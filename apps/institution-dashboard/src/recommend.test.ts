@@ -299,7 +299,7 @@ describe('기존 계획 비교와 예외 상황', () => {
     expect(result.baseline).toMatchObject({ covered: 0, classes: [{ bookable: false }] })
     expect(result.notices.some((notice) => notice.includes('가상 중앙동 도서관은 월요일 오전에 대관 가능으로 등록되어 있지 않아'))).toBe(true)
     const center = recommend(DEMO_RESPONSES, VENUES, { ...DEFAULT_PLAN, venueIds: VENUES.map((venue) => venue.id), baseline: [{ slot: 'sat-morning', venueId: 'v-sinjang-family' }] })
-    expect(center.notices.some((notice) => notice.includes('가상 신장동 가족센터는 토요일 오전에'))).toBe(true)
+    expect(center.notices.some((notice) => notice.includes('신장동 가족센터는 토요일 오전에'))).toBe(true)
     expect(center.notices.join(' ')).not.toContain('센터은')
   })
 

@@ -9,10 +9,10 @@ import { initialPlanForm } from './lib/plan'
 import type { PlanForm } from './lib/plan'
 
 type Tab = 'demand' | 'recommend' | 'guide'
-const tabs: { id: Tab; label: string; hint: string }[] = [
-  { id: 'demand', label: '수요 현황', hint: '요일·시간대와 동네별 수요' },
-  { id: 'recommend', label: '일정·장소 추천', hint: '가장 많은 가정에 닿는 조합' },
-  { id: 'guide', label: '데이터 안내', hint: '수집 항목과 시연용 가정' },
+const tabs: { id: Tab; label: string }[] = [
+  { id: 'demand', label: '수요 현황' },
+  { id: 'recommend', label: '일정·장소 추천' },
+  { id: 'guide', label: '수집 기준' },
 ]
 
 export default function App() {
@@ -36,11 +36,7 @@ export default function App() {
     <div className="app">
       <header className="site-header">
         <div className="header-inner">
-          <div>
-            <p className="brand">오산 아이 프로그램 <span>운영기관</span></p>
-            <h1>수요 기반 일정·장소 추천</h1>
-          </div>
-          <p className="header-note">보호자들이 익명으로 남긴 가능 시간과 동네를 모아, 가장 많은 가정이 올 수 있는 <span className="nowrap">요일·시간대·장소를</span> 찾아요.</p>
+          <h1>오산 아이 프로그램 <span>기관 관리</span></h1>
         </div>
         <div className="tab-list" role="tablist" aria-label="대시보드 화면">
           {tabs.map((item) => (
@@ -57,7 +53,7 @@ export default function App() {
               onClick={() => setTab(item.id)}
               onKeyDown={onTabKey}
             >
-              <span>{item.label}</span><small>{item.hint}</small>
+              {item.label}
             </button>
           ))}
         </div>
@@ -69,7 +65,6 @@ export default function App() {
           {tab === 'guide' && <DataGuide />}
         </section>
       </main>
-      <footer className="site-footer">시연용 목업 · 모든 숫자는 고정 시드로 만든 합성 데이터에서 나와요 · 개별 응답은 표시하지 않아요</footer>
     </div>
   )
 }

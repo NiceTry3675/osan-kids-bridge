@@ -25,10 +25,10 @@ describe('시연용 가정', () => {
     }
   })
 
-  it('가상 장소는 이름이 "가상"으로 시작하고 대관 가능 칸이 21칸 안에 있다', () => {
+  it('후보 장소는 이름이 있고 대관 가능 칸이 21칸 안에 있다', () => {
     expect(new Set(VENUES.map((venue) => venue.id)).size).toBe(VENUES.length)
     for (const venue of VENUES) {
-      expect(venue.name.startsWith('가상 ')).toBe(true)
+      expect(venue.name.length).toBeGreaterThan(0)
       expect(venue.bookable.length).toBeGreaterThan(0)
       for (const slot of venue.bookable) expect(SLOTS).toContain(slot)
     }

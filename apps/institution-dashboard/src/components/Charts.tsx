@@ -52,7 +52,7 @@ export function Heatmap({ counts, max, caption, marks, baselineSlots = [], compa
         ))}
       </div>
       <figcaption className="heat-legend">
-        <span className="legend-title">가능 가정 수</span>
+        <span className="legend-title">가정 수</span>
         <span className="legend-item"><i className="swatch level-0" aria-hidden="true" />0</span>
         <span className="legend-item"><i className="swatch suppressed" aria-hidden="true" />{SUPPRESSION_THRESHOLD} 미만</span>
         {heatLegend(max).map(({ level, from, to }) => (
@@ -104,8 +104,8 @@ export function InsufficientPanel({ onReset, resetLabel }: { onReset?: () => voi
   return (
     <div className="insufficient" role="status">
       <div className="state-icon" aria-hidden="true">!</div>
-      <h2>조건을 넓혀 주세요</h2>
-      <p>조건에 맞는 응답이 {SUPPRESSION_THRESHOLD}가정 미만이에요. 개별 가정이 드러나지 않도록 결과를 보여 주지 않아요.</p>
+      <h2>표시할 수 없음</h2>
+      <p>조건에 맞는 응답이 {SUPPRESSION_THRESHOLD}가정 미만이라 표시하지 않습니다.</p>
       {onReset && <button className="button secondary" type="button" onClick={onReset}>{resetLabel ?? '조건 초기화'}</button>}
     </div>
   )

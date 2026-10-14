@@ -4,7 +4,7 @@ import { ENROLLMENT_RATE, MAX_CAPACITY, MIN_CAPACITY } from '../data/assumptions
 import { DEMO_RESPONSES } from '../data/generate'
 import { VENUES } from '../data/venues'
 import { MASKED_NOTE, countSlots, formatCount, formatHouseholds, formatPeople, suppress, suppressSlots } from '../lib/aggregate'
-import { GRADES, INTERESTS, INTEREST_LABELS, KOREAN_LEVELS, KOREAN_LEVEL_LABELS, LANGUAGES, LANGUAGE_LABELS, formatNumber, percent } from '../lib/labels'
+import { GRADES, INTERESTS, INTEREST_LABELS, KOREAN_LEVELS, KOREAN_LEVEL_LABELS, LANGUAGES, LANGUAGE_LABELS, percent } from '../lib/labels'
 import { CLASS_COUNTS, initialPlanForm, toProgramPlan } from '../lib/plan'
 import type { PlanForm } from '../lib/plan'
 import { recommend, selectEligible } from '../lib/recommend'
@@ -30,11 +30,7 @@ export function RecommendView({ form, setForm }: Props) {
   const [selected, setSelected] = useState(0)
   const [formOpen, setFormOpen] = useState(false)
   const comboLimit = useMemo(readComboLimit, [])
-  const { result, elapsed } = useMemo(() => {
-    const started = performance.now()
-    const value = recommend(DEMO_RESPONSES, VENUES, toProgramPlan(form), { comboLimit })
-    return { result: value, elapsed: performance.now() - started }
-  }, [form, comboLimit])
+  const result = useMemo(() => recommend(DEMO_RESPONSES, VENUES, toProgramPlan(form), { comboLimit }), [form, comboLimit])
   const eligibleSlots = useMemo(() => {
     const counts = countSlots(selectEligible(DEMO_RESPONSES, form))
     const safe = suppressSlots(counts)
@@ -71,7 +67,6 @@ export function RecommendView({ form, setForm }: Props) {
       <form className={`card plan-form${formOpen ? ' open' : ''}`} aria-labelledby="plan-title" onSubmit={(event) => event.preventDefault()}>
         <div className="card-head">
           <h2 id="plan-title">프로그램 조건</h2>
-          <p>바꾸면 바로 다시 계산해요.</p>
           <p className="plan-summary">{planSummary}</p>
           <button className="button secondary plan-toggle" type="button" aria-expanded={formOpen} aria-controls="plan-fields" onClick={() => setFormOpen(!formOpen)}>{formOpen ? '조건 접기' : '조건 바꾸기'}</button>
         </div>
@@ -82,7 +77,6 @@ export function RecommendView({ form, setForm }: Props) {
               <option value="all">전체 분야</option>
               {INTERESTS.map((interest) => <option key={interest} value={interest}>{INTEREST_LABELS[interest]}</option>)}
             </select>
-            <small className="field-hint">분야를 정하면 그 분야를 고르거나 관심 분야를 비워 둔 가정이 대상이에요.</small>
           </label>
           <fieldset className="field">
             <legend className="field-label">대상 학년</legend>
@@ -106,7 +100,7 @@ export function RecommendView({ form, setForm }: Props) {
             <label className="field">
               <span className="field-label">반당 정원</span>
               <span className="unit-input"><input type="number" inputMode="numeric" min={MIN_CAPACITY} max={MAX_CAPACITY} value={capacityText} aria-invalid={capacityError} aria-describedby={capacityError ? 'capacity-error' : undefined} onChange={(event) => onCapacity(event.target.value)} /><span aria-hidden="true">명</span></span>
-              {capacityError && <small id="capacity-error" className="field-error">{MIN_CAPACITY}~{MAX_CAPACITY}명 사이로 적어 주세요. 계산에는 {form.capacity}명을 써요.</small>}
+              {capacityError && <small id="capacity-error" className="field-error">{MIN_CAPACITY}~{MAX_CAPACITY}명</small>}
             </label>
           </div>
           <fieldset className="field venue-field">
@@ -125,8 +119,8 @@ export function RecommendView({ form, setForm }: Props) {
             </div>
           </fieldset>
           <fieldset className="field baseline-field">
-            <legend className="field-label">비교할 기존 계획 <small>선택 · 반 {form.classCount}개</small></legend>
-            <label className="toggle"><input type="checkbox" checked={form.baselineOn} onChange={(event) => update({ baselineOn: event.target.checked })} />기존 계획과 비교하기</label>
+            <legend className="field-label">기존 계획</legend>
+            <label className="toggle"><input type="checkbox" checked={form.baselineOn} onChange={(event) => update({ baselineOn: event.target.checked })} />기존 계획과 비교</label>
             <div className="baseline-rows">
               {form.baseline.slice(0, form.classCount).map((option, at) => (
                 <div key={at} className="baseline-row">
@@ -144,26 +138,23 @@ export function RecommendView({ form, setForm }: Props) {
                 </div>
               ))}
             </div>
-            <small className="field-hint">추천과 같은 반 수로 비교해요. 기본값은 반을 모두 토요일 오전에 여는 경우예요.</small>
           </fieldset>
-          <button className="button ghost full" type="button" onClick={reset}>시연 기본값으로</button>
+          <button className="button ghost full" type="button" onClick={reset}>초기화</button>
         </div>
       </form>
 
       <div className="results">
         <p className="sr-only" role="status">{statusText(result)}</p>
-        {result.status === 'insufficient' && <InsufficientPanel onReset={reset} resetLabel="시연 기본값으로" />}
-        {result.status === 'no_options' && <EmptyState title="후보 장소를 골라 주세요" text="대관 가능한 칸이 있는 장소를 하나 이상 고르면 추천을 계산해요." />}
-        {result.status === 'no_reach' && <EmptyState title="닿는 대상 가정이 없어요" text="고른 장소의 대관 가능 시간과 동네에 맞는 가정이 없어요. 장소를 더 고르거나 분야·학년을 넓혀 보세요." />}
+        {result.status === 'insufficient' && <InsufficientPanel onReset={reset} resetLabel="초기화" />}
+        {result.status === 'no_options' && <EmptyState title="후보 장소 없음" text="장소를 하나 이상 선택하세요." />}
+        {result.status === 'no_reach' && <EmptyState title="참여 가능한 가정 없음" text="장소를 추가하거나 분야·학년 조건을 넓혀 보세요." />}
         {result.status === 'ok' && current && (
           <>
-            <SearchSummary result={result} elapsed={elapsed} />
             {result.notices.length > 0 && <ul className="notice-list">{result.notices.map((notice) => <li key={notice}>{notice}</li>)}</ul>}
             <div className="overview-grid">
               <section id="mini-heat" className="card mini-heat" aria-labelledby="mini-heat-title">
                 <div className="card-head">
-                  <h2 id="mini-heat-title">추천 {current.rank}위 위치</h2>
-                  <p>대상 수요 {formatHouseholds(suppress(result.eligibleCount))}의 가능 시간(동 구분 없이). 진한 테두리가 추천 칸이에요.</p>
+                  <h2 id="mini-heat-title">대상 가정 {formatHouseholds(suppress(result.eligibleCount))} · {current.rank}안 위치</h2>
                 </div>
                 <Heatmap compact counts={eligibleSlots.safe} max={eligibleSlots.max} caption={`대상 수요 히트맵과 추천 ${current.rank}위 칸`} marks={marks} baselineSlots={result.baseline?.classes.map((item) => item.option.slot)} />
               </section>
@@ -186,28 +177,11 @@ function statusText(result: RecommendResult): string {
   const best = result.recommendations[0]
   if (result.status !== 'ok' || !best) return ''
   const baseline = result.baseline ? ` · 기존 계획 ${rateText(result.baseline.covered, result.eligibleCount)}` : ''
-  return `추천 1위: 대상 ${formatHouseholds(suppress(result.eligibleCount))} 중 ${formatHouseholds(suppress(best.covered))}(${rateText(best.covered, result.eligibleCount)})${baseline}`
+  return `1안: 대상 ${formatHouseholds(suppress(result.eligibleCount))} 중 ${formatHouseholds(suppress(best.covered))}(${rateText(best.covered, result.eligibleCount)})${baseline}`
 }
 
 function EmptyState({ title, text }: { title: string; text: string }) {
   return <div className="insufficient" role="status"><div className="state-icon" aria-hidden="true">?</div><h2>{title}</h2><p>{text}</p></div>
-}
-
-const elapsedText = (ms: number) => (ms < 10 ? '0.01초 미만' : `${(ms / 1000).toFixed(2)}초`)
-
-function SearchSummary({ result, elapsed }: { result: RecommendResult; elapsed: number }) {
-  return (
-    <div className="search-summary">
-      <span className={`method-badge ${result.method}`}>{result.method === 'exact' ? '정확 탐색' : '탐욕 알고리즘(근사)'}</span>
-      <p>
-        대상 수요 <strong>{formatHouseholds(suppress(result.eligibleCount))}</strong> · 시간·장소 선택지 {result.optionCount}개 → 같은 시간·같은 동끼리 묶어 대상 가정에 닿는 {result.groupCount}개 ·{' '}
-        {result.method === 'exact'
-          ? <>{result.classCount}개 반 조합 {formatNumber(result.comboCount)}개를 모두 비교</>
-          : <>조합 {formatNumber(result.comboCount)}개가 한도 {formatNumber(result.comboLimit)}개를 넘어 근사 계산</>}
-        {' '}· {elapsedText(elapsed)}
-      </p>
-    </div>
-  )
 }
 
 function CompareCard({ result, best }: { result: RecommendResult; best: Recommendation }) {
@@ -215,18 +189,18 @@ function CompareCard({ result, best }: { result: RecommendResult; best: Recommen
   const baseline = result.baseline
   const rows = [
     ...(baseline ? [{ key: 'baseline', label: `기존 계획(${baseline.classes.length}개 반)`, covered: baseline.covered, tone: 'baseline' }] : []),
-    ...(best.classes.length > 1 ? [{ key: 'single', label: '반 1개로 열 때 최고', covered: result.bestSingleCovered, tone: 'single' }] : []),
-    { key: 'best', label: `추천 1위(${best.classes.length}개 반)`, covered: best.covered, tone: 'best' },
+    ...(best.classes.length > 1 ? [{ key: 'single', label: '1개 반 최대', covered: result.bestSingleCovered, tone: 'single' }] : []),
+    { key: 'best', label: `1안(${best.classes.length}개 반)`, covered: best.covered, tone: 'best' },
   ]
   return (
     <section className="card compare-card" aria-labelledby="compare-title">
       <div className="card-head">
-        <h2 id="compare-title">기존 계획과 비교</h2>
+        <h2 id="compare-title">기존 계획 대비</h2>
         {baseline
           ? <p>{baseline.classes.map((item) => `${slotLabel(item.option.slot)} ${item.venue.name}${item.bookable ? '' : '(대관 불가 칸)'}`).join(' · ')}</p>
-          : <p>프로그램 조건에서 “기존 계획과 비교하기”를 켜면 닿는 가정 수를 나란히 비교해요.</p>}
+          : <p>기존 계획 비교가 꺼져 있습니다.</p>}
       </div>
-      {baseline && <p className="compare-headline">기존 계획 <strong>{rateText(baseline.covered, eligible)}</strong> → 추천 <strong>{rateText(best.covered, eligible)}</strong></p>}
+      {baseline && <p className="compare-headline"><strong>{rateText(baseline.covered, eligible)}</strong> → <strong>{rateText(best.covered, eligible)}</strong></p>}
       <ul className="compare-bars">
         {rows.map((row) => {
           const safe = suppress(row.covered)
@@ -239,7 +213,6 @@ function CompareCard({ result, best }: { result: RecommendResult; best: Recommen
           )
         })}
       </ul>
-      {baseline && <p className="card-note">기존 계획과 추천 모두 반 {best.classes.length}개 기준이에요.</p>}
     </section>
   )
 }
@@ -255,17 +228,17 @@ function RecommendationCard({ item, eligible, capacity, baseline, selected, onSe
     <article className={`card rec-card${selected ? ' selected' : ''}${item.rank === 1 ? ' top' : ''}`} aria-labelledby={titleId}>
       <header className="rec-head">
         <div>
-          <span className="rank">추천 {item.rank}위</span>
+          <span className="rank">{item.rank}안</span>
           <h3 id={titleId}>{item.classes.map((entry) => `${slotLabel(entry.option.slot)} ${entry.venue.dong}`).join(' · ')}</h3>
         </div>
-        <button type="button" className={`select-button${selected ? ' active' : ''}`} aria-pressed={selected} onClick={onSelect}>{selected ? '히트맵에 표시 중' : '히트맵에 표시'}</button>
+        <button type="button" className={`select-button${selected ? ' active' : ''}`} aria-pressed={selected} onClick={onSelect}>{selected ? '표시 중' : '히트맵 보기'}</button>
       </header>
 
       <div className="coverage">
-        <p className="coverage-line">대상 수요 {formatHouseholds(suppress(eligible))} 중 <strong>{formatHouseholds(coveredSafe)}{!coveredSafe.suppressed && `(${percent(item.covered, eligible)}%)`}</strong>에 닿아요</p>
+        <p className="coverage-line"><strong>{formatHouseholds(coveredSafe)}{!coveredSafe.suppressed && ` (${percent(item.covered, eligible)}%)`}</strong> / 대상 {formatHouseholds(suppress(eligible))}</p>
         <span className="meter" aria-hidden="true"><span style={{ width: coveredSafe.suppressed ? '2%' : `${(item.covered / Math.max(1, eligible)) * 100}%` }} /></span>
         {baseline && item.baselineDelta !== undefined && (
-          <p className={`delta${item.baselineDelta > 0 ? ' up' : ''}`}>기존 계획 {rateText(baseline.covered, eligible)} → 추천 {rateText(item.covered, eligible)}{!suppress(baseline.covered).suppressed && !coveredSafe.suppressed && item.baselineDelta !== 0 && ` (${item.baselineDelta > 0 ? '+' : ''}${item.baselineDelta}가정)`}</p>
+          <p className={`delta${item.baselineDelta > 0 ? ' up' : ''}`}>기존 계획 {rateText(baseline.covered, eligible)} 대비{!suppress(baseline.covered).suppressed && !coveredSafe.suppressed && item.baselineDelta !== 0 && ` (${item.baselineDelta > 0 ? '+' : ''}${item.baselineDelta}가정)`}</p>
         )}
       </div>
 
@@ -283,7 +256,7 @@ function RecommendationCard({ item, eligible, capacity, baseline, selected, onSe
                 <td className="num">{!entry.marginalSafe.suppressed && entry.marginalSafe.value === 0 ? '0' : isMasked(entry.marginalSafe) ? formatCount(entry.marginalSafe) : `+${formatCount(entry.marginalSafe)}`}</td>
                 <td className="num">
                   {formatPeople(entry.expectedHeadcount)} / {capacity}명
-                  {entry.overCapacity && <span className="tag warn">정원 초과 예상, 반 추가 고려</span>}
+                  {entry.overCapacity && <span className="tag warn">정원 초과</span>}
                 </td>
               </tr>
             ))}
@@ -291,25 +264,21 @@ function RecommendationCard({ item, eligible, capacity, baseline, selected, onSe
         </table>
       </div>
 
-      <p className="table-note">예상 신청 = 반에 닿는 가정(여러 반에 닿으면 나눠 셈) × 신청 전환율 {Math.round(ENROLLMENT_RATE * 100)}%(시연용 가정), 가정당 아동 1명 기준{masked ? ` · ${MASKED_NOTE}` : ''}</p>
-
-      <p className="why"><strong>왜 이 조합인가요?</strong> {item.explanation}</p>
+      <p className="table-note">예상 신청: 신청률 {Math.round(ENROLLMENT_RATE * 100)}% 기준{masked ? ` · ${MASKED_NOTE}` : ''}</p>
 
       <div className="support-grid">
         <section aria-label="통역·번역 준비">
-          <h4>통역·번역 준비</h4>
+          <h4>사용 언어</h4>
           <p className="dist">{LANGUAGES.map((language) => <span key={language}>{LANGUAGE_LABELS[language]} <b>{formatHouseholds(item.languageBreakdown[language])}</b></span>)}</p>
-          <ul>{item.languageSuggestions.map((line) => <li key={line}>{line}</li>)}</ul>
         </section>
         <section aria-label="수업 난이도와 보조 인력">
-          <h4>수업 난이도·보조교사</h4>
+          <h4>자녀 한국어 수준</h4>
           <p className="dist">{levelKeys.map((level) => <span key={level}>{KOREAN_LEVEL_LABELS[level]} <b>{formatHouseholds(item.koreanLevelBreakdown[level])}</b></span>)}</p>
-          <ul>{item.teachingSuggestions.map((line) => <li key={line}>{line}</li>)}</ul>
         </section>
       </div>
 
-      {item.warnings.length > 0 && (
-        <ul className="warning-list" aria-label="확인할 점">{item.warnings.map((line) => <li key={line}><span aria-hidden="true">!</span>{line}</li>)}</ul>
+      {item.warnings.some((line) => !line.includes('정원')) && (
+        <ul className="warning-list" aria-label="확인할 점">{item.warnings.filter((line) => !line.includes('정원')).map((line) => <li key={line}>{line}</li>)}</ul>
       )}
     </article>
   )

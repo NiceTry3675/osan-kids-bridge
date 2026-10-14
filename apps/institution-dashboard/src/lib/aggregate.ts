@@ -51,7 +51,7 @@ export function suppressPartition<K extends string>(keys: readonly K[], raw: Rec
 
 export const MASKED_LABEL = '가림'
 /** "가림" 설명 문구 */
-export const MASKED_NOTE = `가림: 합계에서 빼서 ${SUPPRESSION_THRESHOLD}가정 미만인 칸을 알아낼 수 없도록 함께 가린 칸이에요.`
+export const MASKED_NOTE = '가림: 개인 식별 방지를 위해 비공개'
 
 /** 히트맵 칸 등 짧은 표시: "132", "5 미만" 또는 "가림" */
 export const formatCount = (count: SafeCount): string =>
