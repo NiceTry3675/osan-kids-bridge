@@ -3,6 +3,10 @@ import type { ReactNode } from 'react'
 
 export type Locale = 'ko-easy' | 'vi' | 'zh'
 
+const demoMode = import.meta.env.VITE_DATA_MODE === 'demo'
+// Additional locales require a reviewed UI copy before they are enabled in a public build.
+export const availableLocales: readonly Locale[] = demoMode ? ['ko-easy', 'vi', 'zh'] : ['ko-easy']
+
 const korean = {
   languageLabel: '화면 언어',
   demoBanner: '시연용 가상 공고와 번역 초안입니다. 실제 신청 정보가 아니에요.',
@@ -311,7 +315,7 @@ const chinese: Record<MessageKey, string> = {
   weekdayFull: '{day}',
 }
 
-const messages: Record<Locale, Record<MessageKey, string>> = { 'ko-easy': korean, vi: vietnamese, zh: chinese }
+export const messages: Record<Locale, Record<MessageKey, string>> = { 'ko-easy': korean, vi: vietnamese, zh: chinese }
 const storageKey = 'guardian-display-language'
 
 export function translate(locale: Locale, key: MessageKey, variables?: Record<string, string | number>): string {
@@ -331,7 +335,7 @@ const LanguageContext = createContext<LanguageContextValue | null>(null)
 function initialLocale(): Locale {
   try {
     const saved = localStorage.getItem(storageKey)
-    if (saved === 'ko-easy' || saved === 'vi' || saved === 'zh') return saved
+    if (availableLocales.includes(saved as Locale)) return saved as Locale
   } catch { /* Storage may be unavailable in private browsing. */ }
   return 'ko-easy'
 }
@@ -356,8 +360,11 @@ export function useLanguage(): LanguageContextValue {
 
 export function LanguageSwitcher() {
   const { locale, setLocale, t } = useLanguage()
+  if (availableLocales.length < 2) return null
   return <nav className="language-bar" aria-label={t('languageLabel')}>
-    {([['ko-easy', '쉬운 한국어'], ['vi', 'Tiếng Việt'], ['zh', '中文']] as const).map(([value, label]) =>
-      <button key={value} type="button" className={locale === value ? 'language-option active' : 'language-option'} aria-pressed={locale === value} onClick={() => setLocale(value)}>{label}</button>)}
+    {availableLocales.map((value) => {
+      const label = { 'ko-easy': '쉬운 한국어', vi: 'Tiếng Việt', zh: '中文' }[value]
+      return <button key={value} type="button" className={locale === value ? 'language-option active' : 'language-option'} aria-pressed={locale === value} onClick={() => setLocale(value)}>{label}</button>
+    })}
   </nav>
 }
