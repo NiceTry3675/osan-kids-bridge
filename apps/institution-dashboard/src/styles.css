@@ -46,9 +46,6 @@ h1, h2, h3, h4 { letter-spacing: -.035em; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 /* 상단 고정 안내와 머리말 */
-.demo-banner { position: sticky; top: 0; z-index: 30; margin: 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 12px; padding: 8px 16px; background: #f0e8d7; border-bottom: 1px solid #e0d4bd; color: #5f4a30; font-size: 12px; text-align: center; }
-.demo-banner strong { font-weight: 800; }
-.demo-banner span { color: #7a6448; }
 .site-header { background: var(--surface); border-bottom: 1px solid var(--line); }
 .header-inner, .tab-list, .page, .site-footer { width: min(100%, 1360px); margin: 0 auto; padding-inline: 32px; }
 .header-inner { display: flex; justify-content: space-between; align-items: end; gap: 24px; padding-top: 24px; padding-bottom: 18px; }
@@ -159,7 +156,7 @@ select:disabled { color: #9aa19d; background: #f3f3f0; }
 
 /* 일정·장소 추천 */
 .recommend-layout { grid-template-columns: 330px minmax(0, 1fr); align-items: start; gap: 20px; }
-.plan-form { position: sticky; top: 52px; max-height: calc(100dvh - 68px); overflow-y: auto; display: grid; gap: 18px; }
+.plan-form { position: sticky; top: 20px; max-height: calc(100dvh - 36px); overflow-y: auto; display: grid; gap: 18px; }
 .plan-form .card-head { margin-bottom: 0; }
 .plan-fields { display: contents; }
 .plan-summary, .plan-toggle { display: none; }
@@ -205,7 +202,7 @@ select:disabled { color: #9aa19d; background: #f3f3f0; }
 .notice-list, .warning-list { list-style: none; margin: 0; padding: 12px 16px; display: grid; gap: 6px; background: var(--amber-bg); border: 1px solid var(--amber-line); border-radius: 8px; color: var(--amber-ink); font-size: 12px; line-height: 1.55; }
 .warning-list li { display: flex; gap: 8px; }
 .warning-list li span { flex: none; width: 18px; height: 18px; display: grid; place-items: center; border-radius: 50%; background: #b06f22; color: #fff; font-size: 11px; font-weight: 800; }
-.mini-heat { scroll-margin-top: 52px; }
+.mini-heat { scroll-margin-top: 20px; }
 .overview-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
 .compare-headline { margin: 0 0 16px; font-size: 15px; color: var(--ink-2); }
 .compare-headline strong { font-size: 22px; color: var(--ink); letter-spacing: -.03em; }

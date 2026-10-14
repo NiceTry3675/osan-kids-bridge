@@ -3,7 +3,6 @@ import type { KeyboardEvent } from 'react'
 import { DataGuide } from './components/DataGuide'
 import { DemandView } from './components/DemandView'
 import { RecommendView } from './components/RecommendView'
-import { DEMO_RECORD_COUNT } from './data/assumptions'
 import { defaultFilters } from './lib/aggregate'
 import type { DemandFilters } from './lib/aggregate'
 import { initialPlanForm } from './lib/plan'
@@ -35,7 +34,6 @@ export default function App() {
 
   return (
     <div className="app">
-      <p className="demo-banner" role="note"><strong>가상 데이터로 만든 시연 화면입니다</strong><span>합성 응답 {DEMO_RECORD_COUNT}가정 · 실제 보호자 응답이나 실제 시설이 아니에요</span></p>
       <header className="site-header">
         <div className="header-inner">
           <div>
