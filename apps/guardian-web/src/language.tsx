@@ -4,11 +4,11 @@ import type { ReactNode } from 'react'
 export type Locale = 'ko-easy' | 'vi' | 'zh'
 
 const demoMode = import.meta.env.VITE_DATA_MODE === 'demo'
-// Additional locales require a reviewed UI copy before they are enabled in a public build.
-export const availableLocales: readonly Locale[] = demoMode ? ['ko-easy', 'vi', 'zh'] : ['ko-easy']
+export const availableLocales: readonly Locale[] = ['ko-easy', 'vi', 'zh']
 
 const korean = {
   languageLabel: '화면 언어',
+  translationDraftNotice: '베트남어·중국어 안내는 검수 전 번역입니다. 중요한 조건은 한국어 원문에서 확인해 주세요.',
   demoBanner: '시연용 가상 공고와 번역 초안입니다. 실제 신청 정보가 아니에요.',
   brand: '오산 아이 프로그램',
   location: '오산시',
@@ -180,6 +180,7 @@ export type MessageKey = keyof typeof korean
 
 const vietnamese: Record<MessageKey, string> = {
   languageLabel: 'Ngôn ngữ hiển thị', demoBanner: 'Thông báo và bản dịch minh họa. Đây không phải thông tin đăng ký thật.',
+  translationDraftNotice: 'Bản dịch này chưa được kiểm tra. Vui lòng đối chiếu các điều kiện quan trọng với bản tiếng Hàn gốc.',
   brand: 'Chương trình cho trẻ ở Osan', location: 'Osan', heroEyebrow: 'Cùng con tại Osan',
   heroTitle: 'Tìm chương trình cho con ở một nơi', heroAction: 'Tìm theo lớp và thời gian',
   openEyebrow: 'Thông báo hiện có', openPrograms: 'Chương trình đang nhận đăng ký', viewAll: 'Xem tất cả',
@@ -253,6 +254,7 @@ const vietnamese: Record<MessageKey, string> = {
 
 const chinese: Record<MessageKey, string> = {
   languageLabel: '显示语言', demoBanner: '以下是演示用虚构公告和翻译草稿，并非真实报名信息。',
+  translationDraftNotice: '此译文尚未经过审核。重要条件请对照韩语原文确认。',
   brand: '乌山市儿童活动', location: '乌山市', heroEyebrow: '与孩子一起了解乌山',
   heroTitle: '在这里查找适合孩子的活动', heroAction: '按年级和时间查找',
   openEyebrow: '当前公告', openPrograms: '正在报名的活动', viewAll: '查看全部',
@@ -360,11 +362,10 @@ export function useLanguage(): LanguageContextValue {
 
 export function LanguageSwitcher() {
   const { locale, setLocale, t } = useLanguage()
-  if (availableLocales.length < 2) return null
-  return <nav className="language-bar" aria-label={t('languageLabel')}>
+  return <><nav className="language-bar" aria-label={t('languageLabel')}>
     {availableLocales.map((value) => {
       const label = { 'ko-easy': '쉬운 한국어', vi: 'Tiếng Việt', zh: '中文' }[value]
       return <button key={value} type="button" className={locale === value ? 'language-option active' : 'language-option'} aria-pressed={locale === value} onClick={() => setLocale(value)}>{label}</button>
     })}
-  </nav>
+  </nav>{locale !== 'ko-easy' && !demoMode && <p className="translation-draft-notice" role="note">{t('translationDraftNotice')}</p>}</>
 }

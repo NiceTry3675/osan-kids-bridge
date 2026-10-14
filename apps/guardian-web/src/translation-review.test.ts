@@ -6,9 +6,10 @@ const locales: Locale[] = ['ko-easy', 'vi', 'zh']
 const slots = (copy: string) => [...copy.matchAll(/\{([a-z]+)\}/g)].map((match) => match[1]).sort()
 
 describe('translation catalog integrity', () => {
-  it('keeps unreviewed language choices in explicit demo mode', () => {
-    if (import.meta.env.VITE_DATA_MODE === 'demo') expect(availableLocales).toEqual(['ko-easy', 'vi', 'zh'])
-    else expect(availableLocales).toEqual(['ko-easy'])
+  it('offers all three languages without marking draft copy as reviewed', () => {
+    expect(availableLocales).toEqual(['ko-easy', 'vi', 'zh'])
+    expect(translate('vi', 'translationDraftNotice')).toContain('chưa được kiểm tra')
+    expect(translate('zh', 'translationDraftNotice')).toContain('尚未经过审核')
   })
 
   it('has a nonempty translation and the same variable slots for every UI message', () => {
