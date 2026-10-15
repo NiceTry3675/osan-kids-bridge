@@ -273,3 +273,4 @@ html:where([lang="vi"], [lang="zh"]) .card-info .meta-label { white-space: norma
   .card-title { font-size: 18px; }
   .filter-summary { margin-inline: 18px; }
 }
+.sheet-options .sheet-option { border: 1px solid #e4e7e1; border-radius: 4px; padding: 14px 16px; }

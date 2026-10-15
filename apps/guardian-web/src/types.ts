@@ -75,6 +75,13 @@ export interface Program {
   venue?: ProgramVenue | null
   /** 회차도 기간도 없을 때 원문이 밝힌 대략의 일정 ('11월 중 운영 예정') */
   schedule_note?: string | null
+  /** 회차 날짜 없이 운영 기간만 적힌 공고의 기간 (YYYY-MM-DD) */
+  period_start?: string | null
+  period_end?: string | null
+  /** 원문에 적힌 총 회차 수 */
+  session_count?: number | null
+  /** 원문에 적힌 정원 (명·가족 수) */
+  capacity?: number | null
   matched_sessions: string[]
   next_session: ProgramSession | null
   cost_krw: number | null
@@ -83,6 +90,8 @@ export interface Program {
   application_start: string | null
   application_end: string | null
   application_methods: ApplicationMethod[]
+  /** 신청 기간 없이 원문이 신청을 대략만 밝힌 표현 ('일정 확정 후 별도 안내') */
+  application_note?: string | null
   /** 보호자에게 알리는 안내 문장 (원문 그대로) */
   notices?: string[]
   guardian_companion?: CompanionRule
@@ -90,8 +99,12 @@ export interface Program {
   korean_level_required?: string | null
   /** 기관이 통역·진행하는 언어 코드. 미상이면 null */
   support_languages?: string[] | null
+  /** 원문이 그 언어 지원을 '통역'이라고 밝힘 (수업 언어가 아니다) */
+  support_interpretation?: boolean
   source_url: string | null
   verified_at: string | null
+  /** 원문에서 확인한 인용 (항목 이름과 함께) */
+  source_evidence?: { field: string; quote: string }[]
   summaries_by_language?: Partial<Record<'ko-easy' | 'vi' | 'zh', LanguageSummary>>
 }
 
