@@ -451,6 +451,9 @@ function claimIssues(lines: string[], facts: SummaryFacts, language: DisplayLang
   if (language === 'zh') {
     const traditional = [...new Set(outside.match(TRADITIONAL) ?? [])]
     if (traditional.length) issues.push(`번체자를 씀: ${traditional.join('')}`)
+    // 동 이름은 한자 표기가 여러 가지라 한국어 그대로 둔다 (제목 번역 괄호 안도 마찬가지)
+    const hanDong = [...new Set(outside.match(/\p{Script=Han}{1,3}洞/gu) ?? [])]
+    if (hanDong.length) issues.push(`동 이름을 한자로 옮김: ${hanDong.join(', ')}`)
   }
   return issues
 }

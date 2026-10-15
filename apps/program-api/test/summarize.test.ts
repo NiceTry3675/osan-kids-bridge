@@ -443,6 +443,22 @@ describe('쉬는 날·남은 회차·신청 이름·신청 안내', () => {
   })
 })
 
+describe('끝난 공고·중국어 동 이름', () => {
+  it('끝난 공고는 ended로 알리고 신청 확인 사항을 넘기지 않는다', () => {
+    const facts = factsOf({ sessions: [session('s1', '2026-06-10')], session_count: 1, uncertain_items: ['신청 방법', '참여 대상·자격'] })
+    expect(facts.operation_ended).toBe(true)
+    expect(facts.check_items).toEqual(['참여 대상·자격'])
+    expect(localizeFacts(facts, 'ko-easy').schedule.ended).toBe(true)
+    expect(factsOf({ uncertain_items: ['신청 방법'] }).check_items).toContain('신청 방법')
+  })
+
+  it('중국어 요약이 동 이름을 한자로 옮기면 문제로 본다 (제목 원문 따옴표 안은 괜찮다)', () => {
+    const lines = replaced('zh', 0, '（多元文化家庭子女周六科学班）', '（南村洞多元文化家庭子女周六科学班）')
+    hasIssue(check(lines, 'zh'), '동 이름을 한자로 옮김: 南村洞')
+    expect(check(GOOD.zh, 'zh').some((issue) => issue.includes('동 이름'))).toBe(false)
+  })
+})
+
 describe('문의 전화와 신청 방법 (F1)', () => {
   // 원문: '신청 : 홈페이지에서 온라인 신청', '문의 : 031-000-0004 (신청은 전화로 받지 않습니다)'
   const inquiryOnly = () => factsOf({

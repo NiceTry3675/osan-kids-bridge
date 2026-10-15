@@ -41,6 +41,8 @@ const ADDRESS_LIKE = /(?:로|길)\s*\d|\d+\s*번지|[시군구]\s|\(\s*\S+동\s*
 const GENERIC_ONLINE_LABEL = /^(?:온라인|인터넷|홈페이지)?\s*(?:신청|접수)$/
 /** 항목 이름 ('■ 신청 방법:', '- 일정:')과 머리 기호 */
 const LEADING_MARKS = /^[\s■□※•·*▶-]+/
+/** 학년·나이 대상만 다시 말한 자격 ('자녀를 둔 가족', '초등학생 자녀를 둔 부모') */
+const CHILD_TARGET_ONLY = /^(?:(?:초등|중|고등)학생\s*)?(?:자녀|아이|아동)(?:를|을)?\s*둔\s*(?:가족|가정|보호자|부모|학부모)$/
 /** 일정·대상·내용처럼 다른 항목이 다루는 원문 줄의 머리 ('내용:', '일시 :') */
 const FIELD_LINE = /^(?:내\s*용|대\s*상|일\s*시|일\s*정|장\s*소|비\s*용|참\s*가\s*비|신\s*청|접\s*수|모\s*집|정\s*원|문\s*의|기\s*간|프로그램)\s*(?:방법|기간|인원|대상)?\s*[:：]/
 
@@ -285,6 +287,8 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
   }
   // '오산시민 누구나'의 '누구나'는 제한이 없다는 말이라 자격에서 뗀다 ('오산시민'만 남고, '누구나'뿐이면 자격 없음 [])
   if (eligibility) eligibility = unique(eligibility.map((item) => item.replace(/\s*(?:누구나|누구든지|제한\s*없음)\s*$/, '').trim()).filter(Boolean))
+  // '초등학생 자녀를 둔 가족 누구나'의 '자녀를 둔 가족'은 학년·나이 대상을 다시 말한 것일 뿐이다 ('입학 예정 자녀를 둔 부모'처럼 조건이 붙으면 남긴다)
+  if (eligibility && targetType === 'all' && (gradeRange || ageRange)) eligibility = eligibility.filter((item) => !CHILD_TARGET_ONLY.test(item))
   // 다문화가족 대상이 원문으로 확인되면 그 자체가 참여 자격이다
   if (targetType === 'multicultural_family' && eligibility === null) eligibility = ['다문화가족']
 

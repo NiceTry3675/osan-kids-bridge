@@ -366,6 +366,17 @@ describe('normalize: 누구나·동반 확인 사항', () => {
     expect(anyone.eligibility_requirements).toEqual([])
   })
 
+  it("학년이 있는 누구나 공고의 '자녀를 둔 가족'은 대상을 다시 말한 것이라 자격에서 뺀다", () => {
+    const line = '■ 대상: 초등학생 자녀를 둔 가족 누구나'
+    const familyText = `${LIST_ROW}\n${line}`
+    const family = (requirements: string[]) => toProgramRecord(raw({
+      title: base.title, target_evidence: [line], target_raw: '초등학생 자녀를 둔 가족 누구나', target_type: 'all',
+      grade_evidence: [line], grade_min: 1, grade_max: 6, eligibility_evidence: [line], eligibility_requirements: requirements,
+    }), context(familyText))
+    expect(family(['자녀를 둔 가족 누구나']).eligibility_requirements).toEqual([])
+    expect(family(['초등학생 자녀를 둔 가족']).eligibility_requirements).toEqual([])
+  })
+
   it('동반 규칙은 모르는 쪽만 확인 사항으로 남긴다', () => {
     const companion = (guardian: 'required' | 'unknown', sibling: 'unknown') => toProgramRecord(raw({
       ...base, guardian_companion_evidence: ['보호자와 자녀가 함께 참여'], guardian_companion: guardian, sibling_companion: sibling,

@@ -221,6 +221,8 @@ export function localizeFacts(facts: SummaryFacts, language: DisplayLanguage) {
       /** 회차도 기간도 없을 때 원문이 밝힌 대략의 일정 (한국어 원문 표기) */
       note: facts.schedule_note,
       next_session: facts.next_session ? sessionWhen(facts.next_session, language, today) : null,
+      /** 이미 끝난 프로그램 */
+      ended: facts.operation_ended,
       period_start: facts.period_start ? dateLabel(facts.period_start, language, today) : null,
       period_end: facts.period_end ? dateLabel(facts.period_end, language, today) : null,
       session_count: facts.session_count,

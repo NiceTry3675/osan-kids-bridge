@@ -74,11 +74,12 @@ function costLabel(program: Program, locale: Locale): string {
   return locale === 'zh' ? `${qualifiers.join('')}${amount}` : `${qualifiers.join(' ')} ${amount}`
 }
 
-/** 정원. 원문 인용이 가족 단위·선착순이면 그대로 밝힌다 ('25가족', '15명 · 선착순') */
+/** 정원. 원문 인용이 가족 단위·회차별·선착순이면 그대로 밝힌다 ('25가족', '회차별 12명', '15명 · 선착순') */
 function capacityLabel(program: Program, locale: Locale): string | null {
   if (program.capacity === null || program.capacity === undefined) return null
   const quote = program.source_evidence?.find((entry) => entry.field === 'capacity')?.quote ?? ''
-  const count = translate(locale, /가족|가정|가구/.test(quote) ? 'capacityFamilies' : 'capacityPeople', { count: program.capacity })
+  const unit = translate(locale, /가족|가정|가구/.test(quote) ? 'capacityFamilies' : 'capacityPeople', { count: program.capacity })
+  const count = /회차\s*별|회차\s*마다|각\s*회차|매\s*회|회\s*당/.test(quote) ? translate(locale, 'capacityPerSession', { count: unit }) : unit
   return /선착순/.test(quote) ? `${count} · ${translate(locale, 'firstCome')}` : count
 }
 
