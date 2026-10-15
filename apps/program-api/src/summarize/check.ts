@@ -10,7 +10,7 @@ import type { VerifyKind } from './prompt'
 // 요약 3줄을 구조화된 사실과 대조한다. checkSummary는 네트워크 없이 결정적으로, verifyWithModel은 Gemini로.
 
 interface LanguageRules {
-  /** 한 줄 최대 글자 수 (1줄은 제목 길이만큼 더 허용) */
+  /** 한 줄 최대 글자 수 (1줄은 제목 길이만큼, 베트남어·중국어는 번역까지 두 배 더 허용) */
   maxLine: number
   /** 줄마다 있어야 하는 그 언어의 글자 */
   script: RegExp
@@ -280,7 +280,8 @@ function lineIssues(line: string, index: number, facts: SummaryFacts, language: 
   if (!line.trim()) return [`${label}이 비어 있음`]
   const issues: string[] = []
   const length = [...line].length
-  const max = rules.maxLine + (index === 0 ? facts.title.length : 0)
+  // 1줄은 제목이 들어가므로 그만큼 더 허용한다 (베트남어·중국어는 제목 원문과 번역이 함께 들어간다)
+  const max = rules.maxLine + (index === 0 ? facts.title.length * (language === 'ko-easy' ? 1 : 2) : 0)
   if (length > max) issues.push(`${label}이 너무 김 (${length}자, 최대 ${max}자)`)
   if (length < MIN_LINE) issues.push(`${label}이 너무 짧음 (${length}자)`)
   if (/\n/.test(line)) issues.push(`${label} 안에 줄바꿈이 있음`)

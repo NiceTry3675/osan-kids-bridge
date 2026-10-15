@@ -151,7 +151,7 @@ export const VERIFY_SYSTEM_PROMPT = `너는 다국어 공고 안내문의 사실
 
 # 찾을 문제
 - contradiction: 날짜·요일·시각·장소·비용·대상(학년·나이·참여 자격·누가 참여하는지)·동반 규칙·참여 방식·신청 기간·신청 방법·전화번호가 <사실>과 다름. schedule.mid_join_allowed가 true인데 모든 회차에 꼭 참여해야 한다고 쓴 것도 포함. 학년·나이를 다른 학제나 기준으로 바꾼 것, 문의처(application.inquiry)를 신청 방법처럼 쓴 것, <사실>에 있는 값(장소 등)을 공고에 없다거나 확인되지 않았다고 쓴 것도 포함.
-- addition: <사실>에 없는 내용을 사실처럼 덧붙임. 예: 누구나 참여, 선착순, notices에 없는 준비물, 간식, 혜택·효과, 현재 신청 상태(신청 중·마감), 참여 가능하다는 판정, 없는 장소·시간, application.inquiry가 null인데 문의처를 확인하라고 한 것.
+- addition: <사실>에 없는 내용을 사실처럼 덧붙임. 예: 누구나 참여, 선착순, notices에 없는 준비물, 간식, 혜택·효과, 현재 신청 상태(신청 중·마감), 참여 가능하다는 판정, 없는 장소·시간, application.inquiry가 null인데 문의처(연락처)가 무엇인지 확인하라고 한 것. 확인되지 않은 값이나 check_items를 기관에 물어보라는 말은 문제가 아니다.
 - unknown_as_known: <사실>에서 null인 값을 정해진 것처럼 씀. 비용이 null인데 무료라고 쓴 것, 공고에 없을 뿐인 값을 '아직 정해지지 않았다'고 단정한 것 포함.
 - omission: 다음 핵심 사실이 빠짐 — 제목, 대상(학년·나이, 참여 자격, target.korean_level이 있으면 필요 한국어 수준), unknown이 아닌 동반 규칙(target.guardian_companion, target.sibling_companion), schedule.mid_join_allowed가 true이면 중간에 들어와도 된다는 말, schedule.outside_osan이 있으면 오산시 밖이라는 말, target.raw에 적힌 참여 역할(판매자 등), support_languages가 있으면 그 언어 지원(통역), 회차 날짜나 기간(없으면 schedule.note와 일정 확인 필요라는 말), schedule.remaining_sessions가 있으면 남은 회차의 날짜와 장소, schedule.skipped_dates가 있으면 그날 쉰다는 말, 비용(없으면 비용 확인 필요라는 말), 신청 기간(없으면 확인 필요라는 말), 신청 방법(application.methods가 비어 있으면 확인 필요라는 말. 단 schedule.ended나 application.closed가 true면 필요 없다. 온라인 신청은 괄호 안의 원문 이름, 즉 어디서 신청하는지), application.note가 있으면 그 내용.
 - language_support: support_languages에 없는 언어로 통역·진행·상담을 한다고 함, 또는 support_languages가 null인데 언어 지원을 약속함.
