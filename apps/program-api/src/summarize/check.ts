@@ -3,7 +3,7 @@ import { generateJson } from '../llm/gemini'
 import { gradeRangeLabel } from '../match/labels'
 import { factDates, factPhones, factTimes } from './facts'
 import type { DateFact, SummaryFacts } from './facts'
-import { schoolGrade } from './format'
+import { listedRemaining, schoolGrade } from './format'
 import { buildVerifyPrompt, VERIFY_SCHEMA, VERIFY_SYSTEM_PROMPT } from './prompt'
 import type { VerifyKind } from './prompt'
 
@@ -162,6 +162,8 @@ const URL_PATTERN = /(?:https?:\/\/|www\.)\S+/gi
 const PHONE_PATTERN = /(?<!\d)(?:0\d{1,2}[-.)\s]\s*\d{3,4}[-.\s]\d{4}|1\d{3}-\d{4})(?!\d)/g
 const TIME_PATTERN = /(?<!\d)([01]?\d|2[0-3]):([0-5]\d)(?!\d)/g
 const MIN_LINE = 8
+/** 온라인 신청 이름 중 어디서 신청하는지 가리키지 않는 말 */
+const GENERIC_LABEL_WORD = /^(?:온라인|인터넷|홈페이지|프로그램|신청|접수|예약|등록|방법)$/
 
 const compact = (text: string) => text.normalize('NFKC').replace(/\s+/g, '')
 const withoutQuoted = (text: string) => text.replace(QUOTED, ' ')
@@ -244,7 +246,7 @@ function allowedNumbers(facts: SummaryFacts): Set<number> {
     ...(facts.eligibility_requirements ?? []), ...facts.check_items,
     ...facts.sessions.flatMap((session) => [session.place, session.address]),
     ...facts.application_methods.flatMap((method) => [method.address, method.label]),
-    facts.outside_osan, facts.schedule_note, ...facts.notices,
+    facts.outside_osan, facts.schedule_note, facts.application_note, ...facts.notices,
   ]
   for (const text of texts) if (text) numberTokens(text).forEach((value) => allowed.add(value))
   return allowed
@@ -256,7 +258,7 @@ function allowedKorean(facts: SummaryFacts): string {
     facts.title, facts.institution, facts.venue,
     ...facts.sessions.flatMap((session) => [session.place, session.address]),
     ...facts.application_methods.flatMap((method) => [method.address, method.label]),
-    facts.outside_osan, facts.schedule_note, ...facts.notices,
+    facts.outside_osan, facts.schedule_note, facts.application_note, ...facts.notices,
   ].filter(Boolean).join('\n'))
 }
 
@@ -349,6 +351,10 @@ function requiredIssues(lines: string[], scans: LineScan[], facts: SummaryFacts,
     if (next && !hasDate(scans, next)) issues.push(`다음 회차 날짜(${md(monthDay(next))})가 없음`)
     if (next?.start_time && !allTimes.has(toMinutes(next.start_time))) issues.push(`다음 회차 시작 시각(${next.start_time})이 없음`)
     if (next && !next.start_time && !rules.unknown.test(second)) issues.push('2줄에 시간 확인 필요라는 말이 없음')
+    for (const session of listedRemaining(facts) ?? []) {
+      if (!hasDate(scans, session)) issues.push(`남은 회차 날짜(${md(monthDay(session))})가 없음`)
+    }
+    for (const fact of facts.skipped_dates) if (!hasDate(scans, fact)) issues.push(`쉬는 날(${md(monthDay(fact))})이 없음`)
   } else if (facts.period_start || facts.period_end) {
     for (const fact of [facts.period_start, facts.period_end]) {
       if (fact && !hasDate(scans, fact)) issues.push(`운영 기간 날짜(${md(monthDay(fact))})가 없음`)
@@ -374,7 +380,13 @@ function requiredIssues(lines: string[], scans: LineScan[], facts: SummaryFacts,
   const { application_start: start, application_end: end } = facts
   if (end && !hasDate(scans, end)) issues.push(`신청 마감 날짜(${md(monthDay(end))})가 없음`)
   if (start && start.date > facts.today && !hasDate(scans, start)) issues.push(`신청 시작 날짜(${md(monthDay(start))})가 없음`)
-  if (!start && !end && !rules.unknown.test(third)) issues.push('3줄에 신청 기간 확인 필요라는 말이 없음')
+  if (!start && !end && !facts.application_note && !rules.unknown.test(third)) issues.push('3줄에 신청 기간 확인 필요라는 말이 없음')
+  // 온라인 신청은 어디서 신청하는지('오산시가족센터 홈페이지')가 빠지면 '온라인으로 신청'만 남는다
+  for (const method of facts.application_methods) {
+    if (method.purpose !== 'apply' || method.type !== 'online' || !method.label) continue
+    const words = (method.label.match(/\p{Script=Hangul}{3,}/gu) ?? []).filter((word) => !GENERIC_LABEL_WORD.test(word))
+    if (words.length && !words.some((word) => compact(third).includes(word))) issues.push(`3줄에 온라인 신청 이름(${method.label})이 없음`)
+  }
   const unnamed = (facts.support_languages ?? []).filter((code) => rules.languageNames[code] && !rules.languageNames[code].test(withoutQuoted(all)))
   if (unnamed.length) issues.push(`기관 지원 언어(${unnamed.join(', ')})를 쓰지 않음`)
   const phones = factPhones(facts).map((phone) => phone.replace(/\D/g, ''))

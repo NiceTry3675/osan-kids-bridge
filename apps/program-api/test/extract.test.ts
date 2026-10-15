@@ -165,6 +165,7 @@ describe('evidence: 값과 인용의 뜻 대조 (리뷰 F4·F5·F6)', () => {
     expect(supportsCompanion('not_allowed', '다문화가족 초등 3~6학년 자녀', 'guardian')).toBe(false)
     expect(supportsCompanion('not_allowed', '※ 보호자 동반 불가', 'guardian')).toBe(true)
     expect(supportsCompanion('required', '부모와 자녀가 함께 참여', 'guardian')).toBe(true)
+    expect(supportsCompanion('required', '보호자와 자녀가 함께 판매에 참여합니다.', 'guardian')).toBe(true)
     expect(supportsCompanion('allowed', '형제자매 동반 가능', 'sibling')).toBe(true)
     expect(supportsCompanion('allowed', '보호자 동반 가능', 'sibling')).toBe(false)
     expect(supportsAudience('parent_child', '아버지와 자녀가 함께 참여해야 합니다.')).toBe(true)
@@ -280,7 +281,7 @@ function raw(overrides: Partial<RawExtraction> = {}): RawExtraction {
     sessions: [], schedule_note: null, period_evidence: [], period_start: null, period_end: null, session_count_evidence: [], session_count: null,
     attendance_evidence: [], attendance_rule: 'unknown', mid_join_evidence: [], mid_join_allowed: null,
     cost_evidence: [], cost_krw: null, cost_raw: null, capacity_evidence: [], capacity: null,
-    application_period_evidence: [], application_start: null, application_end: null, application_methods: [], notices: [], uncertain_items: [],
+    application_period_evidence: [], application_start: null, application_end: null, application_methods: [], application_note: null, notices: [], uncertain_items: [],
     ...overrides,
   }
 }
@@ -433,6 +434,30 @@ describe('normalize: 안내 문장·대략의 일정·장소·신청 이름', ()
     expect(record.uncertain_items).toContain('신청 마감(10월 30일)이 운영 종료일(6월 10일)보다 늦은 점')
     expect(record.uncertain_items).not.toContain('행사기간 종료일보다 접수기간 마감일이 늦은 점')
     expect(toProgramRecord(kpopRaw, context(LIST_ROW)).uncertain_items.some((item) => item.includes('늦은 점'))).toBe(false)
+  })
+
+  it('신청 기간이 없을 때만 원문의 신청 안내를 남긴다', () => {
+    const text = '진로 탐색 캠프\n- 신청: 일정 확정 후 별도 안내'
+    const note = toProgramRecord(raw({ title: '진로 탐색 캠프', application_note: '신청: 일정 확정 후 별도 안내' }), context(text))
+    expect(note.application_note).toBe('일정 확정 후 별도 안내')
+    expect(note.evidence).toContainEqual({ field: 'application_note', quote: '일정 확정 후 별도 안내', verified: true })
+    expect(toProgramRecord(raw({ title: '진로 탐색 캠프', application_note: '전화로 신청' }), context(text)).application_note).toBeNull()
+    expect(toProgramRecord({ ...kpopRaw, application_note: '접수기간 : 2026-10-01 00:00 ~ 2026-10-17 00:00' }, context(LIST_ROW)).application_note).toBeNull()
+  })
+
+  it('신청 마감이 첫 회차 뒤면 시작 후 접수 여부를 묻지 않는다', () => {
+    const line = '■ 일시: 10월 10일(토), 10월 17일(토), 10월 24일(토), 10월 31일(토) 10:30~12:00'
+    const text = `주말 미술 놀이\n${line}\n■ 접수: 2026-09-28 ~ 2026-10-20 18:00`
+    const dates = ['2026-10-10', '2026-10-17', '2026-10-24', '2026-10-31']
+    const record = toProgramRecord(raw({
+      title_evidence: ['주말 미술 놀이'], title: '주말 미술 놀이',
+      sessions: dates.map((date) => session({ date_evidence: [line], date, time_evidence: [line], start_time: '10:30', end_time: '12:00' })),
+      application_period_evidence: ['■ 접수: 2026-09-28 ~ 2026-10-20 18:00'], application_start: '2026-09-28', application_end: '2026-10-20T18:00',
+      uncertain_items: ['프로그램 시작 후 접수 가능 여부', '주차 가능 여부'],
+    }), context(text))
+    expect(record.sessions).toHaveLength(4)
+    expect(record.uncertain_items).not.toContain('프로그램 시작 후 접수 가능 여부')
+    expect(record.uncertain_items).toContain('주차 가능 여부')
   })
 })
 

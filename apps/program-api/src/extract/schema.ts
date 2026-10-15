@@ -89,6 +89,7 @@ export interface RawExtraction {
   application_start: string | null
   application_end: string | null
   application_methods: RawApplicationMethod[]
+  application_note: string | null
   notices: string[]
   uncertain_items: string[]
 }
@@ -190,6 +191,7 @@ export const EXTRACTION_SCHEMA: Schema = object({
   application_start: text(`신청 시작 ${DATE} 또는 ${DATE}THH:MM (시각이 적힌 경우)`),
   application_end: text(`신청 마감 ${DATE} 또는 ${DATE}THH:MM (시각이 적힌 경우)`),
   application_methods: { type: 'array', items: methodSchema, description: '원문에 적힌 신청·문의 방법만' },
+  application_note: text('신청 기간을 밝히지 않고 신청을 대략만 안내한 원문 표현 그대로 (예: 일정 확정 후 별도 안내). 신청 기간을 적었으면 null'),
   notices: { type: 'array', items: { type: 'string' }, maxItems: 4, description: '보호자에게 알리는 안내 문장(보호자 대기 장소, 준비물, 복장, 만든 것을 가져가는지 등)을 원문 그대로. 다른 항목이 다루는 일정·비용·대상·신청 문장은 넣지 않는다. 없으면 []' },
   uncertain_items: { type: 'array', items: { type: 'string' }, description: '원문이 모호하거나 서로 맞지 않아 보호자가 기관에 확인해야 할 점 (짧은 한국어 명사구)' },
 })

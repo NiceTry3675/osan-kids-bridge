@@ -157,6 +157,8 @@ export interface ProgramRecord {
   application_start: string | null
   application_end: string | null
   application_methods: ApplicationMethod[]
+  /** 신청 기간 없이 신청을 대략만 밝힌 원문 표현 ('일정 확정 후 별도 안내'). 이 필드가 생기기 전에 저장한 공고에는 없다 */
+  application_note?: string | null
   /** 판정 없이도 확인이 필요한 사항 (원문에 없는 조건 등) */
   uncertain_items: string[]
   /** 보호자에게 알리는 안내 문장 (보호자 대기 장소, 준비물 등). 원문 그대로 */
@@ -200,6 +202,7 @@ export interface ProgramResponse {
   application_start: string | null
   application_end: string | null
   application_methods: ApplicationMethod[]
+  application_note: string | null
   notices: string[]
   source_url: string | null
   verified_at: string | null
@@ -214,6 +217,8 @@ export interface ProgramResponse {
   sibling_companion: CompanionRule
   korean_level_required: string | null
   support_languages: string[] | null
+  /** 원문이 그 언어 지원을 '통역'이라고 밝힘 (수업 언어가 아니다) */
+  support_interpretation: boolean
   application_languages: string[] | null
   period_start: string | null
   period_end: string | null

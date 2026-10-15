@@ -25,13 +25,15 @@ export const SUMMARY_SYSTEM_PROMPT = `너는 오산시 다문화가족 보호자
   - 동반 규칙: target.guardian_companion이 required면 보호자도 함께 와야 한다고, not_allowed면 아이만 참여하고 보호자는 같이 참여하지 않는다고, allowed면 보호자도 같이 있어도 된다고 쓴다. target.sibling_companion이 allowed면 형제자매도 같이 와도 된다고, not_allowed면 형제자매는 같이 올 수 없다고 쓴다. unknown인 규칙은 line1에 쓰지 않는다.
 - line2 (언제·어디서): 회차 날짜·요일·시간과 장소.
   - 회차가 4개 이하이면 모든 회차의 날짜를 하나씩 쓴다. same_time이 있으면 시간은 한 번만, same_place가 있으면 장소도 한 번만 쓴다.
-  - 회차가 5개 이상이면 next_session과 마지막 회차의 날짜, 요일(weekdays), 총 횟수를 쓴다. 격주·불규칙일 수 있으므로 '매주'라고 쓰지 않는다.
+  - 회차가 5개 이상이면 next_session과 마지막 회차의 날짜, 요일(weekdays), 총 횟수를 쓴다. 격주·불규칙일 수 있으므로 '매주'라고 쓰지 않는다. 단 schedule.remaining_sessions가 있으면(남은 회차 4개 이하) 남은 회차를 하나씩 날짜·장소와 함께 쓴다(같은 장소는 한 번만).
+  - schedule.skipped_dates가 있으면 그날은 쉰다고 쓴다(예: '11월 9일(월), 11월 13일(금)은 쉬어요').
   - 회차가 없고 기간(period_start, period_end)만 있으면 기간과 총 횟수(session_count)를 쓰고, 요일·시간은 확인 필요라고 쓴다. 장소는 schedule.venue를 쓰고, venue가 null일 때만 장소 확인 필요라고 쓴다.
   - 회차도 기간도 없으면 일정은 확인 필요라고 쓴다. 이때 schedule.note(원문이 밝힌 대략의 일정, 예: '11월 중 운영 예정')가 있으면 그 내용을 먼저 쓰고('11월 중에 열 예정이에요') 정확한 날짜·시간은 기관에 확인하라고 쓴다. 시간이 null이면 시간은 확인 필요, 장소가 null이면 장소는 확인 필요라고 쓴다.
   - attendance_rule이 all_sessions이고 회차가 여러 개면 모든 회차에 참여하는 과정이라고 쓴다. 단 schedule.mid_join_allowed가 true면 '중간에 들어와도 되고, 들어온 뒤 남은 회차에 참여한다'고 쓰고 모든 회차에 꼭 참여해야 한다고 쓰지 않는다. choose_one이면 원하는 회차를 골라 참여한다고 쓴다.
   - schedule.outside_osan이 있으면 장소가 오산시 밖이라는 것과 그 주소의 시·구 이름을 쓴다.
-- line3 (비용·신청·확인할 점): 비용(cost.label 그대로. '가족당' 같은 기준도 빼지 않는다. null이면 비용 확인 필요), 신청 기간(application.start ~ application.end), 신청 방법(application.methods, 전화번호는 그대로), 문의처(application.inquiry), check_items 중 중요한 것 1~2개. support_languages가 있으면 꼭 쓴다. support_interpretation이 true면 '베트남어·중국어 통역이 있어요'처럼 통역이라고 쓰고, false면 '베트남어·중국어로 안내해요'처럼 쓴다. notices(보호자 안내 문장)가 있으면 보호자가 기다리는 곳, 준비물 순으로 중요한 것 1개를 짧게 옮겨 쓴다(예: '보호자는 수업 동안 2층 가족 쉼터에서 기다릴 수 있어요').
-  - application.inquiry는 문의만 받는 연락처다. '문의는 …'처럼 따로 쓰고, 그 연락처로 신청한다고 쓰지 않는다. application.methods가 비어 있으면 신청 방법은 기관에 확인하라고 쓴다.
+- line3 (비용·신청·확인할 점): 비용(cost.label 그대로. '가족당' 같은 기준도 빼지 않는다. null이면 비용 확인 필요), 신청 기간(application.start ~ application.end), 신청 방법(application.methods, 전화번호는 그대로. 괄호 안의 원문 이름은 어디서 신청하는지이므로 빼지 않는다), 문의처(application.inquiry가 null이 아닐 때만), check_items 중 중요한 것 1~2개. support_languages가 있으면 꼭 쓴다. support_interpretation이 true면 '베트남어·중국어 통역이 있어요'처럼 통역이라고 쓰고, false면 '베트남어·중국어로 안내해요'처럼 쓴다. notices(보호자 안내 문장)가 있으면 보호자가 기다리는 곳, 준비물 순으로 중요한 것 1개를 짧게 옮겨 쓴다(예: '보호자는 수업 동안 2층 가족 쉼터에서 기다릴 수 있어요').
+  - application.inquiry는 문의만 받는 연락처다. '문의는 …'처럼 따로 쓰고, 그 연락처로 신청한다고 쓰지 않는다. application.methods가 비어 있으면 신청 방법은 기관에 확인하라고 쓴다. application.inquiry가 null이면 문의처를 쓰지도, 확인하라고 하지도 않는다.
+  - application.note(원문이 신청을 대략만 밝힌 표현, 예: '일정 확정 후 별도 안내')가 있으면 신청 기간 대신 그 내용을 쓴다(예: '신청은 일정이 정해진 뒤 따로 알려 줘요').
 
 # 사실 규칙
 1. <사실>에 있는 것만 쓴다. 추측, 홍보, 효과, notices에 없는 준비물, 선착순, 혜택, 대상 넓히기('누구나')를 더하지 않는다.
@@ -52,6 +54,7 @@ const STYLE: Record<DisplayLanguage, string> = {
 - 보호자·형제자매 동반은 '형제자매도 같이 와도 돼요', '보호자는 같이 못 들어가요', '보호자도 꼭 같이 와야 해요'처럼 쓴다. 중도 참여는 '중간에 들어와도 돼요'처럼 쓴다. '참여할 수 있어요', '참여 가능'이라는 말은 쓰지 않는다.
 - 장소 이름 끝의 '외'(예: '오산시가족센터 외')는 '오산시가족센터 등 여러 곳'처럼 풀어 쓴다.
 - 확인되지 않은 값은 '○○은 기관에 물어보세요.'처럼 쓴다. '공고에 나와 있지 않아요', '확인 필요예요'처럼 쓰지 않는다.
+- check_items를 쉬운 말로 바꿀 때 날짜와 무엇의 날짜인지는 빼지 않는다. 예: '신청 마감(10월 30일)이 운영 종료일(10월 13일)보다 늦은 점' → '신청 마감(10월 30일)이 프로그램이 끝나는 날(10월 13일)보다 늦어요. 기관에 물어보세요.'
 - 좋은 줄의 예: '10월 24일(토), 10월 31일(토) 10:00~12:00에 해요. 장소는 오산시가족센터 2층 교육실이에요.' / '무료예요. 10월 22일(목) 18:00까지 전화 031-000-0000으로 신청해요.'`,
   vi: `# 언어: 베트남어
 - 짧고 쉬운 베트남어 문장으로 쓴다. 한 줄에 2~3문장. 어려운 행정 용어 대신 쉬운 말을 쓴다.
@@ -65,6 +68,7 @@ const STYLE: Record<DisplayLanguage, string> = {
 - 장소 이름 끝의 '외'(예: '오산시가족센터 외')는 '오산시가족센터 và các địa điểm khác'처럼 풀어 쓴다.
 - '이하'는 'không quá N' 또는 'từ N … trở xuống', '이상'은 'từ N … trở lên'으로 쓴다. 'dưới'·'trên'은 경계 숫자를 빼므로 쓰지 않는다.
 - 문장은 대문자로 시작한다.
+- attendance_rule이 choose_one이면 'Chọn buổi muốn tham gia'처럼 보호자가 원하는 회차를 고른다고 쓴다. 'chọn 1 buổi'처럼 한 번만 된다거나 기관이 고른다고 읽히게 쓰지 않는다.
 - 숫자는 단어(một, hai, bốn…)가 아니라 아라비아 숫자로 쓴다.`,
   zh: `# 언어: 중국어 간체
 - 简体中文의 짧고 쉬운 문장으로 쓴다. 한 줄에 2~3문장. 번체자를 쓰지 않는다.
@@ -74,7 +78,9 @@ const STYLE: Record<DisplayLanguage, string> = {
 - 확인되지 않은 값은 '…请向机构确认。'처럼 쓴다. '公告未注明…'처럼 공고에 없다고 단정하지 않는다.
 - line3의 예: '免费。报名时间：10月12日（周一）09:00至10月22日（周四）18:00，电话031-000-0000。'
 - 동반·중도 참여는 '兄弟姐妹可以同行', '家长不陪同上课', '可以中途加入'처럼 쓴다. '可以参加', '能参加'라는 말은 쓰지 않는다.
-- 날짜는 <사실>의 '10月24日（周六）' 표기를 그대로 쓴다.
+- 날짜는 <사실>의 '10月24日（周六）' 표기를 그대로 쓴다. 기간과 시간은 '10月19日（周一）至12月4日（周五），时间为16:00–17:30'처럼 기간을 먼저 쓰고 시간을 따로 쓴다. 시간을 시작 날짜에만 붙이지 않는다.
+- 대상은 '对象为…' 또는 '以…为对象'으로 쓴다.
+- attendance_rule이 choose_one이면 '可选择想参加的场次参加'처럼 쓴다.
 - 동 이름(대원동, 궐동 등)은 한자로 옮기지 않고 한국어 그대로 쓴다. 한자 표기가 여러 가지라 다른 곳처럼 보일 수 있다. 예: '대원동 행정복지센터（대원동行政福利中心）'.
 - 장소 이름 끝의 '외'(예: '오산시가족센터 외')는 '오산시가족센터等多个地点'처럼 풀어 쓴다.
 - 숫자는 한자 숫자(一, 两, 四…)가 아니라 아라비아 숫자로 쓴다.`,
@@ -138,9 +144,9 @@ export const VERIFY_SYSTEM_PROMPT = `너는 다국어 공고 안내문의 사실
 
 # 찾을 문제
 - contradiction: 날짜·요일·시각·장소·비용·대상(학년·나이·참여 자격·누가 참여하는지)·동반 규칙·참여 방식·신청 기간·신청 방법·전화번호가 <사실>과 다름. schedule.mid_join_allowed가 true인데 모든 회차에 꼭 참여해야 한다고 쓴 것도 포함. 학년·나이를 다른 학제나 기준으로 바꾼 것, 문의처(application.inquiry)를 신청 방법처럼 쓴 것, <사실>에 있는 값(장소 등)을 공고에 없다거나 확인되지 않았다고 쓴 것도 포함.
-- addition: <사실>에 없는 내용을 사실처럼 덧붙임. 예: 누구나 참여, 선착순, notices에 없는 준비물, 간식, 혜택·효과, 현재 신청 상태(신청 중·마감), 참여 가능하다는 판정, 없는 장소·시간.
+- addition: <사실>에 없는 내용을 사실처럼 덧붙임. 예: 누구나 참여, 선착순, notices에 없는 준비물, 간식, 혜택·효과, 현재 신청 상태(신청 중·마감), 참여 가능하다는 판정, 없는 장소·시간, application.inquiry가 null인데 문의처를 확인하라고 한 것.
 - unknown_as_known: <사실>에서 null인 값을 정해진 것처럼 씀. 비용이 null인데 무료라고 쓴 것, 공고에 없을 뿐인 값을 '아직 정해지지 않았다'고 단정한 것 포함.
-- omission: 다음 핵심 사실이 빠짐 — 제목, 대상(학년·나이, 참여 자격, target.korean_level이 있으면 필요 한국어 수준), unknown이 아닌 동반 규칙(target.guardian_companion, target.sibling_companion), schedule.mid_join_allowed가 true이면 중간에 들어와도 된다는 말, schedule.outside_osan이 있으면 오산시 밖이라는 말, target.raw에 적힌 참여 역할(판매자 등), support_languages가 있으면 그 언어 지원(통역), 회차 날짜나 기간(없으면 schedule.note와 일정 확인 필요라는 말), 비용(없으면 비용 확인 필요라는 말), 신청 기간(없으면 확인 필요라는 말), 신청 방법(application.methods가 비어 있으면 확인 필요라는 말).
+- omission: 다음 핵심 사실이 빠짐 — 제목, 대상(학년·나이, 참여 자격, target.korean_level이 있으면 필요 한국어 수준), unknown이 아닌 동반 규칙(target.guardian_companion, target.sibling_companion), schedule.mid_join_allowed가 true이면 중간에 들어와도 된다는 말, schedule.outside_osan이 있으면 오산시 밖이라는 말, target.raw에 적힌 참여 역할(판매자 등), support_languages가 있으면 그 언어 지원(통역), 회차 날짜나 기간(없으면 schedule.note와 일정 확인 필요라는 말), schedule.remaining_sessions가 있으면 남은 회차의 날짜와 장소, schedule.skipped_dates가 있으면 그날 쉰다는 말, 비용(없으면 비용 확인 필요라는 말), 신청 기간(없으면 확인 필요라는 말), 신청 방법(application.methods가 비어 있으면 확인 필요라는 말. 온라인 신청은 괄호 안의 원문 이름, 즉 어디서 신청하는지), application.note가 있으면 그 내용.
 - language_support: support_languages에 없는 언어로 통역·진행·상담을 한다고 함, 또는 support_languages가 null인데 언어 지원을 약속함.
 
 # 문제가 아닌 것 (보고하지 않는다)

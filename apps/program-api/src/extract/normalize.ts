@@ -590,6 +590,15 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
     applicationMethods.push(result)
   }
 
+  // 신청 기간 없이 신청을 대략만 밝힌 원문 표현 ('일정 확정 후 별도 안내'). 원문에 그대로 있을 때만 남긴다
+  let applicationNote = cleanText(r.application_note)?.replace(LEADING_MARKS, '').replace(/^(?:신\s*청|접\s*수|모\s*집)(?:\s*(?:방법|기간|안내))?\s*[:：]\s*/, '').trim() || null
+  if (applicationNote && (applicationStart || applicationEnd)) applicationNote = null
+  else if (applicationNote && (applicationNote.length > 80 || !quoteInSource(applicationNote, sourceText))) {
+    warn(`신청 안내: 원문에 그대로 없는 표현을 뺐습니다 (값: '${applicationNote}')`)
+    applicationNote = null
+  }
+  if (applicationNote) evidence.push({ field: 'application_note', quote: applicationNote, verified: true })
+
   // ---- 소개·안내·확인 사항 ----
   const description = cleanText(r.description) ?? ''
   // 보호자에게 알리는 안내 문장: 원문에 글자 그대로 있는 것만 (머리 기호는 뗀다)
@@ -634,6 +643,9 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
   // 모델이 적은 항목 중 이미 표준 항목이 다루는 주제는 뺀다
   const covered = standardItems.map((item) => STANDARD_TOPICS[item]).filter(Boolean)
   if (lateApplication) covered.push(/(?:신청|접수).*(?:늦|이후|뒤)|(?:늦|이후|뒤).*(?:신청|접수)/)
+  // 신청 마감이 첫 회차 뒤면 시작 후에도 받는다는 뜻이다 (중도 참여는 판정이 따로 묻는다)
+  const firstDate = sessions.find((session) => session.date)?.date
+  if (firstDate && applicationLastDay && applicationLastDay > firstDate) covered.push(/(?:시작|개강|첫\s*회).*(?:후|뒤|이후).*(?:접수|신청)/)
   const modelItems = stringList(r.uncertain_items)
     .filter((item) => item.length <= 80 && !covered.some((topic) => topic.test(item)))
     .slice(0, 8)
@@ -680,6 +692,7 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
     application_start: applicationStart,
     application_end: applicationEnd,
     application_methods: applicationMethods,
+    application_note: applicationNote,
     uncertain_items: uncertainItems,
     notices,
     evidence: uniqueEvidence,

@@ -60,6 +60,8 @@ export interface SummaryFacts {
   venue: string | null
   /** 날짜가 적히지 않은 회차 수 */
   undated_sessions: number
+  /** 같은 요일마다 하다가 쉬는 날 (원문 '11월 9일·13일 휴강'). 앞으로 올 날만 */
+  skipped_dates: DateFact[]
   /** 회차도 기간도 없을 때 원문이 밝힌 대략의 일정 ('11월 중 운영 예정') */
   schedule_note: string | null
   /** 앞으로 시작할 가장 빠른 회차 */
@@ -79,6 +81,8 @@ export interface SummaryFacts {
   application_start: DateTimeFact | null
   application_end: DateTimeFact | null
   application_methods: MethodFact[]
+  /** 신청 기간 없이 원문이 신청을 대략만 밝힌 표현 ('일정 확정 후 별도 안내') */
+  application_note: string | null
   /** 기관이 실제로 통역·진행하는 언어. 미상 null */
   support_languages: string[] | null
   /** 원문이 그 언어 지원을 '통역'이라고 밝힘 */
@@ -90,6 +94,11 @@ export interface SummaryFacts {
 }
 
 const MAX_CHECK_ITEMS = 4
+/** 이보다 많이 빠지면 매주가 아니라 격주·불규칙 일정으로 본다 */
+const MAX_SKIPPED = 3
+const DAY_MS = 86_400_000
+
+const addDays = (date: string, days: number) => new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10)
 
 function dateFact(date: string | null): DateFact | null {
   return isValidDate(date) ? { date, weekday: weekdayOf(date) } : null
@@ -140,6 +149,23 @@ const verifiedQuotes = (record: ProgramRecord, field: string) =>
 const timeOrNull = (time: string | null) => (isValidTime(time) ? time : null)
 const textOrNull = (text: string | null | undefined) => text?.trim() || null
 
+/**
+ * 회차 요일이 매주 이어지는데 몇 날만 빠졌으면 그날들 (휴강일). 모든 회차가 날짜로 적혀 있을 때만 본다.
+ * 빠진 날이 많으면(격주 등) 쉬는 날이 아니라 일정의 간격이므로 내지 않는다.
+ */
+export function skippedDates(sessions: DateFact[], total: number, sessionCount: number | null, today: string): DateFact[] {
+  if (sessions.length < 4 || total !== sessions.length || (sessionCount !== null && sessionCount !== sessions.length)) return []
+  const weekdays = new Set(sessions.map((session) => session.weekday))
+  const dates = new Set(sessions.map((session) => session.date))
+  const skipped: DateFact[] = []
+  for (let date = sessions[0].date; date <= sessions[sessions.length - 1].date; date = addDays(date, 1)) {
+    const weekday = weekdayOf(date)
+    if (weekdays.has(weekday) && !dates.has(date)) skipped.push({ date, weekday })
+  }
+  if (!skipped.length || skipped.length > MAX_SKIPPED || skipped.length * 3 > sessions.length) return []
+  return skipped.filter((fact) => fact.date >= today)
+}
+
 function checkItems(record: ProgramRecord, now: Date): string[] {
   const items = [...new Set(record.uncertain_items.map((item) => item.trim()).filter(Boolean))]
   const mentions = (word: string) => items.some((item) => item.includes(word))
@@ -180,6 +206,7 @@ export function summaryFacts(record: ProgramRecord, now: Date): SummaryFacts {
     sessions,
     venue: sessions.length ? null : venueText(record),
     undated_sessions: record.sessions.length - dated.length,
+    skipped_dates: skippedDates(sessions, record.sessions.length, record.session_count, clock.today),
     schedule_note: dated.length || record.period_start || record.period_end ? null : textOrNull(record.schedule_note),
     next_session: nextIndex >= 0 ? sessions[nextIndex] : null,
     period_start: dateFact(record.period_start),
@@ -200,6 +227,7 @@ export function summaryFacts(record: ProgramRecord, now: Date): SummaryFacts {
       address: textOrNull(method.address),
       label: method.type === 'online' ? textOrNull(method.label) : null,
     })),
+    application_note: record.application_start || record.application_end ? null : textOrNull(record.application_note),
     support_languages: record.support_languages,
     support_interpretation: verifiedQuotes(record, 'support_languages').some((quote) => /통역/.test(quote)),
     notices: (record.notices ?? []).map((notice) => notice.trim()).filter(Boolean),
@@ -209,7 +237,7 @@ export function summaryFacts(record: ProgramRecord, now: Date): SummaryFacts {
 
 /** 사실에 나오는 모든 날짜 (회차·기간·신청) */
 export function factDates(facts: SummaryFacts): DateFact[] {
-  return [...facts.sessions, facts.period_start, facts.period_end, facts.application_start, facts.application_end]
+  return [...facts.sessions, ...facts.skipped_dates, facts.period_start, facts.period_end, facts.application_start, facts.application_end]
     .filter((fact): fact is DateFact => fact !== null)
 }
 

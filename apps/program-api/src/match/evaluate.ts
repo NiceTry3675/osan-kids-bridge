@@ -83,6 +83,10 @@ function uncertainItems(record: ProgramRecord, eligibility: MatchStatus, clock: 
   return items
 }
 
+/** 원문이 기관의 언어 지원을 '통역'이라고 밝힘 */
+export const supportInterpretation = (record: ProgramRecord) =>
+  record.evidence.some((entry) => entry.verified && entry.field === 'support_languages' && /통역/.test(entry.quote))
+
 /** 시간이 맞으면 가장 빠른 일치 회차, 아니면 앞으로 시작할 가장 빠른 날짜 확인 회차 */
 function nextSession(record: ProgramRecord, time: TimeJudgement, clock: Clock): ProgramSession | null {
   if (time.status === 'matched') return time.matched[0] ?? null
@@ -128,6 +132,7 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
     application_start: seoulDateOf(record.application_start),
     application_end: lastApplicationDay(record.application_end),
     application_methods: record.application_methods,
+    application_note: record.application_note ?? null,
     notices: record.notices ?? [],
     source_url: record.source.url,
     verified_at: record.review.status === 'approved' ? seoulDateOf(record.review.reviewed_at) : null,
@@ -140,6 +145,7 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
     sibling_companion: record.sibling_companion,
     korean_level_required: record.korean_level_required,
     support_languages: record.support_languages,
+    support_interpretation: supportInterpretation(record),
     application_languages: record.application_languages,
     period_start: record.period_start,
     period_end: record.period_end,

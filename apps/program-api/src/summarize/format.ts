@@ -154,13 +154,26 @@ function sessionWhen(session: SessionFact, language: DisplayLanguage, today: str
 
 const unique = <T>(values: T[]) => [...new Set(values)]
 const WEEKDAY_ORDER: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+/** 요약 2줄에 회차 날짜를 모두 쓰는 최대 회차 수 */
+export const MAX_LISTED_SESSIONS = 4
+
+/** 다음 회차부터 남은 회차. 다음 회차가 없으면 null */
+function remainingSessions(facts: SummaryFacts): SessionFact[] | null {
+  const { sessions, next_session: next } = facts
+  const from = next ? sessions.findIndex((session) => session.date === next.date && session.start_time === next.start_time) : -1
+  return from >= 0 ? sessions.slice(from) : null
+}
 
 /** 앞으로 남은 회차(없으면 전체)의 요일. 월요일부터 순서대로 (지난 첫날만의 요일을 넣지 않는다) */
 function upcomingWeekdays(facts: SummaryFacts): Weekday[] {
-  const { sessions, next_session: next } = facts
-  const from = next ? sessions.findIndex((session) => session.date === next.date && session.start_time === next.start_time) : -1
-  const relevant = from >= 0 ? sessions.slice(from) : sessions
+  const relevant = remainingSessions(facts) ?? facts.sessions
   return WEEKDAY_ORDER.filter((weekday) => relevant.some((session) => session.weekday === weekday))
+}
+
+/** 회차가 5개 이상인데 남은 회차가 4개 이하면 남은 회차를 하나씩 보여 준다 (격주·장소가 바뀌는 회차도 그대로 보이게) */
+export function listedRemaining(facts: SummaryFacts): SessionFact[] | null {
+  const remaining = remainingSessions(facts)
+  return facts.sessions.length > MAX_LISTED_SESSIONS && remaining && remaining.length <= MAX_LISTED_SESSIONS ? remaining : null
 }
 
 /**
@@ -172,6 +185,13 @@ export function localizeFacts(facts: SummaryFacts, language: DisplayLanguage) {
   const sessions = facts.sessions
   const times = unique(sessions.map((session) => timeRangeLabel(session.start_time, session.end_time, language)))
   const places = unique(sessions.map((session) => (session.online ? WORDS[language].online : session.place)))
+  const sessionFact = (session: SessionFact) => ({
+    when: sessionWhen(session, language, today),
+    place: session.online ? WORDS[language].online : session.place,
+    address: session.address,
+  })
+  const remaining = listedRemaining(facts)
+  const inquiry = facts.application_methods.filter((method) => method.purpose === 'inquiry').map((method) => methodLabel(method, language))
   return {
     title: facts.title,
     institution: facts.institution,
@@ -187,11 +207,11 @@ export function localizeFacts(facts: SummaryFacts, language: DisplayLanguage) {
       korean_level: facts.korean_level_required,
     },
     schedule: {
-      sessions: sessions.map((session) => ({
-        when: sessionWhen(session, language, today),
-        place: session.online ? WORDS[language].online : session.place,
-        address: session.address,
-      })),
+      sessions: sessions.map(sessionFact),
+      /** 회차가 많을 때 다음 회차부터 남은 회차 (4개 이하일 때만) */
+      remaining_sessions: remaining ? remaining.map(sessionFact) : null,
+      /** 같은 요일마다 하다가 쉬는 날 */
+      skipped_dates: facts.skipped_dates.map((fact) => dateLabel(fact, language, today)),
       /** 회차가 없을 때 원문의 공통 장소 (한국어 원문 표기) */
       venue: facts.venue,
       weekdays: upcomingWeekdays(facts).map((weekday) => WEEKDAY_NAMES[language][weekday]),
@@ -216,8 +236,10 @@ export function localizeFacts(facts: SummaryFacts, language: DisplayLanguage) {
       end: facts.application_end ? dateTimeLabel(facts.application_end, language, today) : null,
       /** 신청할 수 있는 방법 */
       methods: facts.application_methods.filter((method) => method.purpose === 'apply').map((method) => methodLabel(method, language)),
-      /** 문의만 받는 연락처. 신청 방법이 아니다 */
-      inquiry: facts.application_methods.filter((method) => method.purpose === 'inquiry').map((method) => methodLabel(method, language)),
+      /** 문의만 받는 연락처. 신청 방법이 아니다. 없으면 null */
+      inquiry: inquiry.length ? inquiry : null,
+      /** 신청 기간 없이 원문이 신청을 대략만 밝힌 표현 (한국어 원문 표기) */
+      note: facts.application_note,
     },
     support_languages: facts.support_languages?.map((code) => LANGUAGE_CODE_NAMES[language][code] ?? code) ?? null,
     /** 원문이 언어 지원을 '통역'이라고 밝힘 */

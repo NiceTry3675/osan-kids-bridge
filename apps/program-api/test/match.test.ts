@@ -478,6 +478,18 @@ describe('원문 근거 (리뷰 R4)', () => {
     ])
     expect(evaluateProgram(record(), null, NOW).source_evidence).toEqual([])
   })
+
+  it("원문이 언어 지원을 '통역'이라고 밝혔는지와 원문의 신청 안내를 내보낸다", () => {
+    const program = evaluateProgram(record({
+      support_languages: ['vi', 'zh'], application_note: '일정 확정 후 별도 안내',
+      evidence: [{ field: 'support_languages', quote: '※ 베트남어·중국어 통역 지원', verified: true }],
+    }), null, NOW)
+    expect(program.support_interpretation).toBe(true)
+    expect(program.application_note).toBe('일정 확정 후 별도 안내')
+    const plain = evaluateProgram(record({ support_languages: ['vi'], evidence: [{ field: 'support_languages', quote: '베트남어로 진행', verified: true }] }), null, NOW)
+    expect(plain.support_interpretation).toBe(false)
+    expect(plain.application_note).toBeNull()
+  })
 })
 
 describe('신청 기간 형식 (보호자 웹 호환)', () => {

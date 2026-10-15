@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { generateJson } from '../src/llm/gemini'
 import { checkSummary, numberTokens } from '../src/summarize/check'
-import { summaryFacts } from '../src/summarize/facts'
+import { skippedDates, summaryFacts } from '../src/summarize/facts'
 import { ageLabel, costLabel, dateLabel, gradeLabel, localizeFacts } from '../src/summarize/format'
 import { buildVerifyPrompt, SUMMARY_SCHEMA, summarySystemPrompt } from '../src/summarize/prompt'
 import { capitalizeSentences, summarizeRecord } from '../src/summarize/summarize'
@@ -382,6 +382,60 @@ describe('지원 언어·대략의 일정 누락', () => {
     hasIssue(check(lines, 'ko-easy', facts), '대략의 일정')
     const withNote = [GOOD['ko-easy'][0], '11월 중에 열 예정이에요. 날짜와 시간은 기관에 물어보세요.', GOOD['ko-easy'][2]]
     expect(check(withNote, 'ko-easy', facts).some((issue) => issue.includes('대략의 일정') || issue.includes('숫자 11'))).toBe(false)
+  })
+})
+
+describe('쉬는 날·남은 회차·신청 이름·신청 안내', () => {
+  // 매주 월·금, 11월 9일·13일 휴강, 12회
+  const kpopDates = ['2026-10-19', '2026-10-23', '2026-10-26', '2026-10-30', '2026-11-02', '2026-11-06', '2026-11-16', '2026-11-20', '2026-11-23', '2026-11-27', '2026-11-30', '2026-12-04']
+  const kpop = () => factsOf({ sessions: kpopDates.map((date, index) => session(`k${index}`, date, '16:00', '17:30')), session_count: 12 })
+
+  it('매주 같은 요일 사이에 빠진 날만 쉬는 날로 본다 (격주는 아니다)', () => {
+    expect(kpop().skipped_dates.map((fact) => fact.date)).toEqual(['2026-11-09', '2026-11-13'])
+    const biweekly = ['2026-06-24', '2026-07-08', '2026-07-22', '2026-08-05', '2026-08-19', '2026-09-02'].map((date, index) => session(`b${index}`, date))
+    expect(factsOf({ sessions: biweekly, session_count: 6 }).skipped_dates).toEqual([])
+    // 총 회차가 적힌 회차 수와 다르면 목록이 빠졌을 수 있어 내지 않는다
+    expect(factsOf({ sessions: kpopDates.map((date, index) => session(`k${index}`, date)), session_count: 14 }).skipped_dates).toEqual([])
+    expect(skippedDates([{ date: '2026-10-05', weekday: 'mon' }, { date: '2026-10-19', weekday: 'mon' }], 2, null, '2026-10-01')).toEqual([])
+  })
+
+  it('쉬는 날을 2줄에 쓰지 않으면 문제로 본다', () => {
+    const lines = [
+      "오산시가족센터가 '다문화가족 자녀 토요 과학교실'을 열어요. 다문화가족 초등 1~4학년 자녀가 대상이에요.",
+      '10월 19일(월)부터 12월 4일(금)까지 월·금요일 16:00~17:30에 총 12번 해요. 장소는 오산시가족센터 2층 교육실이에요.',
+      GOOD['ko-easy'][2],
+    ]
+    hasIssue(check(lines, 'ko-easy', kpop()), '쉬는 날(11월 9일)')
+    const withBreak = lines.map((line, index) => (index === 1 ? `${line} 11월 9일(월), 11월 13일(금)은 쉬어요.` : line))
+    expect(check(withBreak, 'ko-easy', kpop()).filter((issue) => issue.includes('쉬는 날') || issue.includes('날짜'))).toEqual([])
+  })
+
+  it('회차가 많아도 남은 회차가 4개 이하면 남은 날짜를 모두 써야 한다', () => {
+    const dates = ['2026-09-16', '2026-09-30', '2026-10-14', '2026-10-28', '2026-11-11', '2026-11-25']
+    const facts = factsOf({ sessions: dates.map((date, index) => session(`m${index}`, date)), session_count: 6 })
+    const localized = localizeFacts(facts, 'ko-easy')
+    expect(localized.schedule.remaining_sessions?.map((item) => item.when)).toEqual(['10월 28일(수) 10:00~12:00', '11월 11일(수) 10:00~12:00', '11월 25일(수) 10:00~12:00'])
+    const lines = [GOOD['ko-easy'][0], '10월 28일(수)부터 11월 25일(수)까지 수요일 10:00~12:00에 총 6번 해요. 장소는 오산시가족센터 2층 교육실이에요.', GOOD['ko-easy'][2]]
+    hasIssue(check(lines, 'ko-easy', facts), '남은 회차 날짜(11월 11일)')
+    expect(localizeFacts(factsOf(), 'ko-easy').schedule.remaining_sessions).toBeNull()
+  })
+
+  it('온라인 신청은 어디서 신청하는지가 빠지면 문제로 본다', () => {
+    const facts = factsOf({ application_methods: [{ type: 'online', label: '오산시가족센터 홈페이지 프로그램 신청' }] })
+    const generic = replaced('ko-easy', 2, '온라인이나 전화 031-378-9000으로 신청해요.', '온라인으로 신청해요.')
+    hasIssue(check(generic, 'ko-easy', facts), '온라인 신청 이름')
+    const named = replaced('ko-easy', 2, '온라인이나 전화 031-378-9000으로 신청해요.', '오산시가족센터 홈페이지에서 신청해요.')
+    expect(check(named, 'ko-easy', facts).some((issue) => issue.includes('온라인 신청 이름'))).toBe(false)
+  })
+
+  it('문의처가 없으면 null로 주고, 원문의 신청 안내가 있으면 신청 기간 확인 필요라는 말을 묻지 않는다', () => {
+    expect(localizeFacts(factsOf({ application_methods: [{ type: 'online', label: '온라인 신청' }] }), 'zh').application.inquiry).toBeNull()
+    const facts = factsOf({ application_start: null, application_end: null, application_note: '일정 확정 후 별도 안내' })
+    expect(facts.application_note).toBe('일정 확정 후 별도 안내')
+    expect(localizeFacts(facts, 'vi').application.note).toBe('일정 확정 후 별도 안내')
+    const lines = replaced('ko-easy', 2, '10월 12일(월) 09:00부터 10월 22일(목) 18:00까지 온라인이나 전화 031-378-9000으로', '일정이 정해진 뒤 따로 알려 주면 온라인이나 전화 031-378-9000으로')
+    expect(check(lines, 'ko-easy', facts).some((issue) => issue.includes('신청 기간'))).toBe(false)
+    expect(factsOf({ application_note: '일정 확정 후 별도 안내' }).application_note).toBeNull()
   })
 })
 
