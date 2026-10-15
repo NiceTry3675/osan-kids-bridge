@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { I18nProvider } from '../i18n'
-import { DetailScreen } from '../screens/DetailScreen'
+import { DetailScreen } from '../screens/detail/DetailScreen'
 import { emptyFilters } from '../data/types'
 import type { Locale } from '../data/types'
 

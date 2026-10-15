@@ -20,7 +20,7 @@ const NATIVE: Record<Locale, { native: string; aliases: string[] }> = {
   zh: { native: '中文', aliases: ['중국어', 'chinese', 'zh', 'zhongwen', 'mandarin', '汉语', 'tieng trung'] },
 }
 
-export const draftLocalesAllowed = (): boolean => import.meta.env.DEV || import.meta.env.VITE_DATA_MODE === 'demo'
+const draftLocalesAllowed = (): boolean => import.meta.env.DEV || import.meta.env.VITE_DATA_MODE === 'demo'
 
 export function localeState(locale: Locale, allowDraft = draftLocalesAllowed()): LanguageState {
   if (UI_REVIEW[locale] === 'reviewed') return 'available'

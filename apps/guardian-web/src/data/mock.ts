@@ -7,13 +7,11 @@ import type { AvailableWindow, MatchStatus, Program, ProgramSession, SearchFilte
 
 const dayCodes: Weekday[] = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
 
-export function isoDate(date: Date): string {
+function isoDate(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-/** 시연 기준일. 테스트에서 바꿀 수 있습니다. */
-let today = () => new Date()
-export function setDemoToday(factory: () => Date) { today = factory }
+const today = () => new Date()
 
 function offsetDate(days: number): string {
   const date = today()

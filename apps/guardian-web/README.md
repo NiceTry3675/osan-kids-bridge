@@ -39,12 +39,24 @@
 
 ```
 src/
-  data/       types.ts(명세 6장 계약), api.ts(서버/데모 경계), mock.ts(데모 어댑터·판정 재현)
-  i18n/       messages.ts, policy.ts(공개 언어 정책), index.tsx(Provider)
-  lib/        format.ts(표기·공고 글 언어 선택), router.ts(주소·스크롤 복원), searchSession.ts
-  screens/    IntroScreen, BrowseScreen(홈·결과), ConditionSheet, DetailScreen, ActionSheet
-  components/ ProgramItem, links(외부·전화 링크), bits(상태·형광펜·알림·아이콘)
-  test/       판정·API 경계·언어 정책·상세 화면(jsdom) 테스트
+  App.tsx            페이지 전환(홈·상세), 첫 화면, 언어 고르기
+  data/              types.ts(명세 6장 계약) · api.ts(서버/데모 경계) · mock.ts(데모 어댑터·판정 재현)
+  i18n/              messages.ts(3개 언어 문구) · policy.ts(공개 언어 정책) · index.tsx(Provider·translate)
+  lib/
+    filters.ts       조건 선택지·입력 검사·조건 칩
+    format.ts        날짜·회차·장소·비용·신청 상태·언어 이름 표기
+    content.ts       공고 글의 언어 선택, 기관에 확인할 점, 신청 가능 여부
+    router.ts        주소(/, /programs/{id})와 목록 스크롤 복원
+    session.ts       조건을 탭 세션에만 보관·검사해 되살리기
+  components/        Icon · feedback(상태·형광펜·알림·빈 화면) · Sheet(공통 시트) · links(외부·전화) · ProgramItem
+  screens/
+    intro/           01 첫 화면
+    home/            02 홈·04 결과(HomeScreen) · 03 조건 시트 · useSearch
+    detail/          05 상세 · sections(상세의 각 부분) · 06 신청·물어보기 시트 · useProgram
+  styles/            base · intro · home · detail · sheet
+  test/              판정·API 경계·언어 정책·상세 화면(jsdom)
 ```
+
+화면 하나가 유저플로우 번호 하나와 맞도록 나눴습니다. 표기는 `lib/format`, 공고 내용 판단은 `lib/content`, 서버와의 경계는 `data/api` 한 곳에만 둡니다.
 
 판정 로직은 서버(준현 담당)의 몫이고, `mock.ts`는 화면 동작을 시험하려고 명세 4·5장을 재현한 것입니다. 서버 계약이 바뀌면 `data/types.ts`와 명세 6장을 함께 고칩니다.

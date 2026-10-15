@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { serializeFilters } from '../data/api'
 import { getMockProgram, searchMockPrograms, windowContains } from '../data/mock'
 import { emptyFilters } from '../data/types'
-import { filterChips, programText, removeChip, validateWindow } from '../lib/format'
+import { programText } from '../lib/content'
+import { filterChips, removeChip, validateWindow } from '../lib/filters'
 import { parseRoute, programPath } from '../lib/router'
-import { parseSearchSession } from '../lib/searchSession'
+import { parseFilters } from '../lib/session'
 
 const saturday = { day_of_week: 'sat' as const, start_time: '10:05', end_time: '12:10' }
 
@@ -89,8 +90,8 @@ describe('주소와 저장', () => {
   })
 
   it('저장된 조건 중 올바른 값만 되살린다', () => {
-    const raw = JSON.stringify({ version: 1, hasApplied: true, filters: { child_grade: 3, child_age: 99, available_windows: [{ day_of_week: 'sat', start_time: '10:00', end_time: '12:00' }, { x: 'bad' }], interests: ['korean_study', 'other'], free_only: true } })
-    expect(parseSearchSession(raw)).toEqual({ hasApplied: true, filters: { child_grade: 3, available_windows: [{ day_of_week: 'sat', start_time: '10:00', end_time: '12:00' }], interests: ['korean_study'], free_only: true } })
-    expect(parseSearchSession('{bad')).toEqual({ hasApplied: false, filters: emptyFilters() })
+    const raw = JSON.stringify({ child_grade: 3, child_age: 99, available_windows: [{ day_of_week: 'sat', start_time: '10:00', end_time: '12:00' }, { x: 'bad' }], interests: ['korean_study', 'other', 'korean_study'], free_only: true })
+    expect(parseFilters(raw)).toEqual({ child_grade: 3, available_windows: [{ day_of_week: 'sat', start_time: '10:00', end_time: '12:00' }], interests: ['korean_study'], free_only: true })
+    expect(parseFilters('{bad')).toEqual(emptyFilters())
   })
 })

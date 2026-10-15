@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useImperativeHandle, useRef, useState } from 'react'
+import type { Ref } from 'react'
 import './language-picker.css'
 
 /**
@@ -68,7 +69,11 @@ export function searchLanguages<C extends string>(options: LanguageOption<C>[], 
   }
 }
 
+/** 다른 화면에서 ‘다른 언어 찾기’를 열 때 씁니다. */
+export interface LanguagePickerHandle { openSearch: () => void }
+
 interface Props<C extends string> {
+  ref?: Ref<LanguagePickerHandle>
   value: C
   options: LanguageOption<C>[]
   onChange: (code: C) => void
@@ -77,7 +82,7 @@ interface Props<C extends string> {
   tone?: 'band' | 'plain'
 }
 
-export function LanguagePicker<C extends string>({ value, options, onChange, copy, tone = 'band' }: Props<C>) {
+export function LanguagePicker<C extends string>({ ref, value, options, onChange, copy, tone = 'band' }: Props<C>) {
   const [query, setQuery] = useState('')
   const dialogRef = useRef<HTMLDialogElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -100,6 +105,7 @@ export function LanguagePicker<C extends string>({ value, options, onChange, cop
     requestAnimationFrame(() => inputRef.current?.focus())
   }
   const close = () => dialogRef.current?.close?.()
+  useImperativeHandle(ref, () => ({ openSearch: open }))
   const choose = (code: C) => { onChange(code); close() }
 
   return (

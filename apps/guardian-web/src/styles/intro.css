@@ -1,0 +1,13 @@
+/* 01 첫 화면 */
+.intro { display: grid; gap: 10px; padding: 28px 22px 28px; min-height: calc(100dvh - 60px); align-content: start; }
+@media (min-width: 520px) { .intro { min-height: 720px; } }
+.intro-art { display: grid; place-items: center; height: 150px; border-radius: 24px; background: var(--action-soft); font-size: 72px; }
+.intro-title { margin-top: 10px; text-align: center; font-size: var(--text-xl); line-height: 1.3; font-weight: 900; letter-spacing: -0.03em; text-wrap: balance; }
+.intro-lead { text-align: center; color: var(--ink-2); font-size: var(--text-sm); }
+.intro-q { margin-top: 10px; font-size: var(--text-md); font-weight: 800; }
+.intro-langs { display: grid; gap: 8px; }
+.intro-lang { display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 0 16px; border: 2px solid transparent; border-radius: 14px; background: var(--sunken); font-size: var(--text-md); font-weight: 750; text-align: left; }
+.intro-lang small { padding: 1px 7px; border-radius: 99px; background: var(--status-unknown-soft); color: var(--status-unknown); font-size: 11px; font-weight: 700; }
+.intro-lang .icon { margin-left: auto; color: var(--action); }
+.intro-lang[aria-checked='true'] { border-color: var(--ink); background: var(--paper); }
+.intro-start { margin-top: 8px; }

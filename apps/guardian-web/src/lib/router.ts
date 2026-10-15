@@ -28,7 +28,7 @@ export const programPath = (id: string) => `/programs/${encodeURIComponent(id)}`
 const listeners = new Set<() => void>()
 const notify = () => listeners.forEach((listener) => listener())
 
-export function currentState(): HistoryState {
+function currentState(): HistoryState {
   return (window.history.state as HistoryState | null) ?? {}
 }
 
