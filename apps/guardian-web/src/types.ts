@@ -36,6 +36,14 @@ export interface ApplicationMethod {
   address?: string
 }
 
+export type SummaryStatus = 'machine_draft' | 'machine_checked' | 'approved'
+
+/** 프로그램 API가 구조화된 사실로 만든 언어별 3줄 요약. 승인 전이면 status로 구분한다 */
+export interface LanguageSummary {
+  lines: string[]
+  status: SummaryStatus
+}
+
 export interface Program {
   program_id: string
   title: string
@@ -63,6 +71,7 @@ export interface Program {
   application_methods: ApplicationMethod[]
   source_url: string | null
   verified_at: string | null
+  summaries_by_language?: Partial<Record<'ko-easy' | 'vi' | 'zh', LanguageSummary>>
 }
 
 export interface SearchResponse {
