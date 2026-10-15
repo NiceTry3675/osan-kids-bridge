@@ -3,8 +3,12 @@ import type { ReactNode } from 'react'
 
 export type Locale = 'ko-easy' | 'vi' | 'zh'
 
+const demoMode = import.meta.env.VITE_DATA_MODE === 'demo'
+export const availableLocales: readonly Locale[] = ['ko-easy', 'vi', 'zh']
+
 const korean = {
   languageLabel: '화면 언어',
+  translationDraftNotice: '베트남어·중국어 안내는 검수 전 번역입니다. 중요한 조건은 한국어 원문에서 확인해 주세요.',
   demoBanner: '시연용 가상 공고와 번역 초안입니다. 실제 신청 정보가 아니에요.',
   brand: '오산 아이 프로그램',
   location: '오산시',
@@ -84,6 +88,7 @@ const korean = {
   unknownApplicationHint: '지금 신청할 수 있는지는 기관에 확인해 주세요.',
   sourceCheck: '공고 원문 확인하기',
   helpIntro: '확인된 다른 방법을 보여드려요.',
+  demoHelpIntro: '시연용 원문과 전화번호입니다. 실제 사이트나 전화로 연결되지 않아요.',
   original: '원문',
   originalHint: '공고에서 신청 방법을 확인해 주세요.',
   phone: '전화',
@@ -176,6 +181,7 @@ export type MessageKey = keyof typeof korean
 
 const vietnamese: Record<MessageKey, string> = {
   languageLabel: 'Ngôn ngữ hiển thị', demoBanner: 'Thông báo và bản dịch minh họa. Đây không phải thông tin đăng ký thật.',
+  translationDraftNotice: 'Bản dịch này chưa được kiểm tra. Vui lòng đối chiếu các điều kiện quan trọng với bản tiếng Hàn gốc.',
   brand: 'Chương trình cho trẻ ở Osan', location: 'Osan', heroEyebrow: 'Cùng con tại Osan',
   heroTitle: 'Tìm chương trình cho con ở một nơi', heroAction: 'Tìm theo lớp và thời gian',
   openEyebrow: 'Thông báo hiện có', openPrograms: 'Chương trình đang nhận đăng ký', viewAll: 'Xem tất cả',
@@ -208,7 +214,7 @@ const vietnamese: Record<MessageKey, string> = {
   applyFrom: 'Có thể đăng ký từ {date}.', applyStartUnknown: 'Hãy kiểm tra ngày bắt đầu đăng ký.',
   sourceApply: 'Xem cách đăng ký trong thông báo', closedHint: 'Đã hết hạn đăng ký.',
   unknownApplicationHint: 'Hãy hỏi đơn vị tổ chức xem hiện có thể đăng ký không.', sourceCheck: 'Xem thông báo gốc',
-  helpIntro: 'Các cách liên hệ đã được xác nhận.', original: 'Thông báo gốc',
+  helpIntro: 'Các cách liên hệ đã được xác nhận.', demoHelpIntro: 'Đây là liên kết và số điện thoại minh họa. Trang web và cuộc gọi thật sẽ không mở.', original: 'Thông báo gốc',
   originalHint: 'Hãy kiểm tra cách đăng ký trong thông báo.', phone: 'Điện thoại', visit: 'Trực tiếp', online: 'Trực tuyến',
   noFallback: 'Không có cách liên hệ khác đã được xác nhận. Hãy xem chương trình khác.',
   demoExternalTitle: 'Liên kết của thông báo minh họa', externalTitle: 'Hoàn tất đăng ký tại đơn vị tổ chức',
@@ -249,6 +255,7 @@ const vietnamese: Record<MessageKey, string> = {
 
 const chinese: Record<MessageKey, string> = {
   languageLabel: '显示语言', demoBanner: '以下是演示用虚构公告和翻译草稿，并非真实报名信息。',
+  translationDraftNotice: '此译文尚未经过审核。重要条件请对照韩语原文确认。',
   brand: '乌山市儿童活动', location: '乌山市', heroEyebrow: '与孩子一起了解乌山',
   heroTitle: '在这里查找适合孩子的活动', heroAction: '按年级和时间查找',
   openEyebrow: '当前公告', openPrograms: '正在报名的活动', viewAll: '查看全部',
@@ -278,7 +285,7 @@ const chinese: Record<MessageKey, string> = {
   applyFrom: '可从{date}开始报名。', applyStartUnknown: '请确认报名开始日期。',
   sourceApply: '在公告中查看报名方式', closedHint: '报名已结束。',
   unknownApplicationHint: '请向机构确认现在是否可以报名。', sourceCheck: '查看原公告',
-  helpIntro: '以下是已核实的其他联系方法。', original: '原公告', originalHint: '请在公告中确认报名方式。',
+  helpIntro: '以下是已核实的其他联系方法。', demoHelpIntro: '以下是演示用链接和电话号码，不会打开真实网站或拨出电话。', original: '原公告', originalHint: '请在公告中确认报名方式。',
   phone: '电话', visit: '现场', online: '线上', noFallback: '没有已核实的其他联系方法。请查看其他活动。',
   demoExternalTitle: '演示公告的外部链接', externalTitle: '请在机构页面完成报名',
   demoExternalCopy: '这是演示公告，不会跳转到报名页面。',
@@ -311,7 +318,7 @@ const chinese: Record<MessageKey, string> = {
   weekdayFull: '{day}',
 }
 
-const messages: Record<Locale, Record<MessageKey, string>> = { 'ko-easy': korean, vi: vietnamese, zh: chinese }
+export const messages: Record<Locale, Record<MessageKey, string>> = { 'ko-easy': korean, vi: vietnamese, zh: chinese }
 const storageKey = 'guardian-display-language'
 
 export function translate(locale: Locale, key: MessageKey, variables?: Record<string, string | number>): string {
@@ -331,7 +338,7 @@ const LanguageContext = createContext<LanguageContextValue | null>(null)
 function initialLocale(): Locale {
   try {
     const saved = localStorage.getItem(storageKey)
-    if (saved === 'ko-easy' || saved === 'vi' || saved === 'zh') return saved
+    if (availableLocales.includes(saved as Locale)) return saved as Locale
   } catch { /* Storage may be unavailable in private browsing. */ }
   return 'ko-easy'
 }
@@ -356,8 +363,10 @@ export function useLanguage(): LanguageContextValue {
 
 export function LanguageSwitcher() {
   const { locale, setLocale, t } = useLanguage()
-  return <nav className="language-bar" aria-label={t('languageLabel')}>
-    {([['ko-easy', '쉬운 한국어'], ['vi', 'Tiếng Việt'], ['zh', '中文']] as const).map(([value, label]) =>
-      <button key={value} type="button" className={locale === value ? 'language-option active' : 'language-option'} aria-pressed={locale === value} onClick={() => setLocale(value)}>{label}</button>)}
-  </nav>
+  return <><nav className="language-bar" aria-label={t('languageLabel')}>
+    {availableLocales.map((value) => {
+      const label = { 'ko-easy': '쉬운 한국어', vi: 'Tiếng Việt', zh: '中文' }[value]
+      return <button key={value} type="button" className={locale === value ? 'language-option active' : 'language-option'} aria-pressed={locale === value} onClick={() => setLocale(value)}>{label}</button>
+    })}
+  </nav>{locale !== 'ko-easy' && !demoMode && <p className="translation-draft-notice" role="note">{t('translationDraftNotice')}</p>}</>
 }

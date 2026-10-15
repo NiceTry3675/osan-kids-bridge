@@ -148,6 +148,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .language-bar { display: flex; align-items: center; gap: 0; padding: 8px 17px; background: #faf9f6; border-bottom: 1px solid #e2e5dd; overflow-x: auto; }
 .language-option { flex: 1; min-width: max-content; padding: 8px 10px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #4b5b51; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .language-option.active { border-bottom-color: #175b49; color: #175b49; }
+.translation-draft-notice { margin: 0; padding: 11px 20px; border-bottom: 1px solid #e4d8bd; background: #f5ecdc; color: #5b451f; font-size: 13px; line-height: 1.55; font-weight: 650; }
 .content-language-note { margin: 0; padding: 13px 24px; border-bottom: 1px solid #e5e3da; background: #f4f1e7; color: #4e594f; font-size: 13px; line-height: 1.55; }
 .demo-banner { background: #f0e8d7; color: #66523b; font-size: 11px; font-weight: 600; letter-spacing: -.01em; border-bottom: 1px solid #e3d9c6; }
 .site-header, .topbar { background: #faf9f6; border-bottom: 1px solid #deded7; padding-inline: 24px; }

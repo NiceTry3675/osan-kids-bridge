@@ -303,11 +303,13 @@ function App() {
   }
   const openExternal = (url: string) => {
     if (!isSafeUrl(url)) return
+    setHelpOpen(false)
     if (usingDemoData) { setExternalNoticeOpen(true); return }
     window.open(url, '_blank', 'noopener,noreferrer')
     setExternalNoticeOpen(true)
   }
   const callPhone = (phone: string) => {
+    setHelpOpen(false)
     if (usingDemoData) { setToast(t('demoPhone')); return }
     window.location.href = `tel:${phone.replace(/[^\d+]/g, '')}`
   }
@@ -340,7 +342,7 @@ function App() {
         <div className="filter-summary"><div className="summary-title"><strong>{chips.length ? t('appliedConditions') : t('browseWithoutConditions')}</strong></div>{chips.length > 0 && <div className="chip-row" aria-label={t('appliedConditions')}>{chips.map((chip) => <button className="removable-chip" type="button" key={chip.key} onClick={() => removeChip(chip.key)} aria-label={t('removeCondition', { label: chip.label })}>{chip.label} <span aria-hidden="true">×</span></button>)}</div>}</div>
         {searchLoading && <Loading />}{searchError && <ErrorPanel onRetry={() => setSearchRevision((value) => value + 1)} />}
         {!searchLoading && !searchError && search && <>
-          {search.results.length + search.needs_confirmation.length === 0 ? <div className="empty-results"><div className="state-icon">⌕</div><h1>{t('noResults')}</h1><div className="chip-row">{chips.map((chip) => <button className="removable-chip" type="button" key={chip.key} onClick={() => removeChip(chip.key)} aria-label={t('removeCondition', { label: chip.label })}>{chip.label} <span aria-hidden="true">×</span></button>)}</div><button className="button secondary full" type="button" onClick={() => { setFilters(emptyFilters()); setHasApplied(false) }}>{t('allPrograms')}</button></div>
+          {search.results.length + search.needs_confirmation.length === 0 ? <div className="empty-results"><div className="state-icon">⌕</div><h1>{t('noResults')}</h1><button className="button secondary full" type="button" onClick={() => { setFilters(emptyFilters()); setHasApplied(false) }}>{t('allPrograms')}</button></div>
             : <>
               {search.results.length > 0 && <section className="section-block"><div className="section-heading"><div><p className="eyebrow">{t('resultEyebrow')}</p><h1>{t('programCount', { count: search.results.length })}</h1></div></div><div className="program-list">{search.results.map((program) => <ProgramCard key={program.program_id} program={program} onOpen={openDetail} />)}</div></section>}
               {search.needs_confirmation.length > 0 && <section className="section-block needs-block"><div className="section-heading"><div><p className="eyebrow">{t('checkEyebrow')}</p><h2>{t('unknownTimeCount', { count: search.needs_confirmation.length })}</h2></div></div><div className="program-list">{search.needs_confirmation.map((program) => <ProgramCard key={program.program_id} program={program} onOpen={openDetail} />)}</div></section>}
@@ -385,7 +387,7 @@ function App() {
             </section>
             <section className="detail-section"><h2>{t('allSessions')}</h2><p className="attendance-rule">{detail.attendance_rule === 'all_sessions' ? t('attendAll') : detail.attendance_rule === 'choose_one' ? t('chooseOne') : t('attendanceUnknown')}</p><div className="session-list">{detail.sessions.map((item) => <div className="session-row" key={item.id}><span><strong>{formatSession(item, locale)}</strong><small>{item.online ? t('online') : item.place_name ?? t('placeUnknown')}</small></span>{detail.matched_sessions.includes(item.id) && <span className="match-mark">{t('inputTimeMatch')}</span>}</div>)}</div></section>
             <section className="detail-section"><h2>{t('programInfo')}</h2><p className="description">{detail.description}</p><h3 className="method-heading">{t('applicationMethods')}</h3><div className="method-list">{detail.application_methods.filter((method) => method.type !== 'online' || isSafeUrl(method.url)).map((method) => <div key={method.type} className="method-row"><span>{method.type === 'phone' ? t('phone') : method.type === 'visit' ? t('visit') : t('online')}</span><strong>{method.type === 'phone' ? method.phone : method.type === 'visit' ? method.address : method.label}</strong></div>)}</div></section>
-            {!usingDemoData && <section className="detail-section source-section"><h2>{t('sourceInfo')}</h2>{detail.verified_at && <p>{t('verifiedAt', { date: formatDate(detail.verified_at, locale) })}</p>}{isSafeUrl(detail.source_url) && <button className="underlined-button" type="button" onClick={() => openExternal(detail.source_url!)}>{t('openSource')} ↗</button>}<button className="underlined-button" type="button" onClick={() => setHelpOpen(true)}>{t('linkTrouble')}</button></section>}
+            <section className="detail-section source-section"><h2>{t('sourceInfo')}</h2>{!usingDemoData && detail.verified_at && <p>{t('verifiedAt', { date: formatDate(detail.verified_at, locale) })}</p>}{!usingDemoData && isSafeUrl(detail.source_url) && <button className="underlined-button" type="button" onClick={() => openExternal(detail.source_url!)}>{t('openSource')} ↗</button>}<button className="underlined-button" type="button" onClick={() => setHelpOpen(true)}>{t('linkTrouble')}</button></section>
           </div>
           <footer className="detail-actions">
             {detail.application_status === 'open' && firstMethod && (firstMethod.type === 'online' ? <button className="button primary full" type="button" onClick={() => openExternal(firstMethod.url!)}>{usingDemoData ? t('applyDemo') : t('apply')}</button> : firstMethod.type === 'phone' ? <button className="button primary full" type="button" onClick={() => callPhone(firstMethod.phone!)}>{t('callInstitution')}</button> : <div className="action-note">{t('visitAddress', { address: firstMethod.address ?? '' })}</div>)}
@@ -398,7 +400,7 @@ function App() {
       </main>
     </>}
 
-    {helpOpen && detail && !usingDemoData && <InfoSheet title={t('linkTrouble')} onClose={() => setHelpOpen(false)}><p className="sheet-copy">{t('helpIntro')}</p><div className="sheet-options">{isSafeUrl(detail.source_url) && <button type="button" onClick={() => openExternal(detail.source_url!)}><small>1 · {t('original')}</small><strong>{t('openSource')}</strong><span>{t('originalHint')}</span></button>}{detail.application_methods.filter((method) => method.type === 'phone' && method.phone).map((method) => <button type="button" key={method.phone} onClick={() => callPhone(method.phone!)}><small>2 · {t('phone')}</small><strong>{t('callInstitution')}</strong><span>{method.phone}</span></button>)}{!isSafeUrl(detail.source_url) && !detail.application_methods.some((method) => method.type === 'phone' && method.phone) && <p>{t('noFallback')}</p>}</div></InfoSheet>}
+    {helpOpen && detail && <InfoSheet title={t('linkTrouble')} onClose={() => setHelpOpen(false)}><p className="sheet-copy">{usingDemoData ? t('demoHelpIntro') : t('helpIntro')}</p><div className="sheet-options">{isSafeUrl(detail.source_url) && <button type="button" onClick={() => openExternal(detail.source_url!)}><small>1 · {t('original')}</small><strong>{t('openSource')}</strong><span>{t('originalHint')}</span></button>}{detail.application_methods.filter((method) => method.type === 'phone' && method.phone).map((method) => <button type="button" key={method.phone} onClick={() => callPhone(method.phone!)}><small>2 · {t('phone')}</small><strong>{t('callInstitution')}</strong><span>{method.phone}</span></button>)}{!isSafeUrl(detail.source_url) && !detail.application_methods.some((method) => method.type === 'phone' && method.phone) && <p>{t('noFallback')}</p>}</div></InfoSheet>}
     {externalNoticeOpen && <InfoSheet title={usingDemoData ? t('demoExternalTitle') : t('externalTitle')} onClose={() => setExternalNoticeOpen(false)}><p className="sheet-copy">{usingDemoData ? t('demoExternalCopy') : t('externalCopy')}</p></InfoSheet>}
     {toast && <div className="toast" role="status">{toast}</div>}
   </div>
