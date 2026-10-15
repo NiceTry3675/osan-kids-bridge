@@ -1,0 +1,217 @@
+// 공고 구조화 데이터와 보호자 웹 API의 데이터 계약.
+// 보호자 웹(apps/guardian-web/src/types.ts)의 Program을 그대로 포함하고,
+// 보호자 명세 v2.2 6장에서 제안한 필드를 덧붙인다.
+
+export type MatchStatus = 'matched' | 'not_matched' | 'unknown' | 'not_applied'
+export type ApplicationStatus = 'open' | 'upcoming' | 'closed' | 'unknown'
+export type AttendanceRule = 'all_sessions' | 'choose_one' | 'unknown'
+export type Interest = 'experience_culture' | 'korean_study' | 'sports_arts' | 'career'
+export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
+export type DisplayLanguage = 'ko-easy' | 'vi' | 'zh'
+
+/** 공고 원문이 밝힌 대상 구분. parent_only는 보호자만 참여하는 공고. */
+export type TargetType = 'multicultural_family' | 'all' | 'parent_only' | 'unknown'
+
+/** 실제로 참여하는 사람. 자녀 프로그램 목록에는 child·parent_child만 나온다. */
+export type Audience = 'child' | 'parent_child' | 'parent_only' | 'adult' | 'unknown'
+
+export type CompanionRule = 'required' | 'allowed' | 'not_allowed' | 'unknown'
+
+export type AvailableWindow =
+  | { day_of_week: Weekday; start_time: string; end_time: string }
+  | { date: string; start_time: string; end_time: string }
+
+export interface SearchFilters {
+  child_grade?: number
+  child_age?: number
+  available_windows: AvailableWindow[]
+  interests: Interest[]
+  dong?: string
+  free_only: boolean
+  display_language?: DisplayLanguage
+}
+
+export interface ProgramSession {
+  id: string
+  /** YYYY-MM-DD, Asia/Seoul. 미상이면 null */
+  date: string | null
+  /** HH:MM. 미상이면 null */
+  start_time: string | null
+  end_time: string | null
+  place_name: string | null
+  /** 오산시 행정동(중앙동·대원동·남촌동·신장동·세마동·초평동). 오산 밖이거나 미상이면 null */
+  dong: string | null
+  online: boolean
+  /** 원문에 적힌 주소. 확인되지 않으면 null */
+  address?: string | null
+}
+
+export interface ApplicationMethod {
+  type: 'online' | 'phone' | 'visit'
+  label: string
+  url?: string
+  phone?: string
+  address?: string
+}
+
+/** 원문 근거. quote는 원문(웹 글 또는 포스터 판독문)에 그대로 있는 문장이어야 한다. */
+export interface Evidence {
+  field: string
+  quote: string
+  /** 원문에서 quote를 실제로 찾았는지 (코드가 검사) */
+  verified: boolean
+}
+
+export type SummaryStatus = 'machine_draft' | 'machine_checked' | 'approved'
+
+export interface LanguageSummary {
+  /** 3줄 안내. 구조화된 사실만으로 만든다 */
+  lines: string[]
+  status: SummaryStatus
+  generated_at: string
+  /** 자동 대조에서 발견한 문제. 비어 있어야 machine_checked */
+  issues: string[]
+  /** 이 언어의 최종 검수자 (approved일 때만) */
+  reviewer?: string | null
+  /** 사람이 승인한 시각 (ISO) */
+  approved_at?: string | null
+  /** 승인 때의 사실 해시·언어·문구의 해시. 사실이나 문구가 바뀌면 승인이 풀린 것으로 본다 */
+  approved_hash?: string | null
+}
+
+export type SummariesByLanguage = Partial<Record<DisplayLanguage, LanguageSummary>>
+
+export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+
+export interface ReviewState {
+  status: ReviewStatus
+  reviewed_at: string | null
+  reviewer: string | null
+  notes: string | null
+  /** 승인할 때의 사실 해시. 사실이 바뀌면 다시 검수 대기로 본다 */
+  facts_hash: string | null
+}
+
+export interface SourceInfo {
+  /** 공고 원문 주소 */
+  url: string | null
+  /** 원문을 사람이 저장한 시각 또는 확인일 (YYYY-MM-DD) */
+  retrieved_at: string | null
+  /** inbox 안에서의 파일 이름들 (텍스트·이미지) */
+  files: string[]
+  /** 원문 텍스트 + 포스터 판독문의 SHA-256. 원문이 바뀌었는지 판단 */
+  content_hash: string
+}
+
+/**
+ * 저장되는 공고 한 건. 검색 조건과 무관한 사실만 담는다.
+ * 신청 상태·시간 일치 같은 판정은 요청 시점에 계산한다.
+ */
+export interface ProgramRecord {
+  program_id: string
+  title: string
+  institution: string
+  category: Interest
+  audience: Audience
+  target_type: TargetType
+  /** 대상 원문 표현 그대로 */
+  target_raw: string
+  description: string
+  grade_range: [number, number] | null
+  age_range: [number, number] | null
+  /** 학년·나이 외의 참여 자격 (예: '다문화가족', '오산시 거주'). 없다고 확인되면 [], 미상이면 null */
+  eligibility_requirements: string[] | null
+  guardian_companion: CompanionRule
+  sibling_companion: CompanionRule
+  /** 원문에 적힌 필요 한국어 수준. 미상이면 null */
+  korean_level_required: string | null
+  /** 기관이 실제로 진행·통역하는 언어. 미상 null, 확인 결과 없음 [] */
+  support_languages: string[] | null
+  /** 신청 페이지 언어. 미상 null */
+  application_languages: string[] | null
+  sessions: ProgramSession[]
+  /** 원문이 기간만 밝히고 회차별 일시를 밝히지 않은 경우의 운영 기간 */
+  period_start: string | null
+  period_end: string | null
+  /** 원문에 적힌 총 회차 수 */
+  session_count: number | null
+  attendance_rule: AttendanceRule
+  mid_join_allowed: boolean | null
+  cost_krw: number | null
+  cost_raw: string | null
+  capacity: number | null
+  /** YYYY-MM-DD 또는 YYYY-MM-DDTHH:MM (Asia/Seoul). 시각이 없으면 날짜만 */
+  application_start: string | null
+  application_end: string | null
+  application_methods: ApplicationMethod[]
+  /** 판정 없이도 확인이 필요한 사항 (원문에 없는 조건 등) */
+  uncertain_items: string[]
+  evidence: Evidence[]
+  summaries_by_language: SummariesByLanguage
+  source: SourceInfo
+  extracted_at: string
+  model: string
+  /** 정규화 중 발견한 경고 (원문과 맞지 않는 값, 근거 없는 값 등) */
+  warnings: string[]
+  review: ReviewState
+}
+
+/** 보호자 웹이 받는 프로그램 한 건 (guardian-web Program + 명세 v2.2 추가 필드) */
+export interface ProgramResponse {
+  program_id: string
+  title: string
+  institution: string
+  category: Interest
+  target_raw: string
+  description: string
+  grade_range: [number, number] | null
+  age_range: [number, number] | null
+  age_grade_match_status: MatchStatus
+  eligibility_status: MatchStatus
+  time_match_status: MatchStatus
+  uncertain_items: string[]
+  matched_reasons: string[]
+  attendance_rule: AttendanceRule
+  mid_join_allowed?: boolean
+  sessions: ProgramSession[]
+  matched_sessions: string[]
+  next_session: ProgramSession | null
+  cost_krw: number | null
+  cost_raw: string | null
+  application_status: ApplicationStatus
+  /** YYYY-MM-DD. 보호자 웹 formatDate가 날짜만 받으므로 날짜 부분만 보낸다 */
+  application_start: string | null
+  application_end: string | null
+  application_methods: ApplicationMethod[]
+  source_url: string | null
+  verified_at: string | null
+  // 명세 v2.2 6장 추가 필드
+  /** 원문에 시각까지 있으면 YYYY-MM-DDTHH:MM, 아니면 YYYY-MM-DD */
+  application_start_at: string | null
+  application_end_at: string | null
+  target_type: TargetType
+  audience: Audience
+  eligibility_requirements: string[] | null
+  guardian_companion: CompanionRule
+  sibling_companion: CompanionRule
+  korean_level_required: string | null
+  support_languages: string[] | null
+  application_languages: string[] | null
+  period_start: string | null
+  period_end: string | null
+  session_count: number | null
+  capacity: number | null
+  summaries_by_language: SummariesByLanguage
+  /** 주요 사실의 원문 근거 (원문에서 찾은 인용만). field는 ProgramRecord.evidence와 같은 이름 */
+  source_evidence: Pick<Evidence, 'field' | 'quote'>[]
+}
+
+export interface SearchResponse {
+  results: ProgramResponse[]
+  needs_confirmation: ProgramResponse[]
+}
+
+export const OSAN_DONGS = ['중앙동', '대원동', '남촌동', '신장동', '세마동', '초평동'] as const
+export type OsanDong = (typeof OSAN_DONGS)[number]
+export const INTERESTS: Interest[] = ['experience_culture', 'korean_study', 'sports_arts', 'career']
+export const DISPLAY_LANGUAGES: DisplayLanguage[] = ['ko-easy', 'vi', 'zh']
