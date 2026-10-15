@@ -86,16 +86,17 @@ function ErrorPanel({ onRetry, title }: { onRetry: () => void; title?: string })
   return <div className="state-panel"><div className="state-icon">!</div><h2>{title ?? t('errorList')}</h2><p>{t('retryHint')}</p><button className="button secondary" type="button" onClick={onRetry}>{t('retry')}</button></div>
 }
 
-interface FilterWizardProps {
+interface FilterScreenProps {
   draft: SearchFilters
   setDraft: (filters: SearchFilters) => void
   onClose: () => void
-  onApply: () => void
+  onApply: (filters: SearchFilters) => void
 }
 
-function FilterWizard({ draft, setDraft, onClose, onApply }: FilterWizardProps) {
+function FilterScreen({ draft, setDraft, onClose, onApply }: FilterScreenProps) {
   const { locale, t } = useLanguage()
-  const [step, setStep] = useState(1)
+  const [timeOpen, setTimeOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(draft.interests.length > 0 || !!draft.dong || draft.free_only)
   const [windowMode, setWindowMode] = useState<WindowMode>('weekday')
   const [weekday, setWeekday] = useState<Weekday>('sat')
   const [date, setDate] = useState('')
@@ -106,6 +107,7 @@ function FilterWizard({ draft, setDraft, onClose, onApply }: FilterWizardProps) 
   const [childMode, setChildMode] = useState<'grade' | 'age'>(draft.child_age ? 'age' : 'grade')
   const [childAgeText, setChildAgeText] = useState(draft.child_age ? String(draft.child_age) : '')
   const [childError, setChildError] = useState('')
+  const moreCount = draft.interests.length + (draft.dong ? 1 : 0) + (draft.free_only ? 1 : 0)
 
   const updateChildAge = (value: string) => {
     setChildAgeText(value)
@@ -114,27 +116,38 @@ function FilterWizard({ draft, setDraft, onClose, onApply }: FilterWizardProps) 
     setDraft({ ...draft, child_age: value && Number.isInteger(age) && age >= 1 && age <= 18 ? age : undefined, child_grade: undefined })
   }
 
-  const addWindow = () => {
+  const withPendingWindow = (): SearchFilters | null => {
     const window: AvailableWindow = windowMode === 'weekday'
       ? { day_of_week: weekday, start_time: start, end_time: end }
       : { date, start_time: start, end_time: end }
     const error = validateWindow(window, locale)
-    if (error) { setWindowError(error); return false }
+    if (error) { setWindowError(error); return null }
     if (draft.available_windows.some((existing, index) => index !== editingWindowIndex && JSON.stringify(existing) === JSON.stringify(window))) {
-      setWindowError(t('duplicateTime')); return false
+      setWindowError(t('duplicateTime')); return null
     }
     const windows = [...draft.available_windows]
     if (editingWindowIndex === null) windows.push(window)
     else windows[editingWindowIndex] = window
-    setDraft({ ...draft, available_windows: windows })
+    return { ...draft, available_windows: windows }
+  }
+
+  const resetWindowEditor = () => {
     setEditingWindowIndex(null)
-    setWindowError('')
     setStart('')
     setEnd('')
-    return true
+    setDate('')
+    setWindowError('')
+  }
+
+  const addWindow = () => {
+    const next = withPendingWindow()
+    if (!next) return
+    setDraft(next)
+    resetWindowEditor()
   }
 
   const editWindow = (window: AvailableWindow, index: number) => {
+    setTimeOpen(true)
     setEditingWindowIndex(index)
     if ('date' in window) { setWindowMode('date'); setDate(window.date) }
     else { setWindowMode('weekday'); setWeekday(window.day_of_week) }
@@ -145,66 +158,56 @@ function FilterWizard({ draft, setDraft, onClose, onApply }: FilterWizardProps) 
 
   const deleteWindow = (index: number) => {
     setDraft({ ...draft, available_windows: draft.available_windows.filter((_, itemIndex) => itemIndex !== index) })
-    if (editingWindowIndex === index) { setEditingWindowIndex(null); setStart(''); setEnd('') }
+    if (editingWindowIndex === index) resetWindowEditor()
     else if (editingWindowIndex !== null && editingWindowIndex > index) setEditingWindowIndex(editingWindowIndex - 1)
   }
 
-  const goNext = () => {
-    if (step === 1 && childError) return
-    if (step === 2 && (start || end || (windowMode === 'date' && date)) && !addWindow()) return
-    if (step === 3) onApply()
-    else setStep(step + 1)
-  }
-
-  const skipStep = () => {
-    if (step === 1) {
-      setDraft({ ...draft, child_age: undefined, child_grade: undefined })
-      setChildAgeText('')
-      setChildError('')
-    } else if (step === 2) {
-      setDraft({ ...draft, available_windows: [] })
-      setEditingWindowIndex(null)
-      setStart('')
-      setEnd('')
-      setWindowError('')
+  const submit = () => {
+    if (childError) return
+    if (timeOpen && (start || end || (windowMode === 'date' && date))) {
+      const next = withPendingWindow()
+      if (next) onApply(next)
+      return
     }
-    setStep(step + 1)
+    onApply(draft)
   }
 
   return (
-    <div className="app-shell wizard-shell">
+    <div className="app-shell filter-shell">
       <LanguageSwitcher />
-      <header className="topbar"><button className="icon-button" type="button" onClick={step === 1 ? onClose : () => setStep(step - 1)} aria-label={t('back')}>‹</button><div className="progress" aria-label={t('stepCount', { step })}><span className={step >= 1 ? 'active' : ''} /><span className={step >= 2 ? 'active' : ''} /><span className={step >= 3 ? 'active' : ''} /></div><span className="step-count">{step}/3</span></header>
-      <main className="wizard-content">
-        {step === 1 && <>
-          <div className="eyebrow">{t('childStepEyebrow')}</div>
-          <h1>{t('childStepTitle')}</h1>
-          <div className="segment" role="group" aria-label={t('childModeGroup')}><button type="button" className={childMode === 'grade' ? 'selected' : ''} onClick={() => { setChildMode('grade'); setChildAgeText(''); setChildError(''); setDraft({ ...draft, child_age: undefined }) }}>{t('grade')}</button><button type="button" className={childMode === 'age' ? 'selected' : ''} onClick={() => { setChildMode('age'); setChildError(''); setDraft({ ...draft, child_grade: undefined }) }}>{t('age')}</button></div>
-          {childMode === 'grade' ? <div className="choice-grid grade-grid">{[1, 2, 3, 4, 5, 6].map((grade) => <button className={draft.child_grade === grade ? 'choice selected' : 'choice'} type="button" key={grade} onClick={() => setDraft({ ...draft, child_grade: grade, child_age: undefined })}>{t('gradeOption', { grade })}</button>)}</div>
+      <header className="site-header filter-header"><button className="icon-button" type="button" onClick={onClose} aria-label={t('back')}>‹</button><span className="brand">{t('resultsBrand')}</span></header>
+      <main className="filter-content">
+        <h1>{t('filterTitle')}</h1>
+        <p className="filter-intro">{t('filterIntro')}</p>
+
+        <section className="filter-section" aria-labelledby="child-filter-title">
+          <div className="filter-section-heading"><h2 id="child-filter-title">{t('childFilterTitle')}</h2><span>{t('optional')}</span></div>
+          <div className="segment" role="group" aria-label={t('childModeGroup')}><button type="button" className={childMode === 'grade' ? 'selected' : ''} aria-pressed={childMode === 'grade'} onClick={() => { setChildMode('grade'); setChildAgeText(''); setChildError(''); setDraft({ ...draft, child_age: undefined }) }}>{t('grade')}</button><button type="button" className={childMode === 'age' ? 'selected' : ''} aria-pressed={childMode === 'age'} onClick={() => { setChildMode('age'); setChildError(''); setDraft({ ...draft, child_grade: undefined }) }}>{t('age')}</button></div>
+          {childMode === 'grade' ? <div className="choice-grid grade-grid">{[1, 2, 3, 4, 5, 6].map((grade) => <button className={draft.child_grade === grade ? 'choice selected' : 'choice'} type="button" key={grade} aria-pressed={draft.child_grade === grade} onClick={() => setDraft({ ...draft, child_grade: draft.child_grade === grade ? undefined : grade, child_age: undefined })}>{t('gradeOption', { grade })}</button>)}</div>
             : <label className="field-label">{t('ageInput')} <span className="field-hint">{t('ageHint')}</span><input className="text-input" type="number" min="1" max="18" inputMode="numeric" value={childAgeText} placeholder={t('agePlaceholder')} aria-invalid={!!childError} aria-describedby={childError ? 'child-age-error' : undefined} onChange={(event) => updateChildAge(event.target.value)} /></label>}
           {childError && <p id="child-age-error" className="field-error" role="alert">{childError}</p>}
-          {(draft.child_grade || draft.child_age || childAgeText) && <button className="text-button" type="button" onClick={() => { setChildAgeText(''); setChildError(''); setDraft({ ...draft, child_grade: undefined, child_age: undefined }) }}>{t('clearChild')}</button>}
-        </>}
-        {step === 2 && <>
-          <div className="eyebrow">{draft.child_grade ? t('gradeOption', { grade: draft.child_grade }) : draft.child_age ? t('ageOption', { age: draft.child_age }) : t('noChild')}</div>
-          <h1>{t('timeStepTitle')}</h1>
-          <div className="segment" role="group" aria-label={t('timeModeGroup')}><button type="button" className={windowMode === 'weekday' ? 'selected' : ''} onClick={() => { setWindowMode('weekday'); setWindowError('') }}>{t('weekdayMode')}</button><button type="button" className={windowMode === 'date' ? 'selected' : ''} onClick={() => { setWindowMode('date'); setWindowError('') }}>{t('dateMode')}</button></div>
-          {windowMode === 'weekday' ? <div className="weekday-grid" role="group" aria-label={t('weekdayGroup')}>{weekdays.map(({ value }) => <button className={weekday === value ? 'day selected' : 'day'} type="button" key={value} onClick={() => setWeekday(value)} aria-pressed={weekday === value}>{weekdayLabel(locale, value)}</button>)}</div> : <label className="field-label">{t('dateInput')}<input className="text-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} /></label>}
-          <div className="time-range"><label className="field-label">{t('start')}<input className="text-input" type="text" inputMode="numeric" maxLength={5} placeholder="10:05" value={start} aria-invalid={!!windowError} onChange={(event) => { setStart(formatTimeInput(event.target.value)); setWindowError('') }} /></label><span aria-hidden="true">~</span><label className="field-label">{t('end')}<input className="text-input" type="text" inputMode="numeric" maxLength={5} placeholder="12:10" value={end} aria-invalid={!!windowError} onChange={(event) => { setEnd(formatTimeInput(event.target.value)); setWindowError('') }} /></label></div>
-          {windowError && <p className="field-error" role="alert">{windowError}</p>}
-          <button className="add-window" type="button" onClick={addWindow}>{editingWindowIndex === null ? `+ ${t('addTime')}` : t('finishTimeEdit')}</button>
-          {draft.available_windows.length > 0 && <div className="added-windows"><h2>{t('addedTimes')}</h2>{draft.available_windows.map((window, index) => <div className={editingWindowIndex === index ? 'window-row editing' : 'window-row'} key={`${formatWindow(window, locale)}-${index}`}><span>{formatWindow(window, locale)}</span><button type="button" onClick={() => editWindow(window, index)} aria-label={t('editWindow', { window: formatWindow(window, locale) })}>{t('edit')}</button><button type="button" onClick={() => deleteWindow(index)} aria-label={t('deleteWindow', { window: formatWindow(window, locale) })}>{t('delete')}</button></div>)}</div>}
-        </>}
-        {step === 3 && <>
-          <div className="eyebrow">{t('preferenceEyebrow')}</div>
-          <h1>{t('preferenceTitle')}</h1>
-          <h2 className="section-label">{t('interests')} <span className="field-hint">{t('interestHint')}</span></h2>
-          <div className="choice-grid">{interests.map((value) => <button className={draft.interests.includes(value) ? 'choice selected' : 'choice'} type="button" key={value} aria-pressed={draft.interests.includes(value)} onClick={() => setDraft({ ...draft, interests: draft.interests.includes(value) ? draft.interests.filter((item) => item !== value) : [...draft.interests, value] })}>{interestLabel(locale, value)}</button>)}</div>
-          <label className="field-label spaced">{t('dong')} <span className="field-hint">{t('dongHint')}</span><select className="text-input" value={draft.dong ?? ''} onChange={(event) => setDraft({ ...draft, dong: event.target.value || undefined })}><option value="">{t('none')}</option>{dongOptions.map((dong) => <option key={dong} value={dong}>{dong}</option>)}</select></label>
-          <label className="toggle-row"><span><strong>{t('freeOnly')}</strong><small>{t('freeOnlyHint')}</small></span><input type="checkbox" checked={draft.free_only} onChange={(event) => setDraft({ ...draft, free_only: event.target.checked })} /></label>
-        </>}
+          {(draft.child_grade || draft.child_age || childAgeText) && <button className="text-button clear-filter" type="button" onClick={() => { setChildAgeText(''); setChildError(''); setDraft({ ...draft, child_grade: undefined, child_age: undefined }) }}>{t('clearChild')}</button>}
+        </section>
+
+        <section className="filter-section" aria-labelledby="time-filter-title">
+          <div className="filter-section-heading"><h2 id="time-filter-title">{t('timeFilterTitle')}</h2><span>{t('optional')}</span></div>
+          {draft.available_windows.length > 0 && <div className="added-windows"><h3>{t('addedTimes')}</h3>{draft.available_windows.map((window, index) => <div className={editingWindowIndex === index ? 'window-row editing' : 'window-row'} key={`${formatWindow(window, locale)}-${index}`}><span>{formatWindow(window, locale)}</span><button type="button" onClick={() => editWindow(window, index)} aria-label={t('editWindow', { window: formatWindow(window, locale) })}>{t('edit')}</button><button type="button" onClick={() => deleteWindow(index)} aria-label={t('deleteWindow', { window: formatWindow(window, locale) })}>{t('delete')}</button></div>)}</div>}
+          <button className="filter-disclosure" type="button" aria-expanded={timeOpen} onClick={() => { if (timeOpen) resetWindowEditor(); setTimeOpen(!timeOpen) }}>{timeOpen ? t('closeTime') : t('enterTime')}<span aria-hidden="true">{timeOpen ? '−' : '+'}</span></button>
+          {timeOpen && <div className="time-editor">
+            <div className="segment" role="group" aria-label={t('timeModeGroup')}><button type="button" className={windowMode === 'weekday' ? 'selected' : ''} aria-pressed={windowMode === 'weekday'} onClick={() => { setWindowMode('weekday'); setWindowError('') }}>{t('weekdayMode')}</button><button type="button" className={windowMode === 'date' ? 'selected' : ''} aria-pressed={windowMode === 'date'} onClick={() => { setWindowMode('date'); setWindowError('') }}>{t('dateMode')}</button></div>
+            {windowMode === 'weekday' ? <div className="weekday-grid" role="group" aria-label={t('weekdayGroup')}>{weekdays.map(({ value }) => <button className={weekday === value ? 'day selected' : 'day'} type="button" key={value} onClick={() => setWeekday(value)} aria-pressed={weekday === value}>{weekdayLabel(locale, value)}</button>)}</div> : <label className="field-label">{t('dateInput')}<input className="text-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} /></label>}
+            <div className="time-range"><label className="field-label">{t('start')}<input className="text-input" type="text" inputMode="numeric" maxLength={5} placeholder="10:05" value={start} aria-invalid={!!windowError} onChange={(event) => { setStart(formatTimeInput(event.target.value)); setWindowError('') }} /></label><span aria-hidden="true">~</span><label className="field-label">{t('end')}<input className="text-input" type="text" inputMode="numeric" maxLength={5} placeholder="12:10" value={end} aria-invalid={!!windowError} onChange={(event) => { setEnd(formatTimeInput(event.target.value)); setWindowError('') }} /></label></div>
+            {windowError && <p className="field-error" role="alert">{windowError}</p>}
+            <button className="add-window" type="button" onClick={addWindow}>{editingWindowIndex === null ? `+ ${t('addTime')}` : t('finishTimeEdit')}</button>
+          </div>}
+        </section>
+
+        <section className="filter-section" aria-labelledby="more-filter-title">
+          <button className="filter-disclosure more-disclosure" type="button" aria-expanded={moreOpen} onClick={() => setMoreOpen(!moreOpen)}><span id="more-filter-title">{t('moreFilters')}{moreCount > 0 ? ` (${moreCount})` : ''}</span><span aria-hidden="true">{moreOpen ? '−' : '+'}</span></button>
+          {moreOpen && <div className="more-options"><h3 className="section-label">{t('interests')} <span className="field-hint">{t('interestHint')}</span></h3><div className="choice-grid">{interests.map((value) => <button className={draft.interests.includes(value) ? 'choice selected' : 'choice'} type="button" key={value} aria-pressed={draft.interests.includes(value)} onClick={() => setDraft({ ...draft, interests: draft.interests.includes(value) ? draft.interests.filter((item) => item !== value) : [...draft.interests, value] })}>{interestLabel(locale, value)}</button>)}</div><label className="field-label spaced">{t('dong')} <span className="field-hint">{t('dongHint')}</span><select className="text-input" value={draft.dong ?? ''} onChange={(event) => setDraft({ ...draft, dong: event.target.value || undefined })}><option value="">{t('none')}</option>{dongOptions.map((dong) => <option key={dong} value={dong}>{dong}</option>)}</select></label><label className="toggle-row"><span><strong>{t('freeOnly')}</strong><small>{t('freeOnlyHint')}</small></span><input type="checkbox" checked={draft.free_only} onChange={(event) => setDraft({ ...draft, free_only: event.target.checked })} /></label></div>}
+        </section>
       </main>
-      <footer className="bottom-actions">{step < 3 && <button className="button ghost" type="button" onClick={skipStep}>{step === 1 ? t('noChildStep') : t('noTimeStep')}</button>}<button className="button primary" type="button" onClick={goNext}>{step === 3 ? t('showResults') : t('next')}</button></footer>
+      <footer className="bottom-actions"><button className="button primary full" type="button" onClick={submit}>{t('showResults')}</button></footer>
     </div>
   )
 }
@@ -280,7 +283,7 @@ function App() {
   }, [toast])
 
   const openFilters = () => { setDraft({ ...filters, available_windows: [...filters.available_windows], interests: [...filters.interests] }); setView('filter') }
-  const applyFilters = () => { setFilters({ ...draft, available_windows: [...draft.available_windows], interests: [...draft.interests] }); setHasApplied(true); setView('results') }
+  const applyFilters = (next: SearchFilters) => { setFilters({ ...next, available_windows: [...next.available_windows], interests: [...next.interests] }); setHasApplied(true); setView('results') }
   const openDetail = (id: string) => { setCameFromList(true); window.history.pushState({ fromList: true }, '', `/programs/${encodeURIComponent(id)}`); setProgramId(id); setView('detail'); window.scrollTo(0, 0) }
   const goHome = () => { window.history.pushState({}, '', '/'); clearSearchSession(); setProgramId(null); setFilters(emptyFilters()); setDraft(emptyFilters()); setHasApplied(false); setView('browse'); setHelpOpen(false); setExternalNoticeOpen(false); window.scrollTo(0, 0) }
   const backFromDetail = () => { if (cameFromList) window.history.back(); else goHome() }
@@ -314,7 +317,7 @@ function App() {
     window.location.href = `tel:${phone.replace(/[^\d+]/g, '')}`
   }
 
-  if (view === 'filter') return <FilterWizard draft={draft} setDraft={setDraft} onClose={() => setView(hasApplied ? 'results' : 'browse')} onApply={applyFilters} />
+  if (view === 'filter') return <FilterScreen draft={draft} setDraft={setDraft} onClose={() => setView(hasApplied ? 'results' : 'browse')} onApply={applyFilters} />
 
   const chips = filterChips(filters, locale)
   const firstMethod = detail?.application_methods.find((method) => method.type === 'online' && isSafeUrl(method.url))

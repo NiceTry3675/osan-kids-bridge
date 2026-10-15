@@ -274,3 +274,35 @@ html:where([lang="vi"], [lang="zh"]) .card-info .meta-label { white-space: norma
   .card-title { font-size: 18px; }
   .filter-summary { margin-inline: 18px; }
 }
+
+/* 조건을 한 화면에서 고르는 흐름 */
+.hero { padding-top: 34px; padding-bottom: 22px; }
+.hero::before { top: 19px; width: 36px; }
+.hero h1 { font-size: clamp(24px, 6vw, 29px); }
+.hero-cta { margin-top: 19px; padding: 15px 18px; }
+.hero-cta strong { font-size: 15px; }
+.section-block { padding-top: 24px; }
+.filter-shell { display: flex; flex-direction: column; }
+.filter-header .brand { text-align: center; padding-right: 32px; }
+.filter-content { flex: 1; padding: 26px 24px 110px; }
+.filter-content > h1 { margin: 0; font-size: 26px; line-height: 1.35; letter-spacing: -.05em; }
+.filter-intro { margin: 8px 0 21px; color: #66736a; font-size: 13px; line-height: 1.5; }
+.filter-section { padding: 20px 0 23px; border-top: 1px solid #d8ded5; }
+.filter-section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.filter-section-heading h2 { margin: 0; font-size: 17px; line-height: 1.4; letter-spacing: -.035em; }
+.filter-section-heading > span { flex: none; color: #758178; font-size: 12px; }
+.filter-section .segment { margin-bottom: 15px; }
+.filter-section .clear-filter { margin-top: 9px; }
+.filter-disclosure { width: 100%; min-height: 46px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border: 0; background: transparent; color: #1e6352; text-align: left; font-size: 14px; font-weight: 800; }
+.filter-disclosure > span:last-child { font-size: 23px; font-weight: 400; line-height: 1; }
+.more-disclosure { color: #202824; font-size: 17px; }
+.time-editor, .more-options { padding-top: 10px; }
+.filter-section .added-windows { margin: 0 0 9px; }
+.filter-section .added-windows h3 { margin: 0 0 7px; color: #657168; font-size: 12px; }
+.filter-section .field-label.spaced { margin-top: 24px; }
+.filter-section .toggle-row { margin-top: 20px; }
+.filter-shell .bottom-actions .button.primary { flex: 1; }
+
+@media (max-width: 359px) {
+  .filter-content { padding-inline: 18px; }
+}
