@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { dongFromAddress } from '../geo/dong'
+import { lastApplicationDay } from '../match/dates'
 import { INTERESTS } from '../types'
 import type {
   ApplicationMethod, AttendanceRule, Audience, CompanionRule, Evidence, Interest, ProgramRecord, ProgramSession, TargetType, Weekday,
@@ -32,6 +33,14 @@ const ONLINE_WORDS = /온라인|비대면|zoom|줌|화상|유튜브|youtube|실�
 /** 신청 일정 줄에서 온 인용인지 (회차 일정 근거로 쓰지 않는다) */
 const APPLICATION_LINE = /접수|신청|모집|마감/
 const SCHEDULE_LINE = /행사|운영|교육|일시|일정|활동|시간|회차/
+/** '장소 : …' 줄의 값. 같은 장소를 시설 이름까지 적은 표기를 찾는 데 쓴다 */
+const PLACE_LINE = /장\s*소\s*[:：]\s*(.+)$/
+/** 주소처럼 보이는 표기 (도로명·번지·시군구·괄호 속 동) */
+const ADDRESS_LIKE = /(?:로|길)\s*\d|\d+\s*번지|[시군구]\s|\(\s*\S+동\s*\)/
+/** 어디서 신청하는지 밝히지 않은 온라인 신청 이름 */
+const GENERIC_ONLINE_LABEL = /^(?:온라인|인터넷|홈페이지)?\s*(?:신청|접수)$/
+/** 항목 이름 ('■ 신청 방법:', '- 일정:')과 머리 기호 */
+const LEADING_MARKS = /^[\s■□※•·*▶-]+/
 
 /** 표준 확인 사항이 다루는 주제 */
 const STANDARD_TOPICS: Record<string, RegExp> = {
@@ -41,6 +50,8 @@ const STANDARD_TOPICS: Record<string, RegExp> = {
   '대상 학년·나이': /학년|나이|연령/,
   '참여 대상·자격': /대상|자격/,
   '보호자·형제자매 동반 가능 여부': /동반/,
+  '보호자 동반 가능 여부': /동반/,
+  '형제자매 동반 가능 여부': /동반/,
   '신청 기간': /신청\s*기간|접수\s*기간/,
   '신청 방법': /신청\s*방법|접수\s*방법|신청처/,
 }
@@ -270,6 +281,8 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
     const items = eligibility
     if (!accept('참여 자격', items, check('eligibility_requirements', r.eligibility_evidence), (text) => supportsEligibility(items, text))) eligibility = null
   }
+  // '오산시민 누구나'의 '누구나'는 제한이 없다는 말이라 자격에서 뗀다 ('오산시민'만 남고, '누구나'뿐이면 자격 없음 [])
+  if (eligibility) eligibility = unique(eligibility.map((item) => item.replace(/\s*(?:누구나|누구든지|제한\s*없음)\s*$/, '').trim()).filter(Boolean))
   // 다문화가족 대상이 원문으로 확인되면 그 자체가 참여 자격이다
   if (targetType === 'multicultural_family' && eligibility === null) eligibility = ['다문화가족']
 
@@ -308,8 +321,18 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
       }
       return part
     }
-    const result = { place_name: keep(placeName), address: keep(address) }
+    const result = { place_name: qualifiedPlace(keep(placeName)), address: keep(address) }
     return result.place_name || result.address ? result : null
+  }
+
+  /** 원문의 다른 '장소:' 줄에 같은 장소가 시설 이름과 함께 적혀 있으면 그 표기를 쓴다 ('대체육관' → '오산오색문화체육센터 대체육관') */
+  function qualifiedPlace(name: string | null): string | null {
+    if (!name) return name
+    const longer = sourceText.split('\n')
+      .map((line) => line.match(PLACE_LINE)?.[1]?.trim())
+      .filter((value): value is string => !!value && value !== name && value.endsWith(name) && value.length <= name.length + 30 && !ADDRESS_LIKE.test(value))
+      .sort((a, b) => b.length - a.length)[0]
+    return longer ?? name
   }
 
   const venueChecked = check('venue', r.venue_evidence)
@@ -394,6 +417,15 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
     })
   }
 
+  // 회차도 기간도 없이 대략의 일정만 밝힌 원문 표현 ('11월 중 운영 예정'). 원문에 그대로 있을 때만 남긴다
+  let scheduleNote = cleanText(r.schedule_note)?.replace(LEADING_MARKS, '').replace(/^(?:일\s*정|일\s*시|운영\s*기간)\s*[:：]\s*/, '').trim() || null
+  if (scheduleNote && (drafts.length || periodStart || periodEnd)) scheduleNote = null
+  else if (scheduleNote && !quoteInSource(scheduleNote, sourceText)) {
+    warn(`대략의 일정: 원문에 그대로 없는 표현을 뺐습니다 (값: '${scheduleNote}')`)
+    scheduleNote = null
+  }
+  if (scheduleNote) evidence.push({ field: 'schedule_note', quote: scheduleNote, verified: true })
+
   const seen = new Set<string>()
   const sorted = drafts
     .filter((draft) => {
@@ -452,13 +484,18 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
   if (midJoin !== null && !accept('중도 참여', midJoin, check('mid_join_allowed', r.mid_join_evidence))) midJoin = null
 
   // ---- 비용·정원 ----
+  // 인용이 '무료'뿐이어도 그 인용이 있는 원문 줄('■ 참가비: 무료')로 비용을 가리키는 말인지 확인한다
+  const sourceLinesOf = (quote: string) => {
+    const parts = quote.split('\n').map((part) => normalizeForMatch(part)).filter(Boolean)
+    return sourceText.split('\n').filter((line) => parts.some((part) => normalizeForMatch(line).includes(part))).join('\n')
+  }
   let costKrw = toInt(r.cost_krw)
   let costRaw = cleanText(r.cost_raw)
   if (costKrw !== null && costKrw < 0) costKrw = null
   if (costKrw !== null || costRaw) {
     const checked = check('cost', r.cost_evidence)
     const krw = costKrw
-    if (!accept('비용', costRaw ?? krw, checked, (text) => krw === null || supportsCost(krw, text))) {
+    if (!accept('비용', costRaw ?? krw, checked, (text) => krw === null || supportsCost(krw, text) || supportsCost(krw, sourceLinesOf(text)))) {
       costKrw = null
       costRaw = null
     } else if (costRaw && !quoteInSource(costRaw, sourceText)) {
@@ -499,6 +536,12 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
   }
   if (applicationStart || applicationEnd) evidence.push(...applicationChecked.entries)
 
+  // 신청 마감이 운영이 끝난 뒤로 적힌 원문은 모델이 적지 않아도 늘 묻는다
+  const operationEnd = periodEnd ?? (sessions.length && (sessionCount === null || sessionCount <= sessions.length) ? lastSession.date : null)
+  const applicationLastDay = lastApplicationDay(applicationEnd)
+  const lateApplication = !!operationEnd && !!applicationLastDay && applicationLastDay > operationEnd
+  if (lateApplication) qualityItems.push(`신청 마감(${koreanDate(applicationLastDay!)})이 운영 종료일(${koreanDate(operationEnd!)})보다 늦은 점`)
+
   const applicationMethods: ApplicationMethod[] = []
   const methodKeys = new Set<string>()
   for (const [index, method] of (Array.isArray(r.application_methods) ? r.application_methods : []).entries()) {
@@ -534,14 +577,33 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
     // 원문에 그대로 있는 URL은 그 자체가 근거다
     if (!checked.text && result.url) checked = { entries: [{ field: checked.entries[0]?.field ?? `application_methods.${type}`, quote: result.url, verified: true }], text: result.url }
     if (!accept(label, result.label, checked)) continue
+    // '온라인 신청'처럼 어디서 신청하는지 빠진 이름은 원문 인용의 표현으로 바꾼다 ('■ 신청 방법: 오산시가족센터 홈페이지 프로그램 신청')
+    if (type === 'online' && GENERIC_ONLINE_LABEL.test(result.label) && checked.text) {
+      const stated = checked.text.split('\n')
+        .map((quote) => quote.replace(LEADING_MARKS, '').replace(/^(?:신청|접수)\s*(?:방법|처)\s*[:：]\s*/, '').trim())
+        .find((quote) => quote.length >= 4 && quote.length <= 40 && !GENERIC_ONLINE_LABEL.test(quote) && !/https?:\/\/|www\./i.test(quote))
+      if (stated) result.label = stated
+    }
     const key = [type, result.url, result.phone, result.address].join('|')
     if (methodKeys.has(key)) continue
     methodKeys.add(key)
     applicationMethods.push(result)
   }
 
-  // ---- 소개·확인 사항 ----
+  // ---- 소개·안내·확인 사항 ----
   const description = cleanText(r.description) ?? ''
+  // 보호자에게 알리는 안내 문장: 원문에 글자 그대로 있는 것만 (머리 기호는 뗀다)
+  const notices: string[] = []
+  for (const item of stringList(r.notices)) {
+    const notice = item.replace(LEADING_MARKS, '').trim()
+    if (!notice || notice.length > 120 || notices.includes(notice) || notices.length >= 4) continue
+    if (!quoteInSource(notice, sourceText)) {
+      warn(`안내 문장: 원문에 그대로 없어 뺐습니다 (값: '${notice}')`)
+      continue
+    }
+    notices.push(notice)
+    evidence.push({ field: 'notices', quote: notice, verified: true })
+  }
   const sourceNumbers = new Set(numbersIn(sourceText))
   const strayNumbers = unique(numbersIn(description).filter((value) => !sourceNumbers.has(value) && !(value >= 2000 && value < 2100)))
   if (strayNumbers.length) warn(`소개 문장에 원문에 없는 숫자가 있습니다: ${strayNumbers.join(', ')}`)
@@ -556,15 +618,22 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
   if (!sessions.length) standardItems.push('운영 날짜·시간')
   else if (sessions.some((session) => !session.start_time || !session.end_time)) standardItems.push('운영 시간')
   if (costKrw === null) standardItems.push('참가비')
-  if (forChildren && !gradeRange && !ageRange) standardItems.push('대상 학년·나이')
-  if (targetType === 'unknown' || eligibility === null) standardItems.push('참여 대상·자격')
-  if (forChildren && (guardianCompanion === 'unknown' || siblingCompanion === 'unknown')) standardItems.push('보호자·형제자매 동반 가능 여부')
+  // '누구나'로 확인된 공고는 학년·나이 제한이 없다는 뜻이라 묻지 않는다
+  if (forChildren && !gradeRange && !ageRange && targetType !== 'all') standardItems.push('대상 학년·나이')
+  if (eligibility === null || (targetType === 'unknown' && !eligibility.length)) standardItems.push('참여 대상·자격')
+  if (forChildren) {
+    const [guardianUnknown, siblingUnknown] = [guardianCompanion === 'unknown', siblingCompanion === 'unknown']
+    if (guardianUnknown && siblingUnknown) standardItems.push('보호자·형제자매 동반 가능 여부')
+    else if (guardianUnknown) standardItems.push('보호자 동반 가능 여부')
+    else if (siblingUnknown) standardItems.push('형제자매 동반 가능 여부')
+  }
   if (!applicationStart && !applicationEnd) standardItems.push('신청 기간')
   else if (!applicationStart) standardItems.push('신청 시작일')
   else if (!applicationEnd) standardItems.push('신청 마감일')
   if (!applicationMethods.length) standardItems.push('신청 방법')
   // 모델이 적은 항목 중 이미 표준 항목이 다루는 주제는 뺀다
   const covered = standardItems.map((item) => STANDARD_TOPICS[item]).filter(Boolean)
+  if (lateApplication) covered.push(/(?:신청|접수).*(?:늦|이후|뒤)|(?:늦|이후|뒤).*(?:신청|접수)/)
   const modelItems = stringList(r.uncertain_items)
     .filter((item) => item.length <= 80 && !covered.some((topic) => topic.test(item)))
     .slice(0, 8)
@@ -596,6 +665,10 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
     support_languages: supportLanguages,
     application_languages: applicationLanguages,
     sessions,
+    venue: venue || venueOnline
+      ? { place_name: venue?.place_name ?? null, address: venue?.address ?? null, dong: venue ? dongFromAddress(venue.address ?? venue.place_name).dong : null, online: venueOnline }
+      : null,
+    schedule_note: scheduleNote,
     period_start: periodStart,
     period_end: periodEnd,
     session_count: sessionCount,
@@ -608,6 +681,7 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
     application_end: applicationEnd,
     application_methods: applicationMethods,
     uncertain_items: uncertainItems,
+    notices,
     evidence: uniqueEvidence,
     summaries_by_language: {},
     source: {

@@ -1,5 +1,6 @@
 import type { ApplicationMethod, AttendanceRule, Audience, CompanionRule, ProgramRecord, TargetType, Weekday } from '../types'
-import { isValidDate, isValidTime, parseDateTime, weekdayOf } from '../match/dates'
+import { dongFromAddress } from '../geo/dong'
+import { isValidDate, isValidTime, lastApplicationDay, parseDateTime, weekdayOf } from '../match/dates'
 import { clockOf, compareSessions, hasStarted, needsMidJoinCheck } from '../match/sessions'
 
 // 요약에 쓸 수 있는 사실만 모은다. 원문·소개(description)·근거 인용은 넣지 않는다 (명세 5.4).
@@ -32,6 +33,8 @@ export interface MethodFact {
   purpose: MethodPurpose
   phone: string | null
   address: string | null
+  /** 원문 표현의 방법 이름 ('홈페이지 프로그램 신청'). 온라인 방법만 쓴다 */
+  label: string | null
 }
 
 export interface SummaryFacts {
@@ -44,9 +47,12 @@ export interface SummaryFacts {
   audience: Audience
   grade_range: [number, number] | null
   age_range: [number, number] | null
+  /** 원문이 나이를 '만 N세'로 적음 */
+  age_completed: boolean
   /** 미상 null, 별도 자격 없음 [] */
   eligibility_requirements: string[] | null
   guardian_companion: CompanionRule
+  sibling_companion: CompanionRule
   korean_level_required: string | null
   /** 날짜가 확인된 회차 (시간순) */
   sessions: SessionFact[]
@@ -54,12 +60,18 @@ export interface SummaryFacts {
   venue: string | null
   /** 날짜가 적히지 않은 회차 수 */
   undated_sessions: number
+  /** 회차도 기간도 없을 때 원문이 밝힌 대략의 일정 ('11월 중 운영 예정') */
+  schedule_note: string | null
   /** 앞으로 시작할 가장 빠른 회차 */
   next_session: SessionFact | null
   period_start: DateFact | null
   period_end: DateFact | null
   session_count: number | null
   attendance_rule: AttendanceRule
+  /** 전 회차 과정이지만 중간에 들어와도 된다고 원문이 밝힘 */
+  mid_join_allowed: boolean | null
+  /** 장소가 오산시 밖이면 그 주소 (원문 표기) */
+  outside_osan: string | null
   /** 무료 0, 미상 null */
   cost_krw: number | null
   cost_raw: string | null
@@ -69,6 +81,10 @@ export interface SummaryFacts {
   application_methods: MethodFact[]
   /** 기관이 실제로 통역·진행하는 언어. 미상 null */
   support_languages: string[] | null
+  /** 원문이 그 언어 지원을 '통역'이라고 밝힘 */
+  support_interpretation: boolean
+  /** 보호자에게 알리는 안내 문장 (원문 그대로, 한국어) */
+  notices: string[]
   /** 보호자가 기관에 확인할 점 (한국어, 중요한 순) */
   check_items: string[]
 }
@@ -82,6 +98,24 @@ function dateFact(date: string | null): DateFact | null {
 function dateTimeFact(value: string | null): DateTimeFact | null {
   const parsed = value ? parseDateTime(value) : null
   return parsed ? { date: parsed.date, weekday: weekdayOf(parsed.date), time: parsed.time } : null
+}
+
+/** 신청 마감. 새벽 마감('10-17 00:00까지')은 보호자 웹과 같이 전날까지로 쓴다 */
+function applicationEndFact(value: string | null): DateTimeFact | null {
+  const parsed = dateTimeFact(value)
+  const lastDay = lastApplicationDay(value)
+  if (!parsed || !lastDay || lastDay === parsed.date) return parsed
+  return { date: lastDay, weekday: weekdayOf(lastDay), time: null }
+}
+
+/** 회차나 공통 장소 중 오산시 밖에 있는 곳의 주소 */
+function outsideOsan(record: ProgramRecord): string | null {
+  const places = record.sessions.length ? record.sessions : record.venue ? [record.venue] : []
+  for (const place of places) {
+    const text = place.address ?? place.place_name
+    if (text && dongFromAddress(text).outside_osan) return text
+  }
+  return null
 }
 
 /**
@@ -98,6 +132,10 @@ function venueText(record: ProgramRecord): string | null {
   const quote = record.evidence.find((entry) => entry.verified && entry.field === 'venue')?.quote
   return quote?.replace(/^\s*(?:교육|행사|활동|운영|모임)?\s*장\s*소\s*[:：|]?\s*/, '').trim() || null
 }
+
+/** 원문에서 찾은 인용 중 그 항목의 것 */
+const verifiedQuotes = (record: ProgramRecord, field: string) =>
+  record.evidence.filter((entry) => entry.verified && entry.field === field).map((entry) => entry.quote)
 
 const timeOrNull = (time: string | null) => (isValidTime(time) ? time : null)
 const textOrNull = (text: string | null | undefined) => text?.trim() || null
@@ -134,29 +172,37 @@ export function summaryFacts(record: ProgramRecord, now: Date): SummaryFacts {
     audience: record.audience,
     grade_range: record.grade_range,
     age_range: record.age_range,
+    age_completed: record.age_range !== null && [record.target_raw, ...verifiedQuotes(record, 'age_range')].some((text) => /만\s*\d/.test(text)),
     eligibility_requirements: record.eligibility_requirements,
     guardian_companion: record.guardian_companion,
+    sibling_companion: record.sibling_companion,
     korean_level_required: textOrNull(record.korean_level_required),
     sessions,
     venue: sessions.length ? null : venueText(record),
     undated_sessions: record.sessions.length - dated.length,
+    schedule_note: dated.length || record.period_start || record.period_end ? null : textOrNull(record.schedule_note),
     next_session: nextIndex >= 0 ? sessions[nextIndex] : null,
     period_start: dateFact(record.period_start),
     period_end: dateFact(record.period_end),
     session_count: record.session_count,
     attendance_rule: record.attendance_rule,
+    mid_join_allowed: record.mid_join_allowed,
+    outside_osan: outsideOsan(record),
     cost_krw: record.cost_krw,
     cost_raw: textOrNull(record.cost_raw),
     capacity: record.capacity,
     application_start: dateTimeFact(record.application_start),
-    application_end: dateTimeFact(record.application_end),
+    application_end: applicationEndFact(record.application_end),
     application_methods: record.application_methods.map((method) => ({
       type: method.type,
       purpose: methodPurpose(method),
       phone: textOrNull(method.phone),
       address: textOrNull(method.address),
+      label: method.type === 'online' ? textOrNull(method.label) : null,
     })),
     support_languages: record.support_languages,
+    support_interpretation: verifiedQuotes(record, 'support_languages').some((quote) => /통역/.test(quote)),
+    notices: (record.notices ?? []).map((notice) => notice.trim()).filter(Boolean),
     check_items: checkItems(record, now),
   }
 }

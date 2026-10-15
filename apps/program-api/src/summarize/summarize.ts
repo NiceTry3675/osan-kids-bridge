@@ -23,13 +23,18 @@ const cleanLine = (line: unknown) => String(line ?? '')
   .replace(/^(?:[-•*·]|[1-3][.)])\s+/, '')
   .trim()
 
+/** 베트남어 문장 첫 글자를 대문자로 ('miễn phí. Đăng ký…' → 'Miễn phí. Đăng ký…'). 금액·전화번호의 '.'은 뒤에 빈칸이 없어 건드리지 않는다 */
+export const capitalizeSentences = (line: string) =>
+  line.replace(/(^|[.!?]\s+)(\p{Ll})/gu, (_, before: string, letter: string) => `${before}${letter.toLocaleUpperCase('vi')}`)
+
 async function draftLines(facts: SummaryFacts, language: DisplayLanguage, previous: PreviousAttempt | null): Promise<string[]> {
   const response = await generateJson<Partial<Record<'line1' | 'line2' | 'line3', string>>>({
     system: summarySystemPrompt(language),
     parts: [{ text: buildSummaryPrompt(facts, language, previous) }],
     schema: SUMMARY_SCHEMA,
   })
-  return [response.line1, response.line2, response.line3].map(cleanLine)
+  const lines = [response.line1, response.line2, response.line3].map(cleanLine)
+  return language === 'vi' ? lines.map(capitalizeSentences) : lines
 }
 
 /** 모델 대조가 실패하면 통과로 보지 않고 실패 사유를 문제로 남긴다 */

@@ -72,6 +72,23 @@ export function seoulDateOf(value: string | null): string | null {
   return isValidDate(date) ? date : null
 }
 
+/** 하루 전 날짜 (YYYY-MM-DD) */
+export function previousDate(date: string): string {
+  const previous = new Date(`${date}T00:00:00Z`)
+  previous.setUTCDate(previous.getUTCDate() - 1)
+  return previous.toISOString().slice(0, 10)
+}
+
+/** 마감 시각이 이보다 이르면(새벽) 그 전날이 신청할 수 있는 마지막 날이다 ('10-17 00:00까지', '10-30 01:00까지') */
+const EARLY_CUTOFF = '06:00'
+
+/** 신청할 수 있는 마지막 날 (YYYY-MM-DD). 마감이 새벽이면 전날 */
+export function lastApplicationDay(value: string | null): string | null {
+  const date = seoulDateOf(value)
+  const time = value ? parseDateTime(value)?.time ?? null : null
+  return date && time && time < EARLY_CUTOFF ? previousDate(date) : date
+}
+
 /** '10월 17일(토)' */
 export function koreanDateLabel(date: string): string {
   const [, month, day] = date.split('-').map(Number)

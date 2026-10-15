@@ -4,7 +4,7 @@ import { checkSummary, numberTokens } from '../src/summarize/check'
 import { summaryFacts } from '../src/summarize/facts'
 import { ageLabel, costLabel, dateLabel, gradeLabel, localizeFacts } from '../src/summarize/format'
 import { buildVerifyPrompt, SUMMARY_SCHEMA, summarySystemPrompt } from '../src/summarize/prompt'
-import { summarizeRecord } from '../src/summarize/summarize'
+import { capitalizeSentences, summarizeRecord } from '../src/summarize/summarize'
 import type { DisplayLanguage, ProgramRecord, ProgramSession } from '../src/types'
 
 // 모델 호출은 가짜로 바꾼다. 결정적 검사는 네트워크 없이 돈다.
@@ -116,8 +116,8 @@ describe('summaryFacts', () => {
     expect(facts).not.toHaveProperty('source')
     expect(JSON.stringify(facts)).not.toContain('example.org')
     expect(facts.application_methods).toEqual([
-      { type: 'online', purpose: 'apply', phone: null, address: null },
-      { type: 'phone', purpose: 'apply', phone: '031-378-9000', address: null },
+      { type: 'online', purpose: 'apply', phone: null, address: null, label: '온라인 신청' },
+      { type: 'phone', purpose: 'apply', phone: '031-378-9000', label: null, address: null },
     ])
     expect(facts.venue).toBeNull()
   })
@@ -138,6 +138,26 @@ describe('summaryFacts', () => {
     expect(facts.undated_sessions).toBe(1)
     expect(facts.check_items).toContain('중도 참여 가능 여부')
     expect(factsOf().check_items).toEqual(['형제자매 동반 가능 여부'])
+  })
+
+  it('새벽 마감은 보호자 웹과 같이 전날까지로 둔다', () => {
+    expect(factsOf({ application_end: '2026-10-17T00:00' }).application_end).toEqual({ date: '2026-10-16', weekday: 'fri', time: null })
+    expect(factsOf({ application_end: '2026-10-30T01:00' }).application_end).toEqual({ date: '2026-10-29', weekday: 'thu', time: null })
+    expect(factsOf({ application_end: '2026-10-22T18:00' }).application_end).toEqual({ date: '2026-10-22', weekday: 'thu', time: '18:00' })
+  })
+
+  it('동반 규칙·중도 참여·오산시 밖 장소·온라인 신청처를 모델에게 넘긴다', () => {
+    const facts = factsOf({
+      guardian_companion: 'not_allowed', sibling_companion: 'allowed', attendance_rule: 'all_sessions', mid_join_allowed: true,
+      sessions: [{ ...session('a', '2026-10-24'), address: '경기도 화성시 동탄대로 446', dong: null }],
+      application_methods: [{ type: 'online', label: '오산시가족센터 홈페이지 프로그램 신청' }],
+    })
+    expect(facts.outside_osan).toBe('경기도 화성시 동탄대로 446')
+    const view = localizeFacts(facts, 'vi')
+    expect(view.target).toMatchObject({ guardian_companion: 'not_allowed', sibling_companion: 'allowed' })
+    expect(view.schedule).toMatchObject({ mid_join_allowed: true, outside_osan: '경기도 화성시 동탄대로 446' })
+    expect(view.application.methods).toEqual(['đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청)'])
+    expect(factsOf().outside_osan).toBeNull()
   })
 
   it('날짜만 있는 신청 마감, 기간만 있는 공고, 미상 비용을 그대로 둔다', () => {
@@ -183,6 +203,15 @@ describe('언어별 표기', () => {
     expect(costLabel(null, 'vi')).toBeNull()
   })
 
+  it('비용: 원문의 가족당·재료비 같은 기준을 붙인다', () => {
+    expect(costLabel(8000, 'ko-easy', '가족당 재료비 8,000원')).toBe('가족당 재료비 8,000원')
+    expect(costLabel(8000, 'vi', '가족당 재료비 8,000원')).toBe('8.000 won mỗi gia đình (tiền nguyên liệu)')
+    expect(costLabel(8000, 'zh', '가족당 재료비 8,000원')).toBe('每个家庭材料费8,000韩元')
+    expect(costLabel(10000, 'vi', '1인당 10,000원')).toBe('10.000 won mỗi người')
+    expect(costLabel(10000, 'ko-easy', '10,000원 (악보·간식 포함)')).toBe('10,000원')
+    expect(costLabel(0, 'zh', '가족당 무료')).toBe('免费')
+  })
+
   it('열린 나이 범위', () => {
     expect(ageLabel([8, 99], 'ko-easy')).toBe('8세 이상')
     expect(ageLabel([0, 7], 'vi')).toBe('từ 7 tuổi trở xuống')
@@ -201,6 +230,39 @@ describe('언어별 표기', () => {
     const science = localizeFacts(factsOf(), 'ko-easy')
     expect(science.schedule.same_time).toBe('10:00~12:00')
     expect(science.schedule.weekdays).toEqual(['토'])
+  })
+
+  it("원문의 '만 N세'를 살린다", () => {
+    expect(ageLabel([4, 7], 'ko-easy', true)).toBe('만 4~7세')
+    expect(ageLabel([4, 7], 'vi', true)).toBe('4–7 tuổi (tuổi tròn)')
+    expect(ageLabel([4, 7], 'zh', true)).toBe('4至7周岁')
+    expect(ageLabel([8, 99], 'zh', true)).toBe('8周岁以上')
+    expect(factsOf({ grade_range: null, age_range: [4, 7], target_raw: '만 4~7세 자녀와 부모' }).age_completed).toBe(true)
+    expect(factsOf({ grade_range: null, age_range: [4, 7], target_raw: '4~7세 자녀' }).age_completed).toBe(false)
+  })
+
+  it('요일은 앞으로 남은 회차에서 월요일부터 순서대로 뽑는다 (지난 첫날만의 요일은 넣지 않는다)', () => {
+    const taekwon = factsOf({ sessions: [session('s1', '2026-04-30'), session('s2', '2026-10-21'), session('s3', '2026-10-28')], session_count: 3 })
+    expect(localizeFacts(taekwon, 'ko-easy').schedule.weekdays).toEqual(['수'])
+    const twoDays = factsOf({ sessions: [session('s1', '2026-10-22'), session('s2', '2026-10-27')], session_count: 2 })
+    expect(localizeFacts(twoDays, 'zh').schedule.weekdays).toEqual(['周二', '周四'])
+  })
+
+  it('대략의 일정·통역·안내 문장을 사실로 넘긴다', () => {
+    const career = localizeFacts(factsOf({ sessions: [], session_count: null, schedule_note: '11월 중 운영 예정' }), 'vi')
+    expect(career.schedule.note).toBe('11월 중 운영 예정')
+    expect(localizeFacts(factsOf({ schedule_note: '11월 중 운영 예정' }), 'vi').schedule.note).toBeNull()
+    const interpreted = factsOf({
+      support_languages: ['vi', 'zh'], notices: ['보호자는 수업 중 2층 가족 쉼터에서 기다릴 수 있습니다.'],
+      evidence: [{ field: 'support_languages', quote: '■ 통역: 베트남어·중국어 통역 지원', verified: true }],
+    })
+    expect(interpreted.support_interpretation).toBe(true)
+    expect(localizeFacts(interpreted, 'zh').notices).toEqual(['보호자는 수업 중 2층 가족 쉼터에서 기다릴 수 있습니다.'])
+    expect(factsOf({ support_languages: ['vi'] }).support_interpretation).toBe(false)
+  })
+
+  it('베트남어 문장은 대문자로 시작한다 (금액의 점은 건드리지 않는다)', () => {
+    expect(capitalizeSentences('miễn phí. đăng ký 10.000 won.')).toBe('Miễn phí. Đăng ký 10.000 won.')
   })
 })
 
@@ -253,6 +315,14 @@ describe('checkSummary: 결정적 검사', () => {
     hasIssue(check(replaced('ko-easy', 0, '다문화가족 초등', '초등'), 'ko-easy'), '다문화가족 대상이라는 말이 없음')
   })
 
+  it('제목이 다른 학교급을 다루면 제목 번역에 그 학교급이 나와도 된다', () => {
+    const title = '다문화가족 자녀 중학교 준비 과학교실'
+    const lines = replaced('vi', 0, '다문화가족 자녀 토요 과학교실” (Lớp khoa học thứ Bảy', `${title}” (Lớp khoa học chuẩn bị lên trung học cơ sở`)
+    expect(check(lines, 'vi', factsOf({ title }))).toEqual([])
+    hasIssue(check(lines, 'vi'), '1줄에 제목 원문이 없음')
+    hasIssue(check(replaced('vi', 0, 'học sinh tiểu học', 'học sinh trung học cơ sở'), 'vi', factsOf({ title: '다문화가족 자녀 고등학교 준비 과학교실' })), '없는 학교급을 씀')
+  })
+
   it('무료는 그 언어의 무료로, 금액은 금액으로, 미상은 미상으로 쓴다', () => {
     hasIssue(check(replaced('vi', 2, 'Miễn phí. ', ''), 'vi'), '무료라는 말')
     const paid = factsOf({ cost_krw: 30000, cost_raw: '재료비 30,000원' })
@@ -296,6 +366,22 @@ describe('checkSummary: 결정적 검사', () => {
     hasIssue(check(replaced('zh', 2, '报名时间', '報名時間'), 'zh'), '번체자를 씀')
     hasIssue(check(replaced('zh', 0, '小学1至4年级', '小学1至4年级（一至四年级）'), 'zh'), '숫자를 글자로 씀')
     hasIssue(check(replaced('ko-easy', 1, '해요.', '네 번 해요.'), 'ko-easy'), '숫자를 글자로 씀')
+  })
+})
+
+describe('지원 언어·대략의 일정 누락', () => {
+  it('기관 지원 언어가 있는데 쓰지 않으면 문제로 본다', () => {
+    hasIssue(check(GOOD['ko-easy'], 'ko-easy', factsOf({ support_languages: ['vi'] })), '기관 지원 언어(vi)')
+    expect(check(replaced('ko-easy', 2, '무료예요.', '무료예요. 베트남어 통역이 있어요.'), 'ko-easy', factsOf({ support_languages: ['vi'] }))
+      .some((issue) => issue.includes('기관 지원 언어'))).toBe(false)
+  })
+
+  it('회차·기간이 없으면 원문의 대략의 일정(월)을 2줄에 써야 한다', () => {
+    const facts = factsOf({ sessions: [], session_count: null, schedule_note: '11월 중 운영 예정 (날짜·시간 추후 안내)' })
+    const lines = [GOOD['ko-easy'][0], '날짜와 시간은 기관에 물어보세요.', GOOD['ko-easy'][2]]
+    hasIssue(check(lines, 'ko-easy', facts), '대략의 일정')
+    const withNote = [GOOD['ko-easy'][0], '11월 중에 열 예정이에요. 날짜와 시간은 기관에 물어보세요.', GOOD['ko-easy'][2]]
+    expect(check(withNote, 'ko-easy', facts).some((issue) => issue.includes('대략의 일정') || issue.includes('숫자 11'))).toBe(false)
   })
 })
 

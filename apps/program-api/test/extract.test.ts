@@ -167,6 +167,11 @@ describe('evidence: 값과 인용의 뜻 대조 (리뷰 F4·F5·F6)', () => {
     expect(supportsCompanion('required', '부모와 자녀가 함께 참여', 'guardian')).toBe(true)
     expect(supportsCompanion('allowed', '형제자매 동반 가능', 'sibling')).toBe(true)
     expect(supportsCompanion('allowed', '보호자 동반 가능', 'sibling')).toBe(false)
+    expect(supportsAudience('parent_child', '아버지와 자녀가 함께 참여해야 합니다.')).toBe(true)
+    expect(supportsCompanion('required', '대상: 다문화가족 초등 5~6학년 자녀와 보호자', 'guardian')).toBe(true)
+    expect(supportsCompanion('required', '초등학생 자녀를 둔 가족', 'guardian')).toBe(false)
+    expect(supportsCompanion('allowed', '형제자매도 함께 참여할 수 있습니다.', 'sibling')).toBe(true)
+    expect(supportsCompanion('not_allowed', '형제자매는 함께 참여할 수 없습니다.', 'sibling')).toBe(true)
   })
 
   it('참석 방식: 명시한 표현, 또는 한 과정 이름의 총 회차만 (묶음 사업의 총 N회는 아님)', () => {
@@ -272,10 +277,10 @@ function raw(overrides: Partial<RawExtraction> = {}): RawExtraction {
     korean_level_evidence: [], korean_level_required: null,
     support_languages_evidence: [], support_languages: null, application_languages_evidence: [], application_languages: null,
     venue_evidence: [], venue_place_name: null, venue_address: null, venue_online: null,
-    sessions: [], period_evidence: [], period_start: null, period_end: null, session_count_evidence: [], session_count: null,
+    sessions: [], schedule_note: null, period_evidence: [], period_start: null, period_end: null, session_count_evidence: [], session_count: null,
     attendance_evidence: [], attendance_rule: 'unknown', mid_join_evidence: [], mid_join_allowed: null,
     cost_evidence: [], cost_krw: null, cost_raw: null, capacity_evidence: [], capacity: null,
-    application_period_evidence: [], application_start: null, application_end: null, application_methods: [], uncertain_items: [],
+    application_period_evidence: [], application_start: null, application_end: null, application_methods: [], notices: [], uncertain_items: [],
     ...overrides,
   }
 }
@@ -333,9 +338,101 @@ describe('normalize: 목록 한 줄 (기간만 있는 공고)', () => {
     expect(record.extracted_at).toBe('2026-10-15T03:00:00.000Z')
   })
 
+  it('회차가 없어도 원문의 공통 장소를 행정동과 함께 남긴다', () => {
+    expect(record.venue).toEqual({ place_name: '2층 교류소통공간', address: '경기도 오산시 청학로 80 (궐동)', dong: '중앙동', online: false })
+  })
+
   it('남긴 사실마다 검증된 근거가 있다', () => {
     expect(record.evidence.every((entry) => entry.verified)).toBe(true)
     expect(record.evidence.map((entry) => entry.field)).toEqual(expect.arrayContaining(['title', 'target_type', 'period', 'session_count', 'application_period']))
+  })
+})
+
+describe('normalize: 누구나·동반 확인 사항', () => {
+  const text = `${LIST_ROW}\n■ 대상: 오산시민 누구나 (보호자와 자녀가 함께 참여)`
+  const base = {
+    title: '다문화가족 자녀성장프로그램 k-pop 방송댄스',
+    target_evidence: ['■ 대상: 오산시민 누구나 (보호자와 자녀가 함께 참여)'], target_raw: '오산시민 누구나', target_type: 'all' as const,
+    audience_evidence: ['보호자와 자녀가 함께 참여'], audience: 'parent_child' as const,
+  }
+
+  it("'누구나'는 참여 자격에서 떼고, 누구나 공고에는 학년·나이를 묻지 않는다", () => {
+    const record = toProgramRecord(raw({ ...base, eligibility_evidence: ['■ 대상: 오산시민 누구나'], eligibility_requirements: ['오산시민 누구나'] }), context(text))
+    expect(record.eligibility_requirements).toEqual(['오산시민'])
+    expect(record.uncertain_items).not.toContain('대상 학년·나이')
+    expect(record.uncertain_items).not.toContain('참여 대상·자격')
+    const anyone = toProgramRecord(raw({ ...base, eligibility_evidence: ['■ 대상: 오산시민 누구나'], eligibility_requirements: ['누구나'] }), context(text))
+    expect(anyone.eligibility_requirements).toEqual([])
+  })
+
+  it('동반 규칙은 모르는 쪽만 확인 사항으로 남긴다', () => {
+    const companion = (guardian: 'required' | 'unknown', sibling: 'unknown') => toProgramRecord(raw({
+      ...base, guardian_companion_evidence: ['보호자와 자녀가 함께 참여'], guardian_companion: guardian, sibling_companion: sibling,
+    }), context(text)).uncertain_items.filter((item) => item.includes('동반'))
+    expect(companion('required', 'unknown')).toEqual(['형제자매 동반 가능 여부'])
+    expect(companion('unknown', 'unknown')).toEqual(['보호자·형제자매 동반 가능 여부'])
+  })
+})
+
+describe('normalize: 비용 인용', () => {
+  const costOf = (line: string) => toProgramRecord(raw({
+    title: '다문화가족 자녀성장프로그램 k-pop 방송댄스', cost_evidence: ['무료'], cost_krw: 0, cost_raw: '무료',
+  }), context(`${LIST_ROW}\n${line}`)).cost_krw
+
+  it("'무료'만 인용해도 그 원문 줄이 비용을 가리키면 남긴다 ('무료 주차'는 아님)", () => {
+    expect(costOf('■ 참가비: 무료')).toBe(0)
+    expect(costOf('■ 무료 주차 가능')).toBeNull()
+  })
+})
+
+describe('normalize: 안내 문장·대략의 일정·장소·신청 이름', () => {
+  const title = '다문화가족 자녀성장프로그램 k-pop 방송댄스'
+
+  it('안내 문장은 원문에 그대로 있는 것만 머리 기호를 떼고 남긴다', () => {
+    const text = `${LIST_ROW}\n※ 보호자는 수업 중 2층 가족 쉼터에서 기다릴 수 있습니다.\n※ 앞치마를 준비해 주세요.`
+    const record = toProgramRecord(raw({ title, notices: ['※ 보호자는 수업 중 2층 가족 쉼터에서 기다릴 수 있습니다.', '앞치마를 준비해 주세요.', '간식을 드립니다.'] }), context(text))
+    expect(record.notices).toEqual(['보호자는 수업 중 2층 가족 쉼터에서 기다릴 수 있습니다.', '앞치마를 준비해 주세요.'])
+    expect(record.warnings.some((warning) => warning.includes('간식을 드립니다'))).toBe(true)
+    expect(record.evidence.filter((entry) => entry.field === 'notices')).toHaveLength(2)
+  })
+
+  it('회차·기간이 없을 때만 원문의 대략의 일정을 남긴다', () => {
+    const text = '진로 탐색 캠프\n- 일정: 11월 중 운영 예정 (날짜·시간 추후 안내)'
+    const note = toProgramRecord(raw({ title: '진로 탐색 캠프', schedule_note: '일정: 11월 중 운영 예정 (날짜·시간 추후 안내)' }), context(text))
+    expect(note.schedule_note).toBe('11월 중 운영 예정 (날짜·시간 추후 안내)')
+    expect(note.uncertain_items).toContain('운영 날짜·시간')
+    expect(toProgramRecord(raw({ title: '진로 탐색 캠프', schedule_note: '12월 중 운영' }), context(text)).schedule_note).toBeNull()
+    expect(toProgramRecord({ ...kpopRaw, schedule_note: '행사기간 : 2026-10-19 ~ 2026-12-04' }, context(LIST_ROW)).schedule_note).toBeNull()
+  })
+
+  it('다른 장소 줄에 시설 이름까지 적혀 있으면 그 표기를 쓴다 (주소 줄은 쓰지 않는다)', () => {
+    const text = '가족 운동회\n장소 : 경기도 오산시 오산천로 271 (오산동) 대체육관\n■ 장소: 오산오색문화체육센터 대체육관'
+    const record = toProgramRecord(raw({
+      title: '가족 운동회', venue_evidence: ['장소 : 경기도 오산시 오산천로 271 (오산동) 대체육관'], venue_place_name: '대체육관', venue_address: '경기도 오산시 오산천로 271 (오산동)',
+    }), context(text))
+    expect(record.venue?.place_name).toBe('오산오색문화체육센터 대체육관')
+    expect(record.venue?.address).toBe('경기도 오산시 오산천로 271 (오산동)')
+  })
+
+  it("'온라인 신청'처럼 어디서 신청하는지 빠진 이름은 원문 인용의 표현으로 바꾼다", () => {
+    const text = `${LIST_ROW}\n■ 신청 방법: 오산시가족센터 홈페이지 프로그램 신청`
+    const record = toProgramRecord(raw({
+      title, application_methods: [{ evidence: ['■ 신청 방법: 오산시가족센터 홈페이지 프로그램 신청'], type: 'online', label: '온라인 신청', url: null, phone: null, address: null }],
+    }), context(text))
+    expect(record.application_methods).toEqual([{ type: 'online', label: '오산시가족센터 홈페이지 프로그램 신청' }])
+  })
+
+  it('신청 마감이 운영 종료일보다 늦으면 확인 사항으로 남기고 같은 주제의 모델 항목은 뺀다', () => {
+    const text = LIST_ROW.replace('2026-10-19 ~ 2026-12-04', '2026-06-10 ~ 2026-06-10').replace('총 12회', '총 1회').replace('2026-10-17 00:00', '2026-10-30 18:00')
+    const record = toProgramRecord({
+      ...kpopRaw, uncertain_items: ['행사기간 종료일보다 접수기간 마감일이 늦은 점'],
+      period_evidence: ['행사기간 : 2026-06-10 ~ 2026-06-10'], period_start: '2026-06-10', period_end: '2026-06-10', session_count: 1,
+      session_count_evidence: ['총 1회'], attendance_evidence: ['총 1회'],
+      application_period_evidence: ['접수기간 : 2026-10-01 00:00 ~ 2026-10-30 18:00'], application_end: '2026-10-30T18:00',
+    }, context(text))
+    expect(record.uncertain_items).toContain('신청 마감(10월 30일)이 운영 종료일(6월 10일)보다 늦은 점')
+    expect(record.uncertain_items).not.toContain('행사기간 종료일보다 접수기간 마감일이 늦은 점')
+    expect(toProgramRecord(kpopRaw, context(LIST_ROW)).uncertain_items.some((item) => item.includes('늦은 점'))).toBe(false)
   })
 })
 
@@ -515,7 +612,7 @@ describe('normalize: 근거 없는 핵심 사실은 비운다', () => {
     expect(record.warnings.join('\n')).toMatch(/원문에 없는 URL을 뺐습니다/)
     expect(record.warnings.join('\n')).toContain('알 수 없는 언어 코드를 뺐습니다 (xx)')
     expect(record.warnings.join('\n')).toMatch(/신청 시작 2026-10-15, 신청 마감 2026-10-30/)
-    expect(record.uncertain_items).toEqual(['운영 날짜·시간', '보호자·형제자매 동반 가능 여부'])
+    expect(record.uncertain_items).toEqual(['운영 날짜·시간', '형제자매 동반 가능 여부'])
   })
 
   it('신청 시각이 근거에 없으면 날짜만 남긴다', () => {

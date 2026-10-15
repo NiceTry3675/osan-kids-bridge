@@ -243,7 +243,8 @@ function allowedNumbers(facts: SummaryFacts): Set<number> {
     facts.title, facts.institution, facts.target_raw, facts.cost_raw, facts.korean_level_required, facts.venue,
     ...(facts.eligibility_requirements ?? []), ...facts.check_items,
     ...facts.sessions.flatMap((session) => [session.place, session.address]),
-    ...facts.application_methods.map((method) => method.address),
+    ...facts.application_methods.flatMap((method) => [method.address, method.label]),
+    facts.outside_osan, facts.schedule_note, ...facts.notices,
   ]
   for (const text of texts) if (text) numberTokens(text).forEach((value) => allowed.add(value))
   return allowed
@@ -254,7 +255,8 @@ function allowedKorean(facts: SummaryFacts): string {
   return compact([
     facts.title, facts.institution, facts.venue,
     ...facts.sessions.flatMap((session) => [session.place, session.address]),
-    ...facts.application_methods.map((method) => method.address),
+    ...facts.application_methods.flatMap((method) => [method.address, method.label]),
+    facts.outside_osan, facts.schedule_note, ...facts.notices,
   ].filter(Boolean).join('\n'))
 }
 
@@ -327,8 +329,10 @@ function requiredIssues(lines: string[], scans: LineScan[], facts: SummaryFacts,
     if (!numbers(0).has(from.grade) || !numbers(0).has(to.grade)) issues.push(`1줄에 대상 학년이 없음 (${label})`)
     rules.schools.forEach((pattern, school) => {
       const inRange = school >= from.school && school <= to.school
+      // '고등학교 진학설명회'처럼 제목이 다른 학교급을 다루면 제목 번역에 그 학교급이 나올 수 있다
+      const inTitle = RULES['ko-easy'].schools[school].test(facts.title)
       if (inRange && !pattern.test(withoutQuoted(first))) issues.push(`1줄에 대상 학교급이 없음 (${label})`)
-      if (!inRange && pattern.test(withoutQuoted(all))) issues.push(`대상(${label})에 없는 학교급을 씀`)
+      if (!inRange && !inTitle && pattern.test(withoutQuoted(all))) issues.push(`대상(${label})에 없는 학교급을 씀`)
     })
   }
   if (facts.age_range) {
@@ -350,8 +354,10 @@ function requiredIssues(lines: string[], scans: LineScan[], facts: SummaryFacts,
       if (fact && !hasDate(scans, fact)) issues.push(`운영 기간 날짜(${md(monthDay(fact))})가 없음`)
     }
     if (!rules.unknown.test(second)) issues.push('2줄에 회차 요일·시간 확인 필요라는 말이 없음')
-  } else if (!rules.unknown.test(second)) {
-    issues.push('2줄에 일정 확인 필요라는 말이 없음')
+  } else {
+    if (!rules.unknown.test(second)) issues.push('2줄에 일정 확인 필요라는 말이 없음')
+    const noteNumbers = facts.schedule_note ? numberTokens(facts.schedule_note) : []
+    if (noteNumbers.some((value) => !numbers(1).has(value))) issues.push(`2줄에 대략의 일정(${facts.schedule_note})이 없음`)
   }
 
   // 3줄: 비용, 신청 기간, 전화번호
@@ -369,6 +375,8 @@ function requiredIssues(lines: string[], scans: LineScan[], facts: SummaryFacts,
   if (end && !hasDate(scans, end)) issues.push(`신청 마감 날짜(${md(monthDay(end))})가 없음`)
   if (start && start.date > facts.today && !hasDate(scans, start)) issues.push(`신청 시작 날짜(${md(monthDay(start))})가 없음`)
   if (!start && !end && !rules.unknown.test(third)) issues.push('3줄에 신청 기간 확인 필요라는 말이 없음')
+  const unnamed = (facts.support_languages ?? []).filter((code) => rules.languageNames[code] && !rules.languageNames[code].test(withoutQuoted(all)))
+  if (unnamed.length) issues.push(`기관 지원 언어(${unnamed.join(', ')})를 쓰지 않음`)
   const phones = factPhones(facts).map((phone) => phone.replace(/\D/g, ''))
   if (phones.length && !scans.some((scan) => scan.phones.some((phone) => phones.includes(phone)))) {
     issues.push(`전화번호(${factPhones(facts).join(', ')})가 없음`)

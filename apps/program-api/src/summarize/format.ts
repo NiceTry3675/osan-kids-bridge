@@ -67,13 +67,24 @@ export function timeRangeLabel(start: string | null, end: string | null, languag
   return language === 'vi' ? `từ ${start}` : language === 'zh' ? `${start}开始` : `${start}부터`
 }
 
-/** 무료·금액 표기. 미상은 null (모델이 언어별 '확인 필요' 문장으로 쓴다) */
-export function costLabel(krw: number | null, language: DisplayLanguage): string | null {
+/** 원문 비용 표현의 기준 ('가족당 재료비 8,000원' → 가족당·재료비). 금액만 옮기면 1인당으로 읽힐 수 있다 */
+const COST_BASES: { pattern: RegExp; label: Record<DisplayLanguage, string> }[] = [
+  { pattern: /가족\s*당|가정\s*당|가구\s*당/, label: { 'ko-easy': '가족당', vi: 'mỗi gia đình', zh: '每个家庭' } },
+  { pattern: /(?:1\s*)?인\s*당|1\s*명\s*당/, label: { 'ko-easy': '한 사람당', vi: 'mỗi người', zh: '每人' } },
+  { pattern: /(?:1\s*)?회\s*당|매\s*회/, label: { 'ko-easy': '한 번에', vi: 'mỗi buổi', zh: '每次' } },
+]
+const MATERIAL_FEE: Record<DisplayLanguage, string> = { 'ko-easy': '재료비', vi: 'tiền nguyên liệu', zh: '材料费' }
+
+/** 무료·금액 표기. 원문 표현(raw)에 가족당·재료비 같은 기준이 있으면 붙인다. 미상은 null (모델이 언어별 '확인 필요' 문장으로 쓴다) */
+export function costLabel(krw: number | null, language: DisplayLanguage, raw: string | null = null): string | null {
   if (krw === null) return null
   if (krw === 0) return WORDS[language].free
-  if (language === 'vi') return `${grouped(krw, '.')} won`
-  if (language === 'zh') return `${grouped(krw, ',')}韩元`
-  return `${grouped(krw, ',')}원`
+  const text = raw?.normalize('NFKC') ?? ''
+  const basis = COST_BASES.find((item) => item.pattern.test(text))?.label[language] ?? null
+  const material = /재료비/.test(text) ? MATERIAL_FEE[language] : null
+  if (language === 'vi') return [`${grouped(krw, '.')} won`, basis, material && `(${material})`].filter(Boolean).join(' ')
+  if (language === 'zh') return `${basis ?? ''}${material ?? ''}${grouped(krw, ',')}韩元`
+  return [basis, material, `${grouped(krw, ',')}원`].filter(Boolean).join(' ')
 }
 
 // 학년 규칙: 초등 1~6, 중학교 7~9, 고등학교 10~12 (한국 학제 그대로 쓴다)
@@ -101,23 +112,26 @@ export function gradeLabel(range: [number, number], language: DisplayLanguage): 
   return `${ZH_SCHOOLS[from.school]}${from.grade}年级至${ZH_SCHOOLS[to.school]}${to.grade}年级`
 }
 
-/** 상한 99·하한 0은 열린 범위 ('8세 이상') */
-export function ageLabel([min, max]: [number, number], language: DisplayLanguage): string {
+/** 상한 99·하한 0은 열린 범위 ('8세 이상'). completed면 원문의 '만 N세'를 살린다 (만 나이·세는 나이를 헷갈리지 않게) */
+export function ageLabel([min, max]: [number, number], language: DisplayLanguage, completed = false): string {
   const openMax = max >= 99
   const openMin = min <= 0
   if (language === 'vi') {
-    if (openMax) return `từ ${min} tuổi trở lên`
-    if (openMin) return `từ ${max} tuổi trở xuống`
-    return min === max ? `${min} tuổi` : `${min}–${max} tuổi`
+    const note = completed ? ' (tuổi tròn)' : ''
+    if (openMax) return `từ ${min} tuổi trở lên${note}`
+    if (openMin) return `từ ${max} tuổi trở xuống${note}`
+    return min === max ? `${min} tuổi${note}` : `${min}–${max} tuổi${note}`
   }
   if (language === 'zh') {
-    if (openMax) return `${min}岁以上`
-    if (openMin) return `${max}岁以下`
-    return min === max ? `${min}岁` : `${min}至${max}岁`
+    const unit = completed ? '周岁' : '岁'
+    if (openMax) return `${min}${unit}以上`
+    if (openMin) return `${max}${unit}以下`
+    return min === max ? `${min}${unit}` : `${min}至${max}${unit}`
   }
-  if (openMax) return `${min}세 이상`
-  if (openMin) return `${max}세 이하`
-  return min === max ? `${min}세` : `${min}~${max}세`
+  const prefix = completed ? '만 ' : ''
+  if (openMax) return `${prefix}${min}세 이상`
+  if (openMin) return `${prefix}${max}세 이하`
+  return min === max ? `${prefix}${min}세` : `${prefix}${min}~${max}세`
 }
 
 function methodLabel(method: MethodFact, language: DisplayLanguage): string {
@@ -129,7 +143,8 @@ function methodLabel(method: MethodFact, language: DisplayLanguage): string {
   }
   if (method.type === 'phone') return method.phone ? `${words.phone} ${method.phone}` : words.phone
   if (method.type === 'visit') return method.address ? `${words.visitApply} (${method.address})` : words.visitApply
-  return words.onlineApply
+  // 'XX 홈페이지 프로그램 신청'처럼 어디서 신청하는지 밝힌 원문 표현은 붙인다
+  return method.label && !/^(?:온라인|인터넷)?\s*(?:신청|접수)$/.test(method.label) ? `${words.onlineApply} (${method.label})` : words.onlineApply
 }
 
 function sessionWhen(session: SessionFact, language: DisplayLanguage, today: string): string {
@@ -138,6 +153,15 @@ function sessionWhen(session: SessionFact, language: DisplayLanguage, today: str
 }
 
 const unique = <T>(values: T[]) => [...new Set(values)]
+const WEEKDAY_ORDER: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
+/** 앞으로 남은 회차(없으면 전체)의 요일. 월요일부터 순서대로 (지난 첫날만의 요일을 넣지 않는다) */
+function upcomingWeekdays(facts: SummaryFacts): Weekday[] {
+  const { sessions, next_session: next } = facts
+  const from = next ? sessions.findIndex((session) => session.date === next.date && session.start_time === next.start_time) : -1
+  const relevant = from >= 0 ? sessions.slice(from) : sessions
+  return WEEKDAY_ORDER.filter((weekday) => relevant.some((session) => session.weekday === weekday))
+}
 
 /**
  * 모델에게 주는 언어별 사실. ISO 날짜 대신 그 언어의 표기만 담아 계산·환산할 여지를 없앤다.
@@ -156,9 +180,10 @@ export function localizeFacts(facts: SummaryFacts, language: DisplayLanguage) {
       type: facts.target_type,
       audience: facts.audience,
       grade: facts.grade_range ? gradeLabel(facts.grade_range, language) : null,
-      age: facts.age_range ? ageLabel(facts.age_range, language) : null,
+      age: facts.age_range ? ageLabel(facts.age_range, language, facts.age_completed) : null,
       eligibility: facts.eligibility_requirements,
       guardian_companion: facts.guardian_companion,
+      sibling_companion: facts.sibling_companion,
       korean_level: facts.korean_level_required,
     },
     schedule: {
@@ -169,17 +194,22 @@ export function localizeFacts(facts: SummaryFacts, language: DisplayLanguage) {
       })),
       /** 회차가 없을 때 원문의 공통 장소 (한국어 원문 표기) */
       venue: facts.venue,
-      weekdays: unique(sessions.map((session) => WEEKDAY_NAMES[language][session.weekday])),
+      weekdays: upcomingWeekdays(facts).map((weekday) => WEEKDAY_NAMES[language][weekday]),
       same_time: sessions.length > 1 && times.length === 1 ? times[0] : null,
       same_place: sessions.length > 1 && places.length === 1 ? places[0] : null,
       undated_sessions: facts.undated_sessions,
+      /** 회차도 기간도 없을 때 원문이 밝힌 대략의 일정 (한국어 원문 표기) */
+      note: facts.schedule_note,
       next_session: facts.next_session ? sessionWhen(facts.next_session, language, today) : null,
       period_start: facts.period_start ? dateLabel(facts.period_start, language, today) : null,
       period_end: facts.period_end ? dateLabel(facts.period_end, language, today) : null,
       session_count: facts.session_count,
       attendance_rule: facts.attendance_rule,
+      mid_join_allowed: facts.mid_join_allowed,
+      /** 장소가 오산시 밖이면 그 주소 (한국어 원문 표기) */
+      outside_osan: facts.outside_osan,
     },
-    cost: { label: costLabel(facts.cost_krw, language), raw: facts.cost_raw },
+    cost: { label: costLabel(facts.cost_krw, language, facts.cost_raw), raw: facts.cost_raw },
     capacity: facts.capacity,
     application: {
       start: facts.application_start ? dateTimeLabel(facts.application_start, language, today) : null,
@@ -190,6 +220,10 @@ export function localizeFacts(facts: SummaryFacts, language: DisplayLanguage) {
       inquiry: facts.application_methods.filter((method) => method.purpose === 'inquiry').map((method) => methodLabel(method, language)),
     },
     support_languages: facts.support_languages?.map((code) => LANGUAGE_CODE_NAMES[language][code] ?? code) ?? null,
+    /** 원문이 언어 지원을 '통역'이라고 밝힘 */
+    support_interpretation: facts.support_interpretation,
+    /** 보호자에게 알리는 안내 (한국어 원문 그대로) */
+    notices: facts.notices,
     check_items: facts.check_items,
   }
 }

@@ -74,9 +74,16 @@ export function hasOperationEnded(record: ProgramRecord, clock: Clock): boolean 
   return record.sessions.every((session) => hasFinished(session, clock))
 }
 
-/** 이미 시작했고 중도 참여 허용이 명시되지 않은 전 회차 참석형(또는 참석 방식 미상) 과정 */
+/** 하루 한 번뿐인 행사 (총 1회, 운영 기간이 그날 하루) */
+function isOneTimeEvent(record: ProgramRecord): boolean {
+  const samePeriod = !record.period_start || !record.period_end || record.period_start === record.period_end
+  return (record.session_count ?? record.sessions.length) === 1 && record.sessions.length <= 1 && samePeriod
+}
+
+/** 이미 시작했고 중도 참여 허용이 명시되지 않은 전 회차 참석형(또는 참석 방식 미상) 과정. 한 번뿐인 행사·끝난 과정은 묻지 않는다 */
 export function needsMidJoinCheck(record: ProgramRecord, clock: Clock): boolean {
   if (record.attendance_rule === 'choose_one' || record.mid_join_allowed === true) return false
+  if (isOneTimeEvent(record) || hasOperationEnded(record, clock)) return false
   const periodStarted = isValidDate(record.period_start) && record.period_start < clock.today
   return periodStarted || record.sessions.some((session) => hasStarted(session, clock))
 }
@@ -92,13 +99,18 @@ const judged = (status: MatchStatus, matched: ProgramSession[] = []): TimeJudgem
 /** 명세 4장. 지난 회차는 일치 근거로 쓰지 않는다 */
 export function judgeTime(record: ProgramRecord, windows: AvailableWindow[], clock: Clock): TimeJudgement {
   if (!windows.length) return judged('not_applied')
-  if (record.attendance_rule === 'unknown') return judged('unknown')
 
   const remaining = remainingSessions(record, clock).sort(compareSessions)
   const fits = (session: ProgramSession) => windows.some((window) => windowContains(window, session))
   // 날짜가 확인됐는데 그날에 해당하는 가능 시간 구간이 없으면 시각을 몰라도 확인된 불일치다
   const offDay = (session: ProgramSession) => !isScheduled(session) && isValidDate(session.date) && !windows.some((window) => windowOnDate(window, session.date!))
   const missingSchedule = hasUnlistedSessions(record) || remaining.some((session) => !isScheduled(session) && !offDay(session))
+
+  // 참석 방식을 몰라도 원문의 총 회차가 모두 일정과 함께 적혔고 남은 회차가 하나도 맞지 않으면 확인된 불일치다
+  if (record.attendance_rule === 'unknown') {
+    const allListed = record.session_count !== null && record.session_count === record.sessions.length
+    return judged(allListed && !missingSchedule && !remaining.some(fits) ? 'not_matched' : 'unknown')
+  }
 
   if (record.attendance_rule === 'choose_one') {
     const matched = remaining.filter((session) => isScheduled(session) && fits(session))

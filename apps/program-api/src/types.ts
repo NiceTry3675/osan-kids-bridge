@@ -46,6 +46,15 @@ export interface ProgramSession {
   address?: string | null
 }
 
+/** 회차와 별도로 원문에 적힌 공통 장소. 회차가 없는 공고는 이 장소를 보여준다 */
+export interface ProgramVenue {
+  place_name: string | null
+  address: string | null
+  /** 오산시 행정동. 오산 밖이거나 미상이면 null */
+  dong: string | null
+  online: boolean
+}
+
 export interface ApplicationMethod {
   type: 'online' | 'phone' | 'visit'
   label: string
@@ -130,6 +139,10 @@ export interface ProgramRecord {
   /** 신청 페이지 언어. 미상 null */
   application_languages: string[] | null
   sessions: ProgramSession[]
+  /** 원문의 공통 장소. 근거가 확인되지 않으면 null (이 필드가 생기기 전에 저장한 공고에는 없다) */
+  venue?: ProgramVenue | null
+  /** 회차도 운영 기간도 없이 일정을 대략만 밝힌 원문 표현 ('11월 중 운영 예정'). 이 필드가 생기기 전에 저장한 공고에는 없다 */
+  schedule_note?: string | null
   /** 원문이 기간만 밝히고 회차별 일시를 밝히지 않은 경우의 운영 기간 */
   period_start: string | null
   period_end: string | null
@@ -146,6 +159,8 @@ export interface ProgramRecord {
   application_methods: ApplicationMethod[]
   /** 판정 없이도 확인이 필요한 사항 (원문에 없는 조건 등) */
   uncertain_items: string[]
+  /** 보호자에게 알리는 안내 문장 (보호자 대기 장소, 준비물 등). 원문 그대로 */
+  notices?: string[]
   evidence: Evidence[]
   summaries_by_language: SummariesByLanguage
   source: SourceInfo
@@ -174,6 +189,8 @@ export interface ProgramResponse {
   attendance_rule: AttendanceRule
   mid_join_allowed?: boolean
   sessions: ProgramSession[]
+  venue: ProgramVenue | null
+  schedule_note: string | null
   matched_sessions: string[]
   next_session: ProgramSession | null
   cost_krw: number | null
@@ -183,6 +200,7 @@ export interface ProgramResponse {
   application_start: string | null
   application_end: string | null
   application_methods: ApplicationMethod[]
+  notices: string[]
   source_url: string | null
   verified_at: string | null
   // 명세 v2.2 6장 추가 필드

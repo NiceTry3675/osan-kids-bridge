@@ -24,6 +24,8 @@ function inPreferredDong(record: ProgramRecord, program: ProgramResponse, dong: 
   const relevant = program.time_match_status === 'matched'
     ? record.sessions.filter((session) => program.matched_sessions.includes(session.id))
     : record.sessions.filter((session) => !hasStarted(session, clock))
+  // 회차가 없는 공고는 원문의 공통 장소로 본다
+  if (!record.sessions.length) return record.venue?.dong?.trim() === wanted
   return relevant.some((session) => session.dong?.trim() === wanted)
 }
 

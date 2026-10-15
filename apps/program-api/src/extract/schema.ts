@@ -70,6 +70,7 @@ export interface RawExtraction {
   venue_address: string | null
   venue_online: boolean | null
   sessions: RawSession[]
+  schedule_note: string | null
   period_evidence: string[]
   period_start: string | null
   period_end: string | null
@@ -88,6 +89,7 @@ export interface RawExtraction {
   application_start: string | null
   application_end: string | null
   application_methods: RawApplicationMethod[]
+  notices: string[]
   uncertain_items: string[]
 }
 
@@ -127,7 +129,7 @@ const sessionSchema = object({
 const methodSchema = object({
   evidence: quotes('이 신청·문의 방법'),
   type: choice(METHOD_TYPES, 'online: 웹 신청, phone: 전화, visit: 방문'),
-  label: text('짧은 한국어 이름 (예: 온라인 신청, 전화 신청·문의, 방문 신청)'),
+  label: text('원문의 신청 방법 표현 그대로 (예: 오산시가족센터 홈페이지 프로그램 신청, 전화 신청·문의, 방문 신청)'),
   url: text('원문에 적힌 신청 URL. 원문에 없으면 null'),
   phone: text('원문에 적힌 전화번호'),
   address: text('방문 신청 장소·주소'),
@@ -169,13 +171,14 @@ export const EXTRACTION_SCHEMA: Schema = object({
   venue_address: text('프로그램 전체 장소의 주소 (원문 그대로)'),
   venue_online: flag('프로그램 전체가 온라인이면 true'),
   sessions: { type: 'array', items: sessionSchema, description: '원문에 구체적인 날짜가 적힌 운영 회차만' },
+  schedule_note: text('회차 날짜도 운영 기간도 없이 일정을 대략만 밝힌 원문 표현 그대로 (예: 11월 중 운영 예정 (날짜·시간 추후 안내)). 회차나 운영 기간을 적었으면 null'),
   period_evidence: quotes('운영 기간'),
   period_start: text(`운영(행사·교육) 기간 시작일 ${DATE}`),
   period_end: text(`운영(행사·교육) 기간 종료일 ${DATE}`),
   session_count_evidence: quotes('총 회차 수'),
   session_count: integer('원문에 적힌 총 회차 수'),
   attendance_evidence: quotes('참석 방식'),
-  attendance_rule: choice(ATTENDANCE_RULES, 'all_sessions: 전 회차 과정, choose_one: 회차 하나 골라 참여, unknown: 판단 불가'),
+  attendance_rule: choice(ATTENDANCE_RULES, 'all_sessions: 전 회차 과정, choose_one: 원하는 회차를 골라 참여, unknown: 판단 불가'),
   mid_join_evidence: quotes('중도 참여 허용 여부'),
   mid_join_allowed: flag('중도 참여 허용 여부 (명시된 경우만)'),
   cost_evidence: quotes('비용'),
@@ -187,5 +190,6 @@ export const EXTRACTION_SCHEMA: Schema = object({
   application_start: text(`신청 시작 ${DATE} 또는 ${DATE}THH:MM (시각이 적힌 경우)`),
   application_end: text(`신청 마감 ${DATE} 또는 ${DATE}THH:MM (시각이 적힌 경우)`),
   application_methods: { type: 'array', items: methodSchema, description: '원문에 적힌 신청·문의 방법만' },
+  notices: { type: 'array', items: { type: 'string' }, maxItems: 4, description: '보호자에게 알리는 안내 문장(보호자 대기 장소, 준비물, 복장, 만든 것을 가져가는지 등)을 원문 그대로. 다른 항목이 다루는 일정·비용·대상·신청 문장은 넣지 않는다. 없으면 []' },
   uncertain_items: { type: 'array', items: { type: 'string' }, description: '원문이 모호하거나 서로 맞지 않아 보호자가 기관에 확인해야 할 점 (짧은 한국어 명사구)' },
 })

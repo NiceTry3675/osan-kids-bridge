@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { applicationStatus } from '../src/match/application'
-import { isValidDate, isValidTime, seoulNowMinutes, seoulToday, weekdayOf } from '../src/match/dates'
+import { isValidDate, isValidTime, lastApplicationDay, seoulNowMinutes, seoulToday, weekdayOf } from '../src/match/dates'
 import { evaluateProgram, MID_JOIN_ITEM } from '../src/match/evaluate'
 import { parseSearchFilters } from '../src/match/filters'
 import { isListable, searchPrograms } from '../src/match/search'
@@ -286,6 +286,17 @@ describe('시간 판정 (명세 4장)', () => {
     expect(timeOf({ attendance_rule: 'unknown' }).time_match_status).toBe('unknown')
   })
 
+  it('참석 방식이 미상이어도 총 회차가 모두 적혔고 남은 회차가 하나도 맞지 않으면 not_matched', () => {
+    const evening = [session('a', '2026-10-16', '19:00', '20:30'), session('b', '2026-10-21', '19:00', '20:30')]
+    expect(timeOf({ attendance_rule: 'unknown', session_count: 2, sessions: evening }).time_match_status).toBe('not_matched')
+    // 총 회차를 모르거나 적히지 않은 회차가 있으면 여전히 unknown
+    expect(timeOf({ attendance_rule: 'unknown', session_count: null, sessions: evening }).time_match_status).toBe('unknown')
+    expect(timeOf({ attendance_rule: 'unknown', session_count: 3, sessions: evening }).time_match_status).toBe('unknown')
+    // 맞는 회차가 있으면 참석 방식을 몰라 unknown
+    const withFit = [...evening, session('c', '2026-10-17', '10:10', '12:00')]
+    expect(timeOf({ attendance_rule: 'unknown', session_count: 3, sessions: withFit }).time_match_status).toBe('unknown')
+  })
+
   it('회차 없이 운영 기간만 있으면 시간을 입력했을 때 unknown', () => {
     const program = timeOf({ sessions: [], period_start: '2026-10-19', period_end: '2026-12-04', session_count: 12 })
     expect(program.time_match_status).toBe('unknown')
@@ -313,7 +324,14 @@ describe('학년·나이와 별도 자격', () => {
   it('나이와 학년을 서로 환산하지 않고, 범위가 없으면 unknown', () => {
     expect(evaluateProgram(record({ grade_range: null, age_range: [8, 12] }), filters({ child_grade: 2 }), NOW).age_grade_match_status).toBe('unknown')
     expect(evaluateProgram(record({ grade_range: [1, 3], age_range: null }), filters({ child_age: 8 }), NOW).age_grade_match_status).toBe('unknown')
-    expect(evaluateProgram(record({ grade_range: null }), filters({ child_grade: 2 }), NOW).age_grade_match_status).toBe('unknown')
+    expect(evaluateProgram(record({ grade_range: null, target_type: 'multicultural_family' }), filters({ child_grade: 2 }), NOW).age_grade_match_status).toBe('unknown')
+  })
+
+  it('누구나 공고(학년·나이 제한 없음)와 자녀가 참여하지 않는 공고는 학년을 묻지 않는다', () => {
+    expect(evaluateProgram(record({ grade_range: null, target_type: 'all' }), filters({ child_grade: 2 }), NOW).age_grade_match_status).toBe('not_applied')
+    expect(evaluateProgram(record({ grade_range: null, target_type: 'unknown' }), filters({ child_grade: 2 }), NOW).age_grade_match_status).toBe('unknown')
+    expect(evaluateProgram(record({ grade_range: null, audience: 'adult' }), filters({ child_grade: 2 }), NOW).age_grade_match_status).toBe('not_applied')
+    expect(evaluateProgram(record({ grade_range: null, audience: 'parent_only' }), filters({ child_age: 8 }), NOW).age_grade_match_status).toBe('not_applied')
   })
 
   it('학년 일치 근거는 초·중·고 학년으로 쓴다', () => {
@@ -356,6 +374,20 @@ describe('학년·나이와 별도 자격', () => {
     expect(program.uncertain_items).toEqual(['자녀가 참여하는 프로그램인지 확인 필요'])
     expect(program.matched_sessions).toEqual(['a', 'b'])
     expect(source).toEqual(snapshot)
+  })
+
+  it('한 번뿐인 행사와 이미 끝난 과정에는 중도 참여 확인을 붙이지 않는다', () => {
+    const oneDay = evaluateProgram(record({ attendance_rule: 'all_sessions', session_count: 1, period_start: '2026-06-10', period_end: '2026-06-10', sessions: [session('a', '2026-06-10', '18:00', '19:30')] }), null, NOW)
+    expect(oneDay.uncertain_items).not.toContain(MID_JOIN_ITEM)
+    const ended = evaluateProgram(record({ attendance_rule: 'all_sessions', sessions: [session('a', '2026-10-01', '10:10', '12:00'), session('b', '2026-10-08', '10:10', '12:00')] }), null, NOW)
+    expect(ended.uncertain_items).not.toContain(MID_JOIN_ITEM)
+    const running = evaluateProgram(record({ attendance_rule: 'all_sessions', sessions: [session('a', '2026-10-08', '10:10', '12:00'), session('b', '2026-10-22', '10:10', '12:00')] }), null, NOW)
+    expect(running.uncertain_items).toContain(MID_JOIN_ITEM)
+  })
+
+  it('다문화가족을 구체적으로 밝힌 자격(중도입국 등)이 있으면 다문화가족을 따로 덧붙이지 않는다', () => {
+    const program = evaluateProgram(record({ target_type: 'multicultural_family', eligibility_requirements: ['중도입국'] }), null, NOW)
+    expect(program.uncertain_items).toEqual(['참여 자격 확인 필요: 중도입국'])
   })
 
   it('중도 참여 확인 항목은 공고에 이미 있으면 다시 넣지 않는다', () => {
@@ -463,6 +495,16 @@ describe('신청 기간 형식 (보호자 웹 호환)', () => {
     expect(program.application_end).toBe('2026-10-31')
     expect(program.application_end_at).toBe('2026-11-01T00:00')
   })
+
+  it('새벽(06:00 전) 마감도 전날까지, 그 밖에는 그날까지', () => {
+    expect(lastApplicationDay('2026-10-30T01:00')).toBe('2026-10-29')
+    expect(lastApplicationDay('2026-10-30T05:59')).toBe('2026-10-29')
+    expect(lastApplicationDay('2026-10-30T06:00')).toBe('2026-10-30')
+    expect(lastApplicationDay('2026-10-30T18:00')).toBe('2026-10-30')
+    expect(lastApplicationDay('2026-10-30')).toBe('2026-10-30')
+    expect(lastApplicationDay('2026-11-01T00:00')).toBe('2026-10-31')
+    expect(lastApplicationDay(null)).toBeNull()
+  })
 })
 
 describe('다음 회차와 일치 근거', () => {
@@ -540,7 +582,7 @@ describe('검색 결과 분류 (명세 5.1)', () => {
   const art = record({ program_id: 'art', category: 'sports_arts', sessions: [session('a1', '2026-10-17', '10:00', '12:00')] })
   const periodOnly = record({ program_id: 'period', sessions: [], period_start: '2026-10-19', period_end: '2026-12-04', session_count: 12 })
   const older = record({ program_id: 'older', grade_range: [4, 6] })
-  const noGrade = record({ program_id: 'no-grade', grade_range: null })
+  const noGrade = record({ program_id: 'no-grade', grade_range: null, target_type: 'multicultural_family' })
   const parentOnly = record({ program_id: 'parents', audience: 'parent_only', target_type: 'parent_only' })
   const closed = record({ program_id: 'closed', application_end: '2026-10-14T18:00' })
   const all = [craft, art, periodOnly, older, noGrade, parentOnly, closed]
@@ -641,6 +683,18 @@ describe('검색 결과 순서', () => {
     expect(response.results).toEqual([])
     expect(ids(response.needs_confirmation)).toEqual(['nc-early', 'nc-late', 'nc-undated', 'nc-upcoming'])
     expect(response.needs_confirmation[0].next_session?.id).toBe('e')
+  })
+
+  it('회차가 없는 공고는 원문의 공통 장소로 같은 동을 본다', () => {
+    const venue = (dong: string) => ({ place_name: '센터', address: null, dong, online: false })
+    const records = [
+      record({ program_id: 'v-other', sessions: [], period_start: '2026-10-19', period_end: '2026-12-04', venue: venue('대원동') }),
+      record({ program_id: 'v-same', sessions: [], period_start: '2026-10-19', period_end: '2026-12-04', venue: venue('남촌동') }),
+    ]
+    const response = searchPrograms(records, filters({ dong: '남촌동' }), NOW)
+    expect(ids(response.results)).toEqual(['v-same', 'v-other'])
+    expect(response.results[0].venue).toEqual(venue('남촌동'))
+    expect(evaluateProgram(record(), null, NOW).venue).toBeNull()
   })
 
   it('같은 날짜에서는 대상·자격 확인 → 관심 분야 → 같은 동 순', () => {

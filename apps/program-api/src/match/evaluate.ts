@@ -1,6 +1,6 @@
 import type { MatchStatus, ProgramRecord, ProgramResponse, ProgramSession, SearchFilters } from '../types'
 import { applicationStatus } from './application'
-import { isValidDate, seoulDateOf } from './dates'
+import { isValidDate, lastApplicationDay, seoulDateOf } from './dates'
 import { ageRangeLabel, gradeLabel, gradeRangeLabel, sessionLabel } from './labels'
 import { clockOf, compareSessions, hasOperationEnded, hasStarted, judgeTime, needsMidJoinCheck } from './sessions'
 import type { Clock, TimeJudgement } from './sessions'
@@ -8,6 +8,8 @@ import type { Clock, TimeJudgement } from './sessions'
 export const MID_JOIN_ITEM = '중도 참여 확인 필요'
 export const ELIGIBILITY_ITEM = '참여 자격 확인 필요'
 export const AUDIENCE_ITEM = '자녀가 참여하는 프로그램인지 확인 필요'
+/** 다문화가족 대상을 더 구체적으로 밝힌 자격 ('중도입국 자녀' 등). 있으면 '다문화가족'을 따로 덧붙이지 않는다 */
+const MIGRANT_BACKGROUND = /다문화|중도\s*입국|결혼\s*이민|이주\s*배경|이민자|외국인\s*(?:가정|가족|주민)/
 
 interface AgeGradeJudgement {
   status: MatchStatus
@@ -21,6 +23,9 @@ function inRange(value: number, range: [number, number] | null): MatchStatus {
 
 /** 같은 기준끼리만 비교한다. 나이와 학년을 서로 환산하지 않는다 */
 export function judgeAgeGrade(record: ProgramRecord, filters: SearchFilters | null): AgeGradeJudgement {
+  // 자녀가 참여하지 않는 공고, 학년·나이 제한이 없다고 확인된 '누구나' 공고는 자녀의 학년·나이를 묻지 않는다
+  if (record.audience === 'adult' || record.audience === 'parent_only') return { status: 'not_applied', reason: null }
+  if (record.target_type === 'all' && !record.grade_range && !record.age_range) return { status: 'not_applied', reason: null }
   if (filters?.child_grade !== undefined) {
     const status = inRange(filters.child_grade, record.grade_range)
     const reason = status === 'matched' && record.grade_range
@@ -70,7 +75,7 @@ function uncertainItems(record: ProgramRecord, eligibility: MatchStatus, clock: 
   if (needsMidJoinCheck(record, clock) && !mentions('중도')) add(MID_JOIN_ITEM)
   if (eligibility === 'unknown') {
     const required = (record.eligibility_requirements ?? []).map((item) => item.trim()).filter(Boolean)
-    if (record.target_type === 'multicultural_family' && !required.some((item) => item.includes('다문화'))) required.push('다문화가족')
+    if (record.target_type === 'multicultural_family' && !required.some((item) => MIGRANT_BACKGROUND.test(item))) required.push('다문화가족')
     const unmentioned = required.filter((item) => !mentions(item))
     if (unmentioned.length) add(`${ELIGIBILITY_ITEM}: ${unmentioned.join(', ')}`)
   }
@@ -82,15 +87,6 @@ function uncertainItems(record: ProgramRecord, eligibility: MatchStatus, clock: 
 function nextSession(record: ProgramRecord, time: TimeJudgement, clock: Clock): ProgramSession | null {
   if (time.status === 'matched') return time.matched[0] ?? null
   return record.sessions.filter((session) => isValidDate(session.date) && !hasStarted(session, clock)).sort(compareSessions)[0] ?? null
-}
-
-/** 날짜만 보내는 신청 마감일. '10-17 00:00까지'는 10-16이 신청할 수 있는 마지막 날이다 */
-function lastApplicationDate(value: string | null): string | null {
-  const date = seoulDateOf(value)
-  if (!date || !value || !/T00:00$/.test(value)) return date
-  const previous = new Date(`${date}T00:00:00Z`)
-  previous.setUTCDate(previous.getUTCDate() - 1)
-  return previous.toISOString().slice(0, 10)
 }
 
 /**
@@ -122,14 +118,17 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
     attendance_rule: record.attendance_rule,
     ...(record.mid_join_allowed === null ? {} : { mid_join_allowed: record.mid_join_allowed }),
     sessions: record.sessions,
+    venue: record.venue ?? null,
+    schedule_note: record.schedule_note ?? null,
     matched_sessions: time.matched.map((session) => session.id),
     next_session: nextSession(record, time, clock),
     cost_krw: record.cost_krw,
     cost_raw: record.cost_raw,
     application_status: hasOperationEnded(record, clock) ? 'closed' : applicationStatus(record, now),
     application_start: seoulDateOf(record.application_start),
-    application_end: lastApplicationDate(record.application_end),
+    application_end: lastApplicationDay(record.application_end),
     application_methods: record.application_methods,
+    notices: record.notices ?? [],
     source_url: record.source.url,
     verified_at: record.review.status === 'approved' ? seoulDateOf(record.review.reviewed_at) : null,
     application_start_at: record.application_start,
