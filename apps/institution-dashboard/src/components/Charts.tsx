@@ -93,16 +93,6 @@ export function BarList({ items, total, label }: { items: BarItem[]; total: numb
   )
 }
 
-export function StatTile({ label, value, note }: { label: string; value: string; note?: string }) {
-  return (
-    <div className="stat-tile">
-      <span className="stat-label">{label}</span>
-      <strong className="stat-value">{value}</strong>
-      {note && <span className="stat-note">{note}</span>}
-    </div>
-  )
-}
-
 export function InsufficientPanel({ onReset, resetLabel }: { onReset?: () => void; resetLabel?: string }) {
   const { t } = useLanguage()
   return (

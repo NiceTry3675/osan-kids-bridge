@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
-import { BarList, Heatmap, InsufficientPanel, StatTile } from './Charts'
-import { DONGS, SUPPRESSION_THRESHOLD } from '../data/assumptions'
+import { BarList, Heatmap, InsufficientPanel } from './Charts'
+import { ViewHeader } from './ViewHeader'
+import { DONGS } from '../data/assumptions'
 import { DEMO_RESPONSES } from '../data/generate'
 import { defaultFilters, filterResponses, summarize } from '../lib/aggregate'
-import type { DemandFilters } from '../lib/aggregate'
+import type { DemandFilters, DemandSummary } from '../lib/aggregate'
 import { GRADES, INTERESTS, LANGUAGES } from '../lib/labels'
-import { localizedCount, localizedDong, localizedInterest, localizedLanguage, localizedLevel, localizedSlot, useLanguage } from '../i18n'
+import { localizedDong, localizedInterest, localizedLanguage, localizedLevel, localizedSlot, useLanguage } from '../i18n'
 import type { Dong, Grade, Interest, ScreenLanguage } from '../types'
 
 interface Props { filters: DemandFilters; setFilters: (filters: DemandFilters) => void }
@@ -21,9 +22,11 @@ export function DemandView({ filters, setFilters }: Props) {
     setFilters({ ...filters, gradeRange: range })
   }
   return <div className="view">
-    <button className="filter-toggle mobile-only" type="button" aria-expanded={filterOpen} aria-controls="demand-filters" onClick={() => setFilterOpen(!filterOpen)}>
-      <span><strong>{t('filterTitle')}</strong><small>{filtered ? t('filterOpen') : t('all')}</small></span><span aria-hidden="true">{filterOpen ? '−' : '+'}</span>
-    </button>
+    <ViewHeader title={t('demandTab')} action={
+      <button className="filter-chip mobile-only" type="button" aria-expanded={filterOpen} aria-controls="demand-filters" onClick={() => setFilterOpen(!filterOpen)}>
+        <SlidersIcon />{filtered ? t('filterShort') : t('filterAll')}
+      </button>
+    } />
     <form id="demand-filters" className={'filter-bar' + (filterOpen ? ' is-open' : '')} aria-label={t('filterTitle')} onSubmit={(event) => event.preventDefault()}>
       <fieldset className="filter-group dong-filter"><legend>{t('district')} <small>{filters.dongs.length ? t('selected', { n: filters.dongs.length }) : t('all')}</small></legend>
         <div className="chip-row">{DONGS.map((dong) => <label key={dong} className={'check-chip' + (filters.dongs.includes(dong) ? ' checked' : '')}><input type="checkbox" checked={filters.dongs.includes(dong)} onChange={() => toggleDong(dong)} />{localizedDong(dong, locale)}</label>)}</div>
@@ -42,14 +45,16 @@ export function DemandView({ filters, setFilters }: Props) {
     </form>
     {filterOpen && <div className="scrim mobile-only" aria-hidden="true" onClick={() => setFilterOpen(false)} />}
     {summary.status === 'insufficient' ? <InsufficientPanel onReset={() => setFilters(defaultFilters())} resetLabel={t('reset')} /> : <>
-      <div className="stat-row" aria-live="polite">
-        <StatTile label={t('households')} value={localizedCount({ suppressed: false, value: summary.total }, t)} note={filtered ? t('outOfAll', { n: DEMO_RESPONSES.length }) : undefined} />
-        <StatTile label={t('topTime')} value={summary.topSlots[0] ? localizedSlot(summary.topSlots[0].slot, t) : t('hidden')} note={summary.topSlots[0] ? localizedCount(summary.topSlots[0].count, t) : t('everySlotBelow', { n: SUPPRESSION_THRESHOLD })} />
-        <StatTile label={t('avgSlots')} value={t('slots', { n: summary.averageSlots.toFixed(1) })} note={summary.averageSlotsEstimated ? t('avgEstimate') : t('avgNote')} />
-        <StatTile label={t('koreanResponse')} value={summary.koreanLevelResponseRate === null ? t('hidden') : Math.round(summary.koreanLevelResponseRate * 100) + '%'} note={summary.koreanLevelResponseRate === null ? t('noResponse') : undefined} />
-      </div>
+      <DemandSummaryLine summary={summary} filtered={filtered} />
       <div className="demand-grid">
-        <section className="card heat-card" aria-labelledby="heat-title"><div className="card-head"><h2 id="heat-title">{t('heatTitle')}</h2></div><Heatmap counts={summary.slots} max={summary.maxSlotValue} caption={t('heatCaption')} /></section>
+        <section className="card heat-card" aria-labelledby="heat-title">
+          <div className="card-head"><h2 id="heat-title">{t('heatTitle')}</h2></div>
+          <Heatmap counts={summary.slots} max={summary.maxSlotValue} caption={t('heatCaption')} />
+          <dl className="key-list">
+            <div><dt>{t('avgSlots')}</dt><dd>{t('slots', { n: summary.averageSlots.toFixed(1) })}{summary.averageSlotsEstimated && <small> · {t('avgEstimate')}</small>}</dd></div>
+            <div><dt>{t('koreanResponse')}</dt><dd>{summary.koreanLevelResponseRate === null ? t('hidden') : Math.round(summary.koreanLevelResponseRate * 100) + '%'}</dd></div>
+          </dl>
+        </section>
         <section className="card" aria-labelledby="dong-title"><div className="card-head"><h2 id="dong-title">{t('districtTitle')}</h2></div><BarList label={t('districtCount')} total={summary.total} items={[...summary.dongs].sort((a, b) => (b.count.suppressed ? 2.5 : b.count.value) - (a.count.suppressed ? 2.5 : a.count.value)).map(({ dong, count }) => ({ key: dong, label: localizedDong(dong, locale), count }))} /></section>
         <section className="card" aria-labelledby="language-title"><div className="card-head"><h2 id="language-title">{t('languageTitle')}</h2></div><BarList label={t('languageCount')} total={summary.total} items={summary.languages.map(({ language, count }) => ({ key: language, label: localizedLanguage(language, t), count }))} /></section>
         <section className="card" aria-labelledby="level-title"><div className="card-head"><h2 id="level-title">{t('levelTitle')}</h2></div><BarList label={t('levelCount')} total={summary.total} items={summary.koreanLevels.map(({ level, count }) => ({ key: level, label: localizedLevel(level, t), count, tone: level === 'none' ? 'muted' : undefined }))} /></section>
@@ -57,3 +62,20 @@ export function DemandView({ filters, setFilters }: Props) {
     </>}
   </div>
 }
+
+/** 숫자 4칸 대신 한 문장: 몇 가정이 답했고, 가장 많이 몰린 시간이 언제인지. 가린 칸은 문장에 넣지 않습니다. */
+function DemandSummaryLine({ summary, filtered }: { summary: Extract<DemandSummary, { status: 'ok' }>; filtered: boolean }) {
+  const { locale, t } = useLanguage()
+  const separator = locale === 'zh' ? '、' : ', '
+  const peaks = summary.topSlots.map(({ slot }) => localizedSlot(slot, t)).join(separator)
+  return (
+    <p className="demand-summary" aria-live="polite">
+      <strong>{filtered ? t('demandSummaryFiltered', { n: summary.total, total: DEMO_RESPONSES.length }) : t('demandSummary', { n: summary.total })}</strong>{' '}
+      {peaks ? t('demandPeak', { slots: peaks }) : t('demandPeakHidden')}
+    </p>
+  )
+}
+
+const SlidersIcon = () => (
+  <svg className="line-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
+)

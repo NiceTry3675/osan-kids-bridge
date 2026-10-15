@@ -58,7 +58,7 @@ export function ToCheck({ program }: Props) {
   const items = itemsToCheck(program)
   if (!items.length) return null
   return (
-    <section className="check-card">
+    <section className="to-check">
       <h2 className="block-title">{t('toCheck')}</h2>
       <ul className="checks">
         {items.map((item, index) => (

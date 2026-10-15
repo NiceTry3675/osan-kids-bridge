@@ -28,6 +28,8 @@
 .btn--primary:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn--secondary { background: var(--action-soft); color: var(--action); }
 .btn--secondary:hover { box-shadow: inset 0 0 0 1.5px var(--action); }
+.btn--outline { background: var(--paper); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.btn--outline:hover { background: var(--sunken); }
 .btn--ghost { background: var(--sunken); color: var(--ink-2); }
 .btn--quiet { background: transparent; color: var(--action); padding: 0 8px; min-height: 44px; }
 .btn--quiet:hover { background: var(--action-soft); }

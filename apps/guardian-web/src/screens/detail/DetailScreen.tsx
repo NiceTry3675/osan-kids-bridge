@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useI18n } from '../../i18n'
 import type { Program, SearchFilters } from '../../data/types'
-import { canApply, consultsIn, INTEREST_VISUAL, programText } from '../../lib/content'
-import { formatDate, formatStatus, isSafeUrl, screenLanguageName } from '../../lib/format'
+import { canApply, consultsIn, programText } from '../../lib/content'
+import { formatDate, interestLabel, isSafeUrl, screenLanguageName } from '../../lib/format'
 import { backToList, navigate } from '../../lib/router'
 import { Icon } from '../../components/Icon'
-import { Notice, StatePanel, StatusTag } from '../../components/feedback'
+import { Notice, StatePanel } from '../../components/feedback'
 import { ExternalLink } from '../../components/links'
 import { ActionSheet } from './ActionSheet'
 import type { ActionTab } from './ActionSheet'
@@ -46,7 +46,6 @@ function ProgramDetail({ program, compared }: { program: Program; compared: bool
   const [sheet, setSheet] = useState<ActionTab | null>(null)
   const text = programText(program, locale)
   const language = screenLanguageName(locale)
-  const visual = INTEREST_VISUAL[program.category]
 
   return (
     <article className="detail">
@@ -59,8 +58,7 @@ function ProgramDetail({ program, compared }: { program: Program; compared: bool
       )}
 
       <header className="detail-head">
-        <span className={`detail-art tone-${visual.tone}`} aria-hidden="true">{visual.emoji}</span>
-        <StatusTag status={program.application_status}>{formatStatus(program, locale)}</StatusTag>
+        <p className="detail-category">{interestLabel(locale, program.category)}</p>
         <h1 className="detail-title" lang={text.lang}>
           {text.title}
           {text.missingTranslation && <span className="tag-original">{t('originalTag')}</span>}
@@ -83,7 +81,7 @@ function ProgramDetail({ program, compared }: { program: Program; compared: bool
       <LanguageSection program={program} />
 
       <div className="action-bar">
-        <button type="button" className="btn btn--secondary btn--lg" onClick={() => setSheet('ask')}><Icon name="chat" />{t('askButton')}</button>
+        <button type="button" className="btn btn--outline btn--lg" onClick={() => setSheet('ask')}>{t('askButton')}</button>
         <PrimaryAction program={program} onOpen={() => setSheet('apply')} />
       </div>
       <ActionSheet program={program} tab={sheet} onTab={setSheet} onClose={() => setSheet(null)} />

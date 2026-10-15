@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Heatmap, InsufficientPanel } from './Charts'
+import { ViewHeader } from './ViewHeader'
 import { ENROLLMENT_RATE, MAX_CAPACITY, MIN_CAPACITY } from '../data/assumptions'
 import { DEMO_RESPONSES } from '../data/generate'
 import { VENUES } from '../data/venues'
@@ -70,7 +71,9 @@ export function RecommendView({ form, setForm }: Props) {
   ].join(' · ')
   const showResult = () => { setView('result'); window.scrollTo({ top: 0 }) }
 
-  return <div className="recommend-layout" data-view={view}>
+  return <div className="view">
+  <ViewHeader title={t('recommendTab')} />
+  <div className="recommend-layout" data-view={view}>
     <section className="plan-panel" aria-label={t('planTitle')}>
       <form className="plan-form" onSubmit={(event) => { event.preventDefault(); showResult() }}>
         <h2 className="plan-q">{t('programQuestion')}</h2>
@@ -140,6 +143,7 @@ export function RecommendView({ form, setForm }: Props) {
         </DetailsSheet>
       </>}
     </section>
+  </div>
   </div>
 }
 

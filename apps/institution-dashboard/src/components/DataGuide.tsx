@@ -1,10 +1,12 @@
 import { SUPPRESSION_THRESHOLD } from '../data/assumptions'
 import { useLanguage } from '../i18n'
+import { ViewHeader } from './ViewHeader'
 
 export function DataGuide() {
   const { t } = useLanguage()
   return (
     <div className="view guide">
+      <ViewHeader title={t('guideTab')} />
       <div className="guide-grid">
         <section className="card" aria-labelledby="guide-collect">
           <h2 id="guide-collect">{t('guideCollected')}</h2>
