@@ -1,0 +1,12 @@
+{
+  "name": "@osan-kids-bridge/ui",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens.css": "./src/tokens.css",
+    "./base.css": "./src/base.css"
+  },
+  "peerDependencies": { "react": "^19.1.0" }
+}

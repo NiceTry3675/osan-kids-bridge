@@ -1,5 +1,6 @@
-import { MASKED_NOTE, formatCount, formatHouseholds, heatLegend, heatLevel, safePercent } from '../lib/aggregate'
-import { DAY_PARTS, DAY_PART_LABELS, WEEKDAYS, WEEKDAY_LABELS, slotLongLabel } from '../lib/slots'
+import { heatLegend, heatLevel, safePercent } from '../lib/aggregate'
+import { DAY_PARTS, WEEKDAYS } from '../lib/slots'
+import { localizedCount, localizedDay, localizedPart, localizedSlot, useLanguage } from '../i18n'
 import { DAY_PART_HOURS, SUPPRESSION_THRESHOLD } from '../data/assumptions'
 import type { SafeCount, SlotKey } from '../types'
 
@@ -18,31 +19,32 @@ interface HeatmapProps {
 
 /** 요일 × 시간대 7×3 히트맵. 모든 칸에 숫자(또는 "5 미만")를 함께 적어 색만으로 읽지 않게 합니다. */
 export function Heatmap({ counts, max, caption, marks, baselineSlots = [], compact }: HeatmapProps) {
+  const { t } = useLanguage()
   return (
     <figure className={`heatmap-figure${compact ? ' compact' : ''}`}>
       <div className="heatmap" role="table" aria-label={caption}>
         <div role="row" className="heat-row">
-          <span role="columnheader" className="heat-corner"><span className="sr-only">시간대</span></span>
-          {WEEKDAYS.map((day) => <span key={day} role="columnheader" className={`heat-col${day === 'sat' || day === 'sun' ? ' weekend' : ''}`}>{WEEKDAY_LABELS[day]}</span>)}
+          <span role="columnheader" className="heat-corner"><span className="sr-only">{t('time')}</span></span>
+          {WEEKDAYS.map((day) => <span key={day} role="columnheader" className={`heat-col${day === 'sat' || day === 'sun' ? ' weekend' : ''}`}>{localizedDay(day, t)}</span>)}
         </div>
         {DAY_PARTS.map((part) => (
           <div key={part} role="row" className="heat-row">
-            <span role="rowheader" className="heat-rowhead">{DAY_PART_LABELS[part]}<small>{pad(DAY_PART_HOURS[part][0])}~{pad(DAY_PART_HOURS[part][1])}시</small></span>
+            <span role="rowheader" className="heat-rowhead">{localizedPart(part, t)}<small>{pad(DAY_PART_HOURS[part][0])}~{pad(DAY_PART_HOURS[part][1])}</small></span>
             {WEEKDAYS.map((day) => {
               const slot = `${day}-${part}` as SlotKey
               const count = counts[slot]
               const level = count.suppressed ? 'suppressed' : `level-${heatLevel(count.value, max)}`
               const badges = marks?.[slot] ?? []
               const isBaseline = baselineSlots.includes(slot)
-              const label = `${slotLongLabel(slot)} ${formatHouseholds(count)}${badges.length ? `, 추천 ${badges.join('·')}` : ''}${isBaseline ? ', 기존 계획' : ''}`
+              const label = localizedSlot(slot, t) + ' ' + localizedCount(count, t) + (badges.length ? ', ' + t('recommended') : '') + (isBaseline ? ', ' + t('existing') : '')
               return (
                 <div key={slot} role="cell" className={`heat-cell ${level}${badges.length ? ' marked' : ''}${isBaseline ? ' baseline' : ''}`} title={label}>
                   <span className="sr-only">{label}</span>
-                  <span className="heat-value" aria-hidden="true">{formatCount(count)}</span>
+                  <span className="heat-value" aria-hidden="true">{localizedCount(count, t, 'short')}</span>
                   {(badges.length > 0 || isBaseline) && (
                     <span className="heat-badges" aria-hidden="true">
                       {badges.map((badge) => <span key={badge} className="heat-badge">{badge}</span>)}
-                      {isBaseline && <span className="heat-badge outline">기존</span>}
+                      {isBaseline && <span className="heat-badge outline">{t('existing')}</span>}
                     </span>
                   )}
                 </div>
@@ -52,9 +54,9 @@ export function Heatmap({ counts, max, caption, marks, baselineSlots = [], compa
         ))}
       </div>
       <figcaption className="heat-legend">
-        <span className="legend-title">가정 수</span>
+        <span className="legend-title">{t('householdCount')}</span>
         <span className="legend-item"><i className="swatch level-0" aria-hidden="true" />0</span>
-        <span className="legend-item"><i className="swatch suppressed" aria-hidden="true" />{SUPPRESSION_THRESHOLD} 미만</span>
+        <span className="legend-item"><i className="swatch suppressed" aria-hidden="true" />{t('below', { n: SUPPRESSION_THRESHOLD })}</span>
         {heatLegend(max).map(({ level, from, to }) => (
           <span key={level} className="legend-item"><i className={`swatch level-${level}`} aria-hidden="true" />{from === to ? from : `${from}~${to}`}</span>
         ))}
@@ -67,6 +69,7 @@ export interface BarItem { key: string; label: string; count: SafeCount; tone?: 
 
 /** 가로 막대 목록. 억제된 항목은 길이를 드러내지 않도록 빗금 짧은 막대와 "5 미만"(보조 억제는 "가림")으로 표시합니다. */
 export function BarList({ items, total, label }: { items: BarItem[]; total: number; label: string }) {
+  const { t } = useLanguage()
   const max = Math.max(1, ...items.map(({ count }) => (count.suppressed ? 0 : count.value)))
   const masked = items.some(({ count }) => count.suppressed && count.masked)
   return (
@@ -80,12 +83,12 @@ export function BarList({ items, total, label }: { items: BarItem[]; total: numb
               <span className="bar-track" aria-hidden="true">
                 <span className={`bar-fill${count.suppressed ? ' suppressed' : ''}${tone ? ` ${tone}` : ''}`} style={{ width: count.suppressed ? '8px' : `${(count.value / max) * 100}%` }} />
               </span>
-              <span className="bar-value">{formatHouseholds(count)}{share !== null && <small> {share}%</small>}</span>
+              <span className="bar-value">{localizedCount(count, t)}{share !== null && <small> {share}%</small>}</span>
             </li>
           )
         })}
       </ul>
-      {masked && <p className="card-note masked-note">{MASKED_NOTE}</p>}
+      {masked && <p className="card-note masked-note">{t('maskedNote')}</p>}
     </>
   )
 }
@@ -101,12 +104,13 @@ export function StatTile({ label, value, note }: { label: string; value: string;
 }
 
 export function InsufficientPanel({ onReset, resetLabel }: { onReset?: () => void; resetLabel?: string }) {
+  const { t } = useLanguage()
   return (
     <div className="insufficient" role="status">
       <div className="state-icon" aria-hidden="true">!</div>
-      <h2>표시할 수 없음</h2>
-      <p>조건에 맞는 응답이 {SUPPRESSION_THRESHOLD}가정 미만이라 표시하지 않습니다.</p>
-      {onReset && <button className="button secondary" type="button" onClick={onReset}>{resetLabel ?? '조건 초기화'}</button>}
+      <h2>{t('insufficientTitle')}</h2>
+      <p>{t('insufficientText', { n: SUPPRESSION_THRESHOLD })}</p>
+      {onReset && <button className="button secondary" type="button" onClick={onReset}>{resetLabel ?? t('reset')}</button>}
     </div>
   )
 }

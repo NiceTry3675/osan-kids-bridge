@@ -1,6 +1,6 @@
-import { emptyFilters } from './types'
+import { emptyFilters } from '../data/types'
 import { validateWindow } from './format'
-import type { AvailableWindow, Interest, SearchFilters, Weekday } from './types'
+import type { AvailableWindow, Interest, SearchFilters, Weekday } from '../data/types'
 
 const key = 'guardian-search-v1'
 const weekdays: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
