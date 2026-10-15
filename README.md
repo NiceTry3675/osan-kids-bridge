@@ -6,8 +6,9 @@
 |---|---|
 | `apps/guardian-web` | 보호자 모바일 웹. 탐색·조건·상세·신청/문의 안내 |
 | `apps/institution-dashboard` | 운영기관 대시보드. 합성 수요 집계·소수 셀 억제·추천 |
+| `apps/flow-board` | 유저플로우 보드. 휴대폰 틀마다 실제 앱이 돌아가는 7화면 × 2 |
 | `packages/ui` | 두 앱이 함께 쓰는 디자인 토큰(`tokens.css`), 기본 스타일, 화면 언어 고르기 |
-| `docs/` | 기능 2 계획서 |
+| `docs/` | 기능 2 계획서, 정적 유저플로우 보드(`docs/userflow`) |
 
 ## 시작하기
 
@@ -17,7 +18,8 @@ Node 20 이상이 필요합니다. 저장소 맨 위에서 한 번만 설치합�
 npm install
 npm run dev:guardian     # 보호자 웹 (시연 데이터)
 npm run dev:dashboard    # 기관 대시보드
-npm run check            # 두 앱 타입 검사 → 테스트 → 빌드
+npm run dev:flow         # 유저플로우 보드 (두 앱을 틀 안에서 실행)
+npm run check            # 모든 앱 타입 검사 → 테스트 → 빌드
 ```
 
 예전처럼 각 앱 폴더 안에 `node_modules`가 남아 있다면 지우고 맨 위에서 다시 설치하세요. 앱별 `package-lock.json`은 맨 위 `package-lock.json` 하나로 합쳤습니다.

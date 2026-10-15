@@ -6,6 +6,7 @@
   "scripts": {
     "dev:guardian": "npm run dev -w @osan-kids-bridge/guardian-web",
     "dev:dashboard": "npm run dev -w @osan-kids-bridge/institution-dashboard",
+    "dev:flow": "npm run dev -w @osan-kids-bridge/flow-board",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
