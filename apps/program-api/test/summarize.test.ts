@@ -382,6 +382,10 @@ describe('지원 언어·대략의 일정 누락', () => {
     hasIssue(check(lines, 'ko-easy', facts), '대략의 일정')
     const withNote = [GOOD['ko-easy'][0], '11월 중에 열 예정이에요. 날짜와 시간은 기관에 물어보세요.', GOOD['ko-easy'][2]]
     expect(check(withNote, 'ko-easy', facts).some((issue) => issue.includes('대략의 일정') || issue.includes('숫자 11'))).toBe(false)
+    // 원문의 '추후 안내'를 옮긴 말도 받는다
+    const later = [GOOD['ko-easy'][0], '11월 중에 열 예정이에요. 날짜와 시간은 나중에 알려 줘요.', GOOD['ko-easy'][2]]
+    expect(check(later, 'ko-easy', facts).some((issue) => issue.includes('일정 확인 필요'))).toBe(false)
+    expect(check([GOOD['ko-easy'][0], '날짜와 시간은 나중에 알려 줘요.', GOOD['ko-easy'][2]], 'ko-easy', factsOf({ sessions: [], session_count: null })).some((issue) => issue.includes('일정 확인 필요'))).toBe(true)
   })
 })
 

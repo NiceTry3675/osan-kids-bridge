@@ -17,6 +17,8 @@ interface LanguageRules {
   free: RegExp
   /** '확인 필요'에 해당하는 말 */
   unknown: RegExp
+  /** 원문의 '추후 안내'를 옮긴 말 (대략의 일정이 있을 때만 확인 필요 대신 받는다) */
+  later: RegExp
   multicultural: RegExp
   /** 초등·중학교·고등학교 (한국 학제) */
   schools: [RegExp, RegExp, RegExp]
@@ -98,6 +100,7 @@ const RULES: Record<DisplayLanguage, LanguageRules> = {
     script: /\p{Script=Hangul}/u,
     free: /무료/,
     unknown: /확인|물어|문의|알 수 없|미정|정해지지|나와 있지 않|적혀 있지 않/,
+    later: /나중에\s*(?:알려|안내)|추후|따로\s*(?:알려|안내)/,
     multicultural: /다문화|결혼\s*이민|이주\s*배경|중도\s*입국/,
     schools: [/초등/, /중학|중등/, /고등학|고교/],
     judgement: /신청\s*중|접수\s*중|모집\s*중|마감(?:됐|되었|했|이에요|입니다|돼)|참여할 수 있|참여 가능/,
@@ -115,6 +118,7 @@ const RULES: Record<DisplayLanguage, LanguageRules> = {
     script: /[ăâđêôơưàáạảãằắặẳẵầấậẩẫèéẹẻẽềếệểễìíịỉĩòóọỏõồốộổỗờớợởỡùúụủũừứựửữỳýỵỷỹ]/i,
     free: /miễn phí/i,
     unknown: /chưa rõ|chưa có thông tin|không có thông tin|chưa xác định|không rõ|không ghi|chưa ghi|cần (?:hỏi|xác nhận|kiểm tra)|hãy hỏi|vui lòng hỏi/i,
+    later: /(?:thông báo|báo) sau|sẽ (?:được )?thông báo/i,
     multicultural: /đa văn h(?:óa|oá)|kết hôn|nhập cư|di trú|di cư/i,
     schools: [/tiểu học|cấp 1/i, /trung học cơ sở|THCS|cấp 2/i, /trung học phổ thông|THPT|cấp 3/i],
     judgement: /đang (?:nhận|mở|tiếp nhận) đăng ký|đã (?:hết hạn|đóng|kết thúc)|có thể tham gia|được tham gia/i,
@@ -141,6 +145,7 @@ const RULES: Record<DisplayLanguage, LanguageRules> = {
     script: /\p{Script=Han}/u,
     free: /免费/,
     unknown: /待确认|需确认|需要确认|请向|请咨询|需咨询|未注明|未公布|不详|未确定|尚未|不明/,
+    later: /另行通知|稍后通知|后续通知|另行告知/,
     multicultural: /多元文化|多文化|移民/,
     schools: [/小学/, /初中|初级中学/, /高中/],
     judgement: /正在报名|报名中|已截止|报名已结束|已结束报名|可以参加|可参加|能参加/,
@@ -361,7 +366,7 @@ function requiredIssues(lines: string[], scans: LineScan[], facts: SummaryFacts,
     }
     if (!rules.unknown.test(second)) issues.push('2줄에 회차 요일·시간 확인 필요라는 말이 없음')
   } else {
-    if (!rules.unknown.test(second)) issues.push('2줄에 일정 확인 필요라는 말이 없음')
+    if (!rules.unknown.test(second) && !(facts.schedule_note && rules.later.test(second))) issues.push('2줄에 일정 확인 필요라는 말이 없음')
     const noteNumbers = facts.schedule_note ? numberTokens(facts.schedule_note) : []
     if (noteNumbers.some((value) => !numbers(1).has(value))) issues.push(`2줄에 대략의 일정(${facts.schedule_note})이 없음`)
   }
