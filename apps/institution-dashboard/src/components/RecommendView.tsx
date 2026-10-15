@@ -1,6 +1,7 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Heatmap, InsufficientPanel } from './Charts'
+import { Icon } from './icons'
+import { Sheet } from './Sheet'
 import { ViewHeader } from './ViewHeader'
 import { ENROLLMENT_RATE, MAX_CAPACITY, MIN_CAPACITY } from '../data/assumptions'
 import { DEMO_RESPONSES } from '../data/generate'
@@ -30,8 +31,8 @@ function readComboLimit(): number | undefined {
 }
 
 /**
- * 추천 탭. 휴대폰에서는 ‘조건’ → ‘결과’ 두 화면을 오가고 ‘자세히’는 시트로 엽니다.
- * 넓은 화면에서는 조건과 결과를 나란히 둡니다. 추천 계산은 lib/recommend.ts 그대로입니다.
+ * 추천 탭. ‘조건’ → ‘결과’ 두 화면을 오가고 ‘자세히’는 시트로 엽니다(보호자 웹의 조건 → 결과와 같은 흐름).
+ * 추천 계산은 lib/recommend.ts 그대로입니다.
  */
 export function RecommendView({ form, setForm }: Props) {
   const { locale, t } = useLanguage()
@@ -71,79 +72,108 @@ export function RecommendView({ form, setForm }: Props) {
   ].join(' · ')
   const showResult = () => { setView('result'); window.scrollTo({ top: 0 }) }
 
-  return <div className="view">
-  <ViewHeader title={t('recommendTab')} />
-  <div className="recommend-layout" data-view={view}>
-    <section className="plan-panel" aria-label={t('planTitle')}>
-      <form className="plan-form" onSubmit={(event) => { event.preventDefault(); showResult() }}>
-        <h2 className="plan-q">{t('programQuestion')}</h2>
-        <div className="interest-tiles" role="radiogroup" aria-label={t('planField')}>
+  if (view === 'plan') return <div className="view">
+    <ViewHeader title={t('recommendTab')} />
+    <form className="plan-form" aria-label={t('planTitle')} onSubmit={(event) => { event.preventDefault(); showResult() }}>
+      <fieldset className="field">
+        <legend>{t('programQuestion')}</legend>
+        <div className="tiles tiles--five" role="radiogroup" aria-label={t('planField')}>
           {(['all', ...INTERESTS] as (Interest | 'all')[]).map((value) => (
-            <button key={value} type="button" role="radio" aria-checked={form.interest === value} className="itile" onClick={() => update({ interest: value })}>
-              <span className={`itile-art tone-${INTEREST_ART[value].tone}`} aria-hidden="true">{INTEREST_ART[value].emoji}</span>
+            <button key={value} type="button" role="radio" aria-checked={form.interest === value} className="tile" onClick={() => update({ interest: value })}>
+              <span className={`tile-art tone-${INTEREST_ART[value].tone}`} aria-hidden="true">{INTEREST_ART[value].emoji}</span>
               {value === 'all' ? t('allFields') : localizedInterest(value, t)}
             </button>
           ))}
         </div>
-        <div className="field-pair">
-          <fieldset className="field"><legend className="field-label">{t('targetGrade')}</legend><div className="range-row"><label><span className="sr-only">{t('startGrade')}</span><select value={form.gradeRange[0]} onChange={(event) => setGrade(0, Number(event.target.value) as Grade)}>{GRADES.map((grade) => <option key={grade} value={grade}>{t('gradeValue', { n: grade })}</option>)}</select></label><span>–</span><label><span className="sr-only">{t('endGrade')}</span><select value={form.gradeRange[1]} onChange={(event) => setGrade(1, Number(event.target.value) as Grade)}>{GRADES.map((grade) => <option key={grade} value={grade}>{t('gradeValue', { n: grade })}</option>)}</select></label></div></fieldset>
-          <label className="field"><span className="field-label">{t('capacity')}</span><span className="unit-input"><input type="number" inputMode="numeric" min={MIN_CAPACITY} max={MAX_CAPACITY} value={capacityText} aria-invalid={capacityError} aria-describedby={capacityError ? 'capacity-error' : undefined} onChange={(event) => onCapacity(event.target.value)} /><span>{t('people', { n: '' })}</span></span>{capacityError && <small id="capacity-error" className="field-error">{MIN_CAPACITY}–{MAX_CAPACITY}</small>}</label>
+      </fieldset>
+      <fieldset className="field">
+        <legend>{t('targetGrade')}</legend>
+        <div className="range-row">
+          <label><span className="visually-hidden">{t('startGrade')}</span><select className="input" value={form.gradeRange[0]} onChange={(event) => setGrade(0, Number(event.target.value) as Grade)}>{GRADES.map((grade) => <option key={grade} value={grade}>{t('gradeValue', { n: grade })}</option>)}</select></label>
+          <span aria-hidden="true">~</span>
+          <label><span className="visually-hidden">{t('endGrade')}</span><select className="input" value={form.gradeRange[1]} onChange={(event) => setGrade(1, Number(event.target.value) as Grade)}>{GRADES.map((grade) => <option key={grade} value={grade}>{t('gradeValue', { n: grade })}</option>)}</select></label>
         </div>
-        <fieldset className="field"><legend className="field-label">{t('classCount')}</legend><div className="segment">{CLASS_COUNTS.map((count) => <label key={count} className={form.classCount === count ? 'selected' : ''}><input type="radio" name="class-count" value={count} checked={form.classCount === count} onChange={() => update({ classCount: count })} />{t('classes', { n: count })}</label>)}</div></fieldset>
-        <details className="acc">
-          <summary><span>{t('venues')}</span><small>{t('venuesSummary', { n: VENUES.length, m: form.venueIds.length })}</small></summary>
-          <div className="acc-body">
-            <div className="inline-actions"><button type="button" className="text-button" onClick={() => update({ venueIds: VENUES.map((venue) => venue.id) })}>{t('selectAll')}</button><button type="button" className="text-button" onClick={() => update({ venueIds: [] })}>{t('clearAll')}</button></div>
-            <div className="venue-list">{VENUES.map((venue) => <label key={venue.id} className={'venue-option' + (form.venueIds.includes(venue.id) ? ' checked' : '')}><input type="checkbox" checked={form.venueIds.includes(venue.id)} onChange={() => toggleVenue(venue.id)} /><span><strong>{localizedVenue(venue, locale)}</strong><small>{localizedDong(venue.dong, locale)} · {t('available', { n: venue.bookable.length })}</small></span></label>)}</div>
-          </div>
-        </details>
-        <details className="acc">
-          <summary><span>{t('compareBaseline')}</span><small>{form.baselineOn ? t('baselineOnSummary') : t('baselineOffSummary')}</small></summary>
-          <div className="acc-body">
-            <label className="toggle"><input type="checkbox" checked={form.baselineOn} onChange={(event) => update({ baselineOn: event.target.checked })} />{t('compareBaseline')}</label>
-            {form.baselineOn && <div className="baseline-rows">{form.baseline.slice(0, form.classCount).map((option, at) => <div key={at} className="baseline-row"><span className="baseline-name">{t('planForClass', { n: at + 1 })}</span><label><span className="sr-only">{t('baselineClassSlot', { n: at + 1 })}</span><select value={option.slot} onChange={(event) => setBaseline(at, { slot: event.target.value as SlotKey })}>{SLOTS.map((slot) => <option key={slot} value={slot}>{localizedSlot(slot, t)}</option>)}</select></label><label><span className="sr-only">{t('baselineClassVenue', { n: at + 1 })}</span><select value={option.venueId} onChange={(event) => setBaseline(at, { venueId: event.target.value })}>{VENUES.map((venue) => <option key={venue.id} value={venue.id}>{localizedVenue(venue, locale)}</option>)}</select></label></div>)}</div>}
-          </div>
-        </details>
-        <div className="plan-actions">
-          <button className="button ghost" type="button" onClick={reset}>{t('reset')}</button>
-          <button className="button primary lg mobile-only" type="submit">{t('showRecommend')}</button>
+      </fieldset>
+      <fieldset className="field">
+        <legend>{t('classCount')}</legend>
+        <div className="picks" role="radiogroup" aria-label={t('classCount')}>
+          {CLASS_COUNTS.map((count) => <button key={count} type="button" role="radio" aria-checked={form.classCount === count} className="pick" onClick={() => update({ classCount: count })}>{t('classes', { n: count })}</button>)}
         </div>
-      </form>
-    </section>
-
-    <section className="plan-results" aria-live="polite">
-      <div className="result-top mobile-only">
-        <button type="button" className="back-btn" onClick={() => setView('plan')}>‹ {t('filterOpen')}</button>
-        <span className="result-summary">{summary}</span>
+      </fieldset>
+      <div className="field">
+        <label className="field-label" htmlFor="capacity">{t('capacity')}</label>
+        <div className="input-row">
+          <input id="capacity" className="input input--short" type="number" inputMode="numeric" min={MIN_CAPACITY} max={MAX_CAPACITY} value={capacityText} aria-invalid={capacityError} aria-describedby={capacityError ? 'capacity-error' : undefined} onChange={(event) => onCapacity(event.target.value)} />
+          <span>{t('people', { n: '' }).trim()}</span>
+        </div>
+        {capacityError && <p id="capacity-error" className="field-error">{MIN_CAPACITY}–{MAX_CAPACITY}</p>}
       </div>
+      <details className="fold">
+        <summary><span>{t('venues')}</span><small>{t('venuesSummary', { n: VENUES.length, m: form.venueIds.length })}</small></summary>
+        <div className="fold-body">
+          <div className="fold-actions"><button type="button" className="link-btn" onClick={() => update({ venueIds: VENUES.map((venue) => venue.id) })}>{t('selectAll')}</button><button type="button" className="link-btn" onClick={() => update({ venueIds: [] })}>{t('clearAll')}</button></div>
+          <ul className="check-list">{VENUES.map((venue) => <li key={venue.id}><label className="check-row"><input type="checkbox" checked={form.venueIds.includes(venue.id)} onChange={() => toggleVenue(venue.id)} /><span><strong>{localizedVenue(venue, locale)}</strong><small>{localizedDong(venue.dong, locale)} · {t('available', { n: venue.bookable.length })}</small></span></label></li>)}</ul>
+        </div>
+      </details>
+      <details className="fold">
+        <summary><span>{t('compareBaseline')}</span><small>{form.baselineOn ? t('baselineOnSummary') : t('baselineOffSummary')}</small></summary>
+        <div className="fold-body">
+          <label className="switch-row switch-row--flat"><input type="checkbox" checked={form.baselineOn} onChange={(event) => update({ baselineOn: event.target.checked })} /><span className="switch" aria-hidden="true" /><strong>{t('compareBaseline')}</strong></label>
+          {form.baselineOn && <div className="baseline-rows">{form.baseline.slice(0, form.classCount).map((option, at) => <div key={at} className="baseline-row"><span className="baseline-name">{t('planForClass', { n: at + 1 })}</span><label><span className="visually-hidden">{t('baselineClassSlot', { n: at + 1 })}</span><select className="input" value={option.slot} onChange={(event) => setBaseline(at, { slot: event.target.value as SlotKey })}>{SLOTS.map((slot) => <option key={slot} value={slot}>{localizedSlot(slot, t)}</option>)}</select></label><label><span className="visually-hidden">{t('baselineClassVenue', { n: at + 1 })}</span><select className="input" value={option.venueId} onChange={(event) => setBaseline(at, { venueId: event.target.value })}>{VENUES.map((venue) => <option key={venue.id} value={venue.id}>{localizedVenue(venue, locale)}</option>)}</select></label></div>)}</div>}
+        </div>
+      </details>
+      <div className="form-actions">
+        <button className="btn btn--ghost btn--lg" type="button" onClick={reset}>{t('reset')}</button>
+        <button className="btn btn--primary btn--lg" type="submit">{t('showRecommend')}</button>
+      </div>
+    </form>
+  </div>
+
+  return <div className="view">
+    <ViewHeader title={t('recommendTab')} />
+    <div className="bar-top">
+      <button type="button" className="btn btn--quiet btn--back" onClick={() => { setView('plan'); window.scrollTo({ top: 0 }) }}><Icon name="back" />{t('filterOpen')}</button>
+    </div>
+    <p className="muted plan-summary">{summary}</p>
+    <section aria-live="polite" className="results">
       {result.status === 'insufficient' && <InsufficientPanel onReset={reset} resetLabel={t('reset')} />}
-      {result.status === 'no_options' && <div className="insufficient"><h2>{t('noVenues')}</h2><p>{t('chooseVenue')}</p></div>}
-      {result.status === 'no_reach' && <div className="insufficient"><h2>{t('noReach')}</h2><p>{t('widen')}</p></div>}
+      {result.status === 'no_options' && <div className="state"><p className="state-title">{t('noVenues')}</p><p className="state-hint">{t('chooseVenue')}</p></div>}
+      {result.status === 'no_reach' && <div className="state"><p className="state-title">{t('noReach')}</p><p className="state-hint">{t('widen')}</p></div>}
       {result.status === 'ok' && current && <>
-        <div className="option-switch" role="group" aria-label={t('recommendTab')}>{result.recommendations.map((item, index) => <button key={item.rank} type="button" className={selected === index ? 'active' : ''} aria-pressed={selected === index} onClick={() => setSelected(index)}>{t('option', { n: item.rank })}</button>)}</div>
+        <div className="seg" role="tablist" aria-label={t('recommendTab')}>{result.recommendations.map((item, index) => <button key={item.rank} type="button" role="tab" className="seg-btn" aria-selected={selected === index} onClick={() => setSelected(index)}>{t('option', { n: item.rank })}</button>)}</div>
         <Coverage result={result} current={current} />
-        <section className="card class-card">
-          <h2>{t('classDetails')}</h2>
-          {current.classes.map((entry, at) => <div key={entry.option.slot + entry.option.venueId} className="class-item"><span className="class-index">{at + 1}</span><div className="class-main"><strong>{localizedSlot(entry.option.slot, t)} · {localizedVenue(entry.venue, locale)}</strong><small>{localizedDong(entry.venue.dong, locale)}{entry.alternatives.length > 0 && <> · {t('sameEffect')}: {entry.alternatives.map((venue) => localizedVenue(venue, locale)).join(', ')}</>}</small><div className="class-metrics"><span>{t('added')} <b>{entry.marginalSafe.suppressed ? localizedCount(entry.marginalSafe, t) : '+' + localizedCount(entry.marginalSafe, t, 'short')}</b></span><span>{t('expected')} <b className={entry.overCapacity ? 'over' : undefined}>{localizedPeople(entry.expectedHeadcount, t)} / {t('people', { n: form.capacity })}</b></span></div></div><div className="class-numbers"><strong>{localizedCount(suppress(entry.reach), t)}</strong><small>{t('reached')}</small></div></div>)}
-          {current.classes.some((entry) => entry.overCapacity) && <p className="capacity-note">{t('overCapacity')}</p>}
-          <p className="table-note">{t('estimatedNote', { n: Math.round(ENROLLMENT_RATE * 100) })}</p>
+        <section className="block" aria-labelledby="class-title">
+          <h2 id="class-title" className="block-title">{t('classDetails')}</h2>
+          <ol className="class-list">
+            {current.classes.map((entry, at) => <li key={entry.option.slot + entry.option.venueId} className="class-item">
+              <span className="class-index">{at + 1}</span>
+              <div className="class-main">
+                <strong>{localizedSlot(entry.option.slot, t)} · {localizedVenue(entry.venue, locale)}</strong>
+                <small>{localizedDong(entry.venue.dong, locale)}{entry.alternatives.length > 0 && <> · {t('sameEffect')}: {entry.alternatives.map((venue) => localizedVenue(venue, locale)).join(', ')}</>}</small>
+                <span className="class-metrics"><span>{t('added')} <b>{entry.marginalSafe.suppressed ? localizedCount(entry.marginalSafe, t) : '+' + localizedCount(entry.marginalSafe, t, 'short')}</b></span><span>{t('expected')} <b className={entry.overCapacity ? 'over' : undefined}>{localizedPeople(entry.expectedHeadcount, t)} / {t('people', { n: form.capacity })}</b></span></span>
+              </div>
+              <div className="class-numbers"><strong>{localizedCount(suppress(entry.reach), t)}</strong><small>{t('reached')}</small></div>
+            </li>)}
+          </ol>
+          {current.classes.some((entry) => entry.overCapacity) && <div className="notice notice--warn" role="note"><p className="notice-title">{t('overCapacity')}</p></div>}
+          <p className="muted">{t('estimatedNote', { n: Math.round(ENROLLMENT_RATE * 100) })}</p>
         </section>
-        <section className="card desktop-only"><h2>{t('heatPlan', { n: current.rank })}</h2><Heatmap compact counts={eligibleSlots.safe} max={eligibleSlots.max} caption={t('heatPlanCaption')} marks={marks} baselineSlots={baselineSlots} /></section>
-        <button type="button" className="button secondary lg full" onClick={() => setDetailsOpen(true)}>{t('detailsOpen', { n: current.rank })}</button>
-        <DetailsSheet open={detailsOpen} onClose={() => setDetailsOpen(false)} title={t('detailsTitle', { n: current.rank })}>
-          <Heatmap compact counts={eligibleSlots.safe} max={eligibleSlots.max} caption={t('heatPlanCaption')} marks={marks} baselineSlots={baselineSlots} />
-          <h3 className="sheet-sub">{t('languageTitle')}</h3>
-          <Pills items={LANGUAGES.map((language) => [localizedLanguage(language, t), current.languageBreakdown[language]])} />
-          <h3 className="sheet-sub">{t('levelTitle')}</h3>
-          <Pills items={([...KOREAN_LEVELS, 'none'] as const).map((level) => [localizedLevel(level, t), current.koreanLevelBreakdown[level]])} />
-          <h3 className="sheet-sub">{t('insights')}</h3>
-          {locale === 'ko-easy'
-            ? <div className="insight-copy"><p>{current.explanation}</p><ul>{[...current.languageSuggestions, ...current.teachingSuggestions, ...current.warnings].map((line) => <li key={line}>{line}</li>)}</ul></div>
-            : <div className="insight-copy"><p>{t('insightSummary')}</p><ul><li>{t('languageAdvice')}</li><li>{t('teachingAdvice')}</li></ul><details className="original-insight"><summary>{t('originalDetails')}</summary><p>{t('originalNote')}</p><div lang="ko"><p>{current.explanation}</p><ul>{[...current.languageSuggestions, ...current.teachingSuggestions, ...current.warnings].map((line) => <li key={line}>{line}</li>)}</ul></div></details></div>}
-        </DetailsSheet>
+        <button type="button" className="btn btn--secondary btn--lg btn--block" aria-haspopup="dialog" onClick={() => setDetailsOpen(true)}>{t('detailsOpen', { n: current.rank })}</button>
+        <Sheet tall open={detailsOpen} onClose={() => setDetailsOpen(false)} title={t('detailsTitle', { n: current.rank })}>
+          <div className="stack">
+            <Heatmap compact counts={eligibleSlots.safe} max={eligibleSlots.max} caption={t('heatPlanCaption')} marks={marks} baselineSlots={baselineSlots} />
+            <h3 className="sheet-sub">{t('languageTitle')}</h3>
+            <Pills items={LANGUAGES.map((language) => [localizedLanguage(language, t), current.languageBreakdown[language]])} />
+            <h3 className="sheet-sub">{t('levelTitle')}</h3>
+            <Pills items={([...KOREAN_LEVELS, 'none'] as const).map((level) => [localizedLevel(level, t), current.koreanLevelBreakdown[level]])} />
+            <h3 className="sheet-sub">{t('insights')}</h3>
+            {locale === 'ko-easy'
+              ? <div className="insight-copy"><p>{current.explanation}</p><ul>{[...current.languageSuggestions, ...current.teachingSuggestions, ...current.warnings].map((line) => <li key={line}>{line}</li>)}</ul></div>
+              : <div className="insight-copy"><p>{t('insightSummary')}</p><ul><li>{t('languageAdvice')}</li><li>{t('teachingAdvice')}</li></ul><details className="original"><summary>{t('originalDetails')}</summary><p>{t('originalNote')}</p><div lang="ko"><p>{current.explanation}</p><ul>{[...current.languageSuggestions, ...current.teachingSuggestions, ...current.warnings].map((line) => <li key={line}>{line}</li>)}</ul></div></details></div>}
+          </div>
+        </Sheet>
       </>}
     </section>
-  </div>
   </div>
 }
 
@@ -153,12 +183,12 @@ function Coverage({ result, current }: { result: RecommendResult; current: Recom
   const safeBaseline = result.baseline ? suppress(result.baseline.covered) : null
   const rate = percent(current.covered, result.eligibleCount)
   return (
-    <article className="card result-card">
-      <span className="section-kicker">{t('eligible', { n: result.eligibleCount })}</span>
+    <article className="coverage">
+      <p className="coverage-kicker">{t('eligible', { n: result.eligibleCount })}</p>
       <div className="result-total"><strong>{localizedCount(safeCovered, t)}</strong><span>{safeCovered.suppressed ? t('hidden') : rate + '%'}</span></div>
       <div className="meter"><span style={{ width: safeCovered.suppressed ? '2%' : rate + '%' }} /></div>
       {result.baseline && safeBaseline && <div className="baseline-compare"><span>{t('baseline')}</span><strong>{safeBaseline.suppressed ? localizedCount(safeBaseline, t) : percent(result.baseline.covered, result.eligibleCount) + '%'} → {safeCovered.suppressed ? localizedCount(safeCovered, t) : rate + '%'}</strong></div>}
-      <p className="demo-result-note">{t('demoResultNote')}{result.method === 'greedy' && <><br />{t('approximate')}</>}</p>
+      <p className="muted">{t('demoResultNote')}{result.method === 'greedy' && <><br />{t('approximate')}</>}</p>
     </article>
   )
 }
@@ -166,25 +196,4 @@ function Coverage({ result, current }: { result: RecommendResult; current: Recom
 function Pills({ items }: { items: [string, SafeCount][] }) {
   const { t } = useLanguage()
   return <div className="pill-list">{items.map(([label, count]) => <span key={label}>{label} <strong>{localizedCount(count, t)}</strong></span>)}</div>
-}
-
-function DetailsSheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
-  const { t } = useLanguage()
-  const ref = useRef<HTMLDialogElement>(null)
-  const titleId = useId()
-  useEffect(() => {
-    const dialog = ref.current
-    if (!dialog) return
-    if (open && !dialog.open) dialog.showModal?.()
-    if (!open && dialog.open) dialog.close()
-  }, [open])
-  return (
-    <dialog ref={ref} className="dsheet" aria-labelledby={titleId} onClose={onClose} onCancel={onClose} onClick={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <div className="dsheet-inner">
-        <div className="grab" aria-hidden="true" />
-        <div className="dsheet-head"><h2 id={titleId}>{title}</h2><button type="button" className="close-btn" onClick={onClose} aria-label={t('close')}>✕</button></div>
-        <div className="dsheet-body">{children}</div>
-      </div>
-    </dialog>
-  )
 }

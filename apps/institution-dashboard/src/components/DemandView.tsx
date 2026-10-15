@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import { BarList, Heatmap, InsufficientPanel } from './Charts'
+import { Icon } from './icons'
+import { Sheet } from './Sheet'
 import { ViewHeader } from './ViewHeader'
 import { DONGS } from '../data/assumptions'
 import { DEMO_RESPONSES } from '../data/generate'
@@ -21,44 +23,68 @@ export function DemandView({ filters, setFilters }: Props) {
     const range: [Grade, Grade] = index === 0 ? [grade, Math.max(grade, filters.gradeRange[1]) as Grade] : [Math.min(grade, filters.gradeRange[0]) as Grade, grade]
     setFilters({ ...filters, gradeRange: range })
   }
+  const pick = (pressed: boolean, label: string, onClick: () => void) => (
+    <button key={label} type="button" className="chip chip--pick" aria-pressed={pressed} onClick={onClick}>{label}</button>
+  )
+
   return <div className="view">
     <ViewHeader title={t('demandTab')} action={
-      <button className="filter-chip mobile-only" type="button" aria-expanded={filterOpen} aria-controls="demand-filters" onClick={() => setFilterOpen(!filterOpen)}>
-        <SlidersIcon />{filtered ? t('filterShort') : t('filterAll')}
+      <button className="btn btn--quiet" type="button" aria-haspopup="dialog" onClick={() => setFilterOpen(true)}>
+        <Icon name="sliders" />{filtered ? t('filterOpen') : t('filterTitle')}
       </button>
     } />
-    <form id="demand-filters" className={'filter-bar' + (filterOpen ? ' is-open' : '')} aria-label={t('filterTitle')} onSubmit={(event) => event.preventDefault()}>
-      <fieldset className="filter-group dong-filter"><legend>{t('district')} <small>{filters.dongs.length ? t('selected', { n: filters.dongs.length }) : t('all')}</small></legend>
-        <div className="chip-row">{DONGS.map((dong) => <label key={dong} className={'check-chip' + (filters.dongs.includes(dong) ? ' checked' : '')}><input type="checkbox" checked={filters.dongs.includes(dong)} onChange={() => toggleDong(dong)} />{localizedDong(dong, locale)}</label>)}</div>
+
+    <Sheet
+      open={filterOpen}
+      onClose={() => setFilterOpen(false)}
+      title={t('filterTitle')}
+      onSubmit={() => setFilterOpen(false)}
+      footer={<>
+        <button className="btn btn--ghost btn--lg" type="button" onClick={() => setFilters(defaultFilters())} disabled={!filtered}>{t('reset')}</button>
+        <button className="btn btn--primary btn--lg" type="submit">{t('applyFilters')}</button>
+      </>}
+    >
+      <fieldset className="field">
+        <legend>{t('district')} <small className="legend-note">{filters.dongs.length ? t('selected', { n: filters.dongs.length }) : t('all')}</small></legend>
+        <div className="chips">{DONGS.map((dong) => pick(filters.dongs.includes(dong), localizedDong(dong, locale), () => toggleDong(dong)))}</div>
       </fieldset>
-      <fieldset className="filter-group"><legend>{t('grade')}</legend><div className="range-row">
-        <label><span className="sr-only">{t('startGrade')}</span><select value={filters.gradeRange[0]} onChange={(event) => setGrade(0, Number(event.target.value) as Grade)}>{GRADES.map((grade) => <option key={grade} value={grade}>{t('gradeValue', { n: grade })}</option>)}</select></label>
-        <span aria-hidden="true">~</span>
-        <label><span className="sr-only">{t('endGrade')}</span><select value={filters.gradeRange[1]} onChange={(event) => setGrade(1, Number(event.target.value) as Grade)}>{GRADES.map((grade) => <option key={grade} value={grade}>{t('gradeValue', { n: grade })}</option>)}</select></label>
-      </div></fieldset>
-      <label className="filter-group"><span className="filter-label">{t('interest')}</span><select value={filters.interest} onChange={(event) => setFilters({ ...filters, interest: event.target.value as Interest | 'all' })}><option value="all">{t('allFields')}</option>{INTERESTS.map((interest) => <option key={interest} value={interest}>{localizedInterest(interest, t)}</option>)}</select></label>
-      <label className="filter-group"><span className="filter-label">{t('screenLanguage')}</span><select value={filters.language} onChange={(event) => setFilters({ ...filters, language: event.target.value as ScreenLanguage | 'all' })}><option value="all">{t('allLanguages')}</option>{LANGUAGES.map((language) => <option key={language} value={language}>{localizedLanguage(language, t)}</option>)}</select></label>
-      <div className="filter-actions">
-        <button className="button ghost reset" type="button" onClick={() => setFilters(defaultFilters())} disabled={!filtered}>{t('reset')}</button>
-        <button className="button primary mobile-only" type="button" onClick={() => setFilterOpen(false)}>{t('applyFilters')}</button>
-      </div>
-    </form>
-    {filterOpen && <div className="scrim mobile-only" aria-hidden="true" onClick={() => setFilterOpen(false)} />}
+      <fieldset className="field">
+        <legend>{t('grade')}</legend>
+        <div className="range-row">
+          <label><span className="visually-hidden">{t('startGrade')}</span><select className="input" value={filters.gradeRange[0]} onChange={(event) => setGrade(0, Number(event.target.value) as Grade)}>{GRADES.map((grade) => <option key={grade} value={grade}>{t('gradeValue', { n: grade })}</option>)}</select></label>
+          <span aria-hidden="true">~</span>
+          <label><span className="visually-hidden">{t('endGrade')}</span><select className="input" value={filters.gradeRange[1]} onChange={(event) => setGrade(1, Number(event.target.value) as Grade)}>{GRADES.map((grade) => <option key={grade} value={grade}>{t('gradeValue', { n: grade })}</option>)}</select></label>
+        </div>
+      </fieldset>
+      <fieldset className="field">
+        <legend>{t('interest')}</legend>
+        <div className="chips">
+          {pick(filters.interest === 'all', t('allFields'), () => setFilters({ ...filters, interest: 'all' }))}
+          {INTERESTS.map((interest) => pick(filters.interest === interest, localizedInterest(interest, t), () => setFilters({ ...filters, interest: interest as Interest })))}
+        </div>
+      </fieldset>
+      <fieldset className="field">
+        <legend>{t('screenLanguage')}</legend>
+        <div className="chips">
+          {pick(filters.language === 'all', t('allLanguages'), () => setFilters({ ...filters, language: 'all' }))}
+          {LANGUAGES.map((language) => pick(filters.language === language, localizedLanguage(language, t), () => setFilters({ ...filters, language: language as ScreenLanguage })))}
+        </div>
+      </fieldset>
+    </Sheet>
+
     {summary.status === 'insufficient' ? <InsufficientPanel onReset={() => setFilters(defaultFilters())} resetLabel={t('reset')} /> : <>
       <DemandSummaryLine summary={summary} filtered={filtered} />
-      <div className="demand-grid">
-        <section className="card heat-card" aria-labelledby="heat-title">
-          <div className="card-head"><h2 id="heat-title">{t('heatTitle')}</h2></div>
-          <Heatmap counts={summary.slots} max={summary.maxSlotValue} caption={t('heatCaption')} />
-          <dl className="key-list">
-            <div><dt>{t('avgSlots')}</dt><dd>{t('slots', { n: summary.averageSlots.toFixed(1) })}{summary.averageSlotsEstimated && <small> · {t('avgEstimate')}</small>}</dd></div>
-            <div><dt>{t('koreanResponse')}</dt><dd>{summary.koreanLevelResponseRate === null ? t('hidden') : Math.round(summary.koreanLevelResponseRate * 100) + '%'}</dd></div>
-          </dl>
-        </section>
-        <section className="card" aria-labelledby="dong-title"><div className="card-head"><h2 id="dong-title">{t('districtTitle')}</h2></div><BarList label={t('districtCount')} total={summary.total} items={[...summary.dongs].sort((a, b) => (b.count.suppressed ? 2.5 : b.count.value) - (a.count.suppressed ? 2.5 : a.count.value)).map(({ dong, count }) => ({ key: dong, label: localizedDong(dong, locale), count }))} /></section>
-        <section className="card" aria-labelledby="language-title"><div className="card-head"><h2 id="language-title">{t('languageTitle')}</h2></div><BarList label={t('languageCount')} total={summary.total} items={summary.languages.map(({ language, count }) => ({ key: language, label: localizedLanguage(language, t), count }))} /></section>
-        <section className="card" aria-labelledby="level-title"><div className="card-head"><h2 id="level-title">{t('levelTitle')}</h2></div><BarList label={t('levelCount')} total={summary.total} items={summary.koreanLevels.map(({ level, count }) => ({ key: level, label: localizedLevel(level, t), count, tone: level === 'none' ? 'muted' : undefined }))} /></section>
-      </div>
+      <section className="block" aria-labelledby="heat-title">
+        <h2 id="heat-title" className="block-title">{t('heatTitle')}</h2>
+        <Heatmap counts={summary.slots} max={summary.maxSlotValue} caption={t('heatCaption')} />
+        <dl className="rows key-rows">
+          <div className="row"><dt>{t('avgSlots')}</dt><dd>{t('slots', { n: summary.averageSlots.toFixed(1) })}{summary.averageSlotsEstimated && <small> · {t('avgEstimate')}</small>}</dd></div>
+          <div className="row"><dt>{t('koreanResponse')}</dt><dd>{summary.koreanLevelResponseRate === null ? t('hidden') : Math.round(summary.koreanLevelResponseRate * 100) + '%'}</dd></div>
+        </dl>
+      </section>
+      <section className="block" aria-labelledby="dong-title"><h2 id="dong-title" className="block-title">{t('districtTitle')}</h2><BarList label={t('districtCount')} total={summary.total} items={[...summary.dongs].sort((a, b) => (b.count.suppressed ? 2.5 : b.count.value) - (a.count.suppressed ? 2.5 : a.count.value)).map(({ dong, count }) => ({ key: dong, label: localizedDong(dong, locale), count }))} /></section>
+      <section className="block" aria-labelledby="language-title"><h2 id="language-title" className="block-title">{t('languageTitle')}</h2><BarList label={t('languageCount')} total={summary.total} items={summary.languages.map(({ language, count }) => ({ key: language, label: localizedLanguage(language, t), count }))} /></section>
+      <section className="block" aria-labelledby="level-title"><h2 id="level-title" className="block-title">{t('levelTitle')}</h2><BarList label={t('levelCount')} total={summary.total} items={summary.koreanLevels.map(({ level, count }) => ({ key: level, label: localizedLevel(level, t), count, tone: level === 'none' ? 'muted' : undefined }))} /></section>
     </>}
   </div>
 }
@@ -75,7 +101,3 @@ function DemandSummaryLine({ summary, filtered }: { summary: Extract<DemandSumma
     </p>
   )
 }
-
-const SlidersIcon = () => (
-  <svg className="line-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></svg>
-)

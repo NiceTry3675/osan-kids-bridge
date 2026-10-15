@@ -24,7 +24,7 @@ export function Heatmap({ counts, max, caption, marks, baselineSlots = [], compa
     <figure className={`heatmap-figure${compact ? ' compact' : ''}`}>
       <div className="heatmap" role="table" aria-label={caption}>
         <div role="row" className="heat-row">
-          <span role="columnheader" className="heat-corner"><span className="sr-only">{t('time')}</span></span>
+          <span role="columnheader" className="heat-corner"><span className="visually-hidden">{t('time')}</span></span>
           {WEEKDAYS.map((day) => <span key={day} role="columnheader" className={`heat-col${day === 'sat' || day === 'sun' ? ' weekend' : ''}`}>{localizedDay(day, t)}</span>)}
         </div>
         {DAY_PARTS.map((part) => (
@@ -39,7 +39,7 @@ export function Heatmap({ counts, max, caption, marks, baselineSlots = [], compa
               const label = localizedSlot(slot, t) + ' ' + localizedCount(count, t) + (badges.length ? ', ' + t('recommended') : '') + (isBaseline ? ', ' + t('existing') : '')
               return (
                 <div key={slot} role="cell" className={`heat-cell ${level}${badges.length ? ' marked' : ''}${isBaseline ? ' baseline' : ''}`} title={label}>
-                  <span className="sr-only">{label}</span>
+                  <span className="visually-hidden">{label}</span>
                   <span className="heat-value" aria-hidden="true">{localizedCount(count, t, 'short')}</span>
                   {(badges.length > 0 || isBaseline) && (
                     <span className="heat-badges" aria-hidden="true">
@@ -88,7 +88,7 @@ export function BarList({ items, total, label }: { items: BarItem[]; total: numb
           )
         })}
       </ul>
-      {masked && <p className="card-note masked-note">{t('maskedNote')}</p>}
+      {masked && <p className="muted masked-note">{t('maskedNote')}</p>}
     </>
   )
 }
@@ -96,11 +96,10 @@ export function BarList({ items, total, label }: { items: BarItem[]; total: numb
 export function InsufficientPanel({ onReset, resetLabel }: { onReset?: () => void; resetLabel?: string }) {
   const { t } = useLanguage()
   return (
-    <div className="insufficient" role="status">
-      <div className="state-icon" aria-hidden="true">!</div>
-      <h2>{t('insufficientTitle')}</h2>
-      <p>{t('insufficientText', { n: SUPPRESSION_THRESHOLD })}</p>
-      {onReset && <button className="button secondary" type="button" onClick={onReset}>{resetLabel ?? t('reset')}</button>}
+    <div className="state" role="status">
+      <p className="state-title">{t('insufficientTitle')}</p>
+      <p className="state-hint">{t('insufficientText', { n: SUPPRESSION_THRESHOLD })}</p>
+      {onReset && <button className="btn btn--secondary" type="button" onClick={onReset}>{resetLabel ?? t('reset')}</button>}
     </div>
   )
 }

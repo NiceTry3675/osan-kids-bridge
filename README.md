@@ -6,8 +6,8 @@
 |---|---|
 | `apps/guardian-web` | 보호자 모바일 웹. 탐색·조건·상세·신청/문의 안내 |
 | `apps/institution-dashboard` | 운영기관 대시보드. 합성 수요 집계·소수 셀 억제·추천 |
-| `apps/flow-board` | 유저플로우 보드. 휴대폰 틀마다 실제 앱이 돌아가는 7화면 × 2 |
-| `packages/ui` | 두 앱이 함께 쓰는 디자인 토큰(`tokens.css`), 기본 스타일, 화면 언어 고르기 |
+| `packages/ui` | 두 앱이 함께 쓰는 디자인 토큰(`tokens.css`), 서체, 화면 요소(`components.css`: 버튼·칩·시트·구역), 시트, 화면 언어 고르기 |
+| `packages/phone-preview` | 두 앱을 휴대폰 틀에 담은 단일 HTML 시연 페이지 만들기(`npm run preview`) |
 | `docs/` | 기능 2 계획서, 정적 유저플로우 보드(`docs/userflow`) |
 
 ## 시작하기
@@ -18,7 +18,7 @@ Node 20 이상이 필요합니다. 저장소 맨 위에서 한 번만 설치합�
 npm install
 npm run dev:guardian     # 보호자 웹 (시연 데이터)
 npm run dev:dashboard    # 기관 대시보드
-npm run dev:flow         # 유저플로우 보드 (두 앱을 틀 안에서 실행)
+npm run preview          # 시연 페이지 2개 → dist-preview/ (휴대폰 틀, 끌어서 넘기기)
 npm run check            # 모든 앱 타입 검사 → 테스트 → 빌드
 ```
 

@@ -12,31 +12,12 @@
 .action-wrap { display: grid; gap: 4px; }
 .demo-note { font-size: var(--text-xs); color: var(--ink-3); }
 
-.facts { margin-bottom: 14px; border-block: 2px solid var(--ink); }
-.fact-row { display: grid; grid-template-columns: 6em 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-.fact-row:last-child { border-bottom: 0; }
-:lang(vi) .fact-row { grid-template-columns: 7.5em 1fr; }
-.fact-row dt { color: var(--ink-3); font-size: var(--text-sm); }
-.fact-row dd { display: grid; gap: 2px; font-weight: 700; line-height: 1.5; }
-.fact-sub { font-size: var(--text-xs); font-weight: 500; color: var(--ink-2); }
-
 /* 기관에 확인할 점: 상자 없이 형광펜이 신호 */
 .to-check { padding: 18px 0 4px; }
 .checks { display: grid; gap: 8px; }
 .checks li { display: grid; gap: 1px; }
 .check-quote { font-size: var(--text-xs); color: var(--ink-2); }
 
-.block { padding: 18px 0; border-bottom: 1px solid var(--line); }
-.block:last-of-type { border-bottom: 0; }
-.block-title { font-size: var(--text-md); font-weight: 850; margin-bottom: 8px; }
-.muted { color: var(--ink-3); font-size: var(--text-xs); line-height: 1.55; }
-.block .rows + .muted { margin-top: 8px; }
-.prose { max-width: 38em; }
-.rows { display: grid; }
-.row { display: grid; grid-template-columns: minmax(6em, 40%) 1fr; gap: 12px; padding: 9px 0; border-top: 1px dashed var(--line); font-size: var(--text-sm); }
-.row:first-child { border-top: 0; }
-.row dt { color: var(--ink-3); }
-.row dd { font-weight: 650; }
 .judge--matched { color: var(--status-open); }
 .judge--not_matched { color: var(--status-closed); }
 

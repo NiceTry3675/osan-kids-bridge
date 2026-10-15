@@ -11,3 +11,5 @@
 .intro-lang .icon { margin-left: auto; color: var(--action); }
 .intro-lang[aria-checked='true'] { border-color: var(--ink); background: var(--paper); }
 .intro-start { margin-top: 8px; }
+.shell--intro .lp-strip { display: none; }
+.shell--intro .lp--band { border: 0; background: none; }

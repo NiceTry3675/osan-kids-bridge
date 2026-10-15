@@ -6,8 +6,8 @@ import type { LanguageOption, LanguageState } from '@osan-kids-bridge/ui'
 
 export type Locale = 'ko-easy' | 'vi' | 'zh'
 const ko = {
-  brand: '오산 아이 프로그램', institution: '운영기관 화면', language: '화면 언어', demo: '시연용 합성 데이터 · 실제 보호자 응답이 아닙니다',
-  pickerMore: '다른 언어', pickerTitle: '화면 언어 고르기', pickerSearch: '언어 이름으로 찾기', close: '닫기', pickerCurrent: '지금 보는 언어', pickerDraft: '번역 초안', pickerInReview: '번역 검수 중', pickerNotOffered: '아직 제공하지 않아요', pickerNoMatch: '찾는 언어가 없어요', draftNotice: '이 언어의 화면 문구는 검수 전 초안이에요. 개발·시연 화면에서만 고를 수 있어요.', skip: '본문으로 건너뛰기', demandSummary: '{n}가정이 답했어요.', demandSummaryFiltered: '전체 {total}가정 중 {n}가정이 조건에 맞아요.', demandPeak: '가장 많이 몰린 시간은 {slots}이에요.', demandPeakHidden: '시간별 숫자는 개인 식별을 막으려고 가렸어요.', demoTag: '시연', filterShort: '조건', filterAll: '전체', showRecommend: '추천 보기', detailsOpen: '{n}안 자세히 보기', detailsTitle: '{n}안 자세히', applyFilters: '적용하기', nextStepTitle: '다음 단계 (이번에는 만들지 않음)', nextStepBody: '보호자 웹의 익명 동의 → 서버 집계·가림 → 이 화면', programQuestion: '어떤 프로그램을 여나요?', venuesSummary: '{n}곳 중 {m}곳', baselineOnSummary: '켜짐', baselineOffSummary: '꺼짐',
+  brand: '오산 아이 프로그램', institution: '운영기관 화면', language: '화면 언어', demo: '시연용 가상 응답이에요. 실제 보호자가 답한 것이 아니에요.',
+  pickerMore: '다른 언어', pickerTitle: '화면 언어 고르기', pickerSearch: '언어 이름으로 찾기', close: '닫기', pickerCurrent: '지금 보는 언어', pickerDraft: '번역 초안', pickerInReview: '번역 검수 중', pickerNotOffered: '아직 제공하지 않아요', pickerNoMatch: '찾는 언어가 없어요', draftNotice: '이 언어의 화면 문구는 검수 전 초안이에요. 개발·시연 화면에서만 고를 수 있어요.', skip: '본문으로 건너뛰기', demandSummary: '{n}가정이 답했어요.', demandSummaryFiltered: '전체 {total}가정 중 {n}가정이 조건에 맞아요.', demandPeak: '가장 많이 몰린 시간은 {slots}이에요.', demandPeakHidden: '시간별 숫자는 개인 식별을 막으려고 가렸어요.', showRecommend: '추천 보기', detailsOpen: '{n}안 자세히 보기', detailsTitle: '{n}안 자세히', applyFilters: '적용하기', nextStepTitle: '다음 단계 (이번에는 만들지 않음)', nextStepBody: '보호자 웹의 익명 동의 → 서버 집계·가림 → 이 화면', programQuestion: '어떤 프로그램을 여나요?', venuesSummary: '{n}곳 중 {m}곳', baselineOnSummary: '켜짐', baselineOffSummary: '꺼짐',
   demandTab: '수요 현황', recommendTab: '일정·장소 추천', guideTab: '데이터 안내',
   filterTitle: '조건 선택', filterOpen: '조건 바꾸기', reset: '초기화', all: '전체', allFields: '전체 분야', allLanguages: '전체 언어',
   district: '동', selected: '{n}곳 선택', grade: '자녀 학년', startGrade: '시작 학년', endGrade: '끝 학년', gradeValue: '{n}학년',
@@ -19,7 +19,7 @@ const ko = {
   venues: '후보 장소', selectAll: '모두 선택', clearAll: '모두 해제', available: '대관 가능 {n}칸',
   baseline: '기존 계획', compareBaseline: '기존 계획과 비교', baselineClassSlot: '기존 계획 {n}반 요일·시간대', baselineClassVenue: '기존 계획 {n}반 장소',
   planForClass: '{n}반', noVenues: '후보 장소가 없어요', chooseVenue: '장소를 하나 이상 선택해 주세요.', noReach: '참여 가능한 가정이 없어요', widen: '장소를 추가하거나 조건을 넓혀 보세요.',
-  heatPlan: '추천 {n}안의 시간', heatPlanCaption: '대상 수요와 추천 시간',
+  heatPlanCaption: '대상 수요와 추천 시간',
   option: '{n}안', eligible: '대상 {n}', compared: '기존 계획 {rate} 대비',
   classDetails: '반별 내역', class: '반', time: '요일·시간대', place: '장소', reached: '닿는 가정', added: '새로 더함', expected: '예상 신청 / 정원',
   sameEffect: '같은 효과', overCapacity: '정원 초과', estimatedNote: '예상 신청: 시연용 신청률 {n}% 기준',
@@ -42,7 +42,7 @@ type Key = keyof typeof ko
 type Dictionary = Record<Key, string>
 const vi: Dictionary = {
   brand: 'Chương trình cho trẻ em Osan', institution: 'Dành cho đơn vị', language: 'Ngôn ngữ', demo: 'Dữ liệu mô phỏng · Không phải phản hồi thực tế',
-  pickerMore: 'Ngôn ngữ khác', pickerTitle: 'Chọn ngôn ngữ màn hình', pickerSearch: 'Tìm theo tên ngôn ngữ', close: 'Đóng', pickerCurrent: 'Đang dùng', pickerDraft: 'Bản dịch nháp', pickerInReview: 'Đang kiểm tra bản dịch', pickerNotOffered: 'Chưa hỗ trợ', pickerNoMatch: 'Không tìm thấy ngôn ngữ', draftNotice: 'Chữ trên màn hình bằng ngôn ngữ này là bản nháp chưa được kiểm tra. Chỉ chọn được trong bản phát triển và trình diễn.', skip: 'Chuyển đến nội dung chính', demandSummary: '{n} gia đình đã trả lời.', demandSummaryFiltered: 'Có {n} trong {total} gia đình phù hợp điều kiện.', demandPeak: 'Thời gian đông nhất: {slots}.', demandPeakHidden: 'Số theo giờ đã được ẩn để bảo vệ thông tin cá nhân.', demoTag: 'Mô phỏng', filterShort: 'Điều kiện', filterAll: 'Tất cả', showRecommend: 'Xem gợi ý', detailsOpen: 'Xem chi tiết phương án {n}', detailsTitle: 'Chi tiết phương án {n}', applyFilters: 'Áp dụng', nextStepTitle: 'Bước tiếp theo (chưa làm lần này)', nextStepBody: 'Đồng ý ẩn danh trên web phụ huynh → máy chủ tổng hợp, che số nhỏ → màn hình này', programQuestion: 'Bạn sẽ mở chương trình nào?', venuesSummary: '{m}/{n} nơi', baselineOnSummary: 'Bật', baselineOffSummary: 'Tắt',
+  pickerMore: 'Ngôn ngữ khác', pickerTitle: 'Chọn ngôn ngữ màn hình', pickerSearch: 'Tìm theo tên ngôn ngữ', close: 'Đóng', pickerCurrent: 'Đang dùng', pickerDraft: 'Bản dịch nháp', pickerInReview: 'Đang kiểm tra bản dịch', pickerNotOffered: 'Chưa hỗ trợ', pickerNoMatch: 'Không tìm thấy ngôn ngữ', draftNotice: 'Chữ trên màn hình bằng ngôn ngữ này là bản nháp chưa được kiểm tra. Chỉ chọn được trong bản phát triển và trình diễn.', skip: 'Chuyển đến nội dung chính', demandSummary: '{n} gia đình đã trả lời.', demandSummaryFiltered: 'Có {n} trong {total} gia đình phù hợp điều kiện.', demandPeak: 'Thời gian đông nhất: {slots}.', demandPeakHidden: 'Số theo giờ đã được ẩn để bảo vệ thông tin cá nhân.', showRecommend: 'Xem gợi ý', detailsOpen: 'Xem chi tiết phương án {n}', detailsTitle: 'Chi tiết phương án {n}', applyFilters: 'Áp dụng', nextStepTitle: 'Bước tiếp theo (chưa làm lần này)', nextStepBody: 'Đồng ý ẩn danh trên web phụ huynh → máy chủ tổng hợp, che số nhỏ → màn hình này', programQuestion: 'Bạn sẽ mở chương trình nào?', venuesSummary: '{m}/{n} nơi', baselineOnSummary: 'Bật', baselineOffSummary: 'Tắt',
   demandTab: 'Tổng quan nhu cầu', recommendTab: 'Lịch & địa điểm', guideTab: 'Thông tin dữ liệu',
   filterTitle: 'Chọn điều kiện', filterOpen: 'Đổi điều kiện', reset: 'Đặt lại', all: 'Tất cả', allFields: 'Mọi lĩnh vực', allLanguages: 'Mọi ngôn ngữ',
   district: 'Phường', selected: 'Đã chọn {n}', grade: 'Lớp của trẻ', startGrade: 'Từ lớp', endGrade: 'Đến lớp', gradeValue: 'Lớp {n}',
@@ -54,7 +54,7 @@ const vi: Dictionary = {
   venues: 'Địa điểm đề xuất', selectAll: 'Chọn tất cả', clearAll: 'Bỏ chọn', available: 'Có {n} khung giờ',
   baseline: 'Kế hoạch hiện tại', compareBaseline: 'So với kế hoạch hiện tại', baselineClassSlot: 'Thời gian lớp {n} hiện tại', baselineClassVenue: 'Địa điểm lớp {n} hiện tại',
   planForClass: 'Lớp {n}', noVenues: 'Không có địa điểm', chooseVenue: 'Hãy chọn ít nhất một địa điểm.', noReach: 'Không có gia đình phù hợp', widen: 'Thêm địa điểm hoặc mở rộng điều kiện.',
-  heatPlan: 'Thời gian của phương án {n}', heatPlanCaption: 'Nhu cầu và thời gian gợi ý',
+  heatPlanCaption: 'Nhu cầu và thời gian gợi ý',
   option: 'Phương án {n}', eligible: 'Trong {n} gia đình', compared: 'So với kế hoạch {rate}',
   classDetails: 'Chi tiết từng lớp', class: 'Lớp', time: 'Ngày và buổi', place: 'Địa điểm', reached: 'Gia đình tiếp cận', added: 'Thêm mới', expected: 'Dự kiến / sức chứa',
   sameEffect: 'Hiệu quả tương đương', overCapacity: 'Vượt sức chứa', estimatedNote: 'Dự kiến theo tỷ lệ đăng ký mô phỏng {n}%',
@@ -75,7 +75,7 @@ const vi: Dictionary = {
 }
 const zh: Dictionary = {
   brand: '乌山市儿童活动', institution: '机构端', language: '页面语言', demo: '模拟数据 · 并非真实家长反馈',
-  pickerMore: '其他语言', pickerTitle: '选择界面语言', pickerSearch: '按语言名称搜索', close: '关闭', pickerCurrent: '当前语言', pickerDraft: '翻译草稿', pickerInReview: '翻译审核中', pickerNotOffered: '暂不提供', pickerNoMatch: '没有找到该语言', draftNotice: '此语言的界面文字是未经审核的草稿，仅在开发和演示版本中可选。', skip: '跳到正文', demandSummary: '共有{n}户回答。', demandSummaryFiltered: '{total}户中有{n}户符合条件。', demandPeak: '人数最多的时间是{slots}。', demandPeakHidden: '为保护个人信息，各时段人数已隐藏。', demoTag: '演示', filterShort: '条件', filterAll: '全部', showRecommend: '查看推荐', detailsOpen: '查看方案{n}详情', detailsTitle: '方案{n}详情', applyFilters: '应用', nextStepTitle: '下一步（本次不做）', nextStepBody: '家长网页匿名同意 → 服务器汇总并隐藏小数 → 本页面', programQuestion: '要开设什么活动？', venuesSummary: '{n}处中{m}处', baselineOnSummary: '开启', baselineOffSummary: '关闭',
+  pickerMore: '其他语言', pickerTitle: '选择界面语言', pickerSearch: '按语言名称搜索', close: '关闭', pickerCurrent: '当前语言', pickerDraft: '翻译草稿', pickerInReview: '翻译审核中', pickerNotOffered: '暂不提供', pickerNoMatch: '没有找到该语言', draftNotice: '此语言的界面文字是未经审核的草稿，仅在开发和演示版本中可选。', skip: '跳到正文', demandSummary: '共有{n}户回答。', demandSummaryFiltered: '{total}户中有{n}户符合条件。', demandPeak: '人数最多的时间是{slots}。', demandPeakHidden: '为保护个人信息，各时段人数已隐藏。', showRecommend: '查看推荐', detailsOpen: '查看方案{n}详情', detailsTitle: '方案{n}详情', applyFilters: '应用', nextStepTitle: '下一步（本次不做）', nextStepBody: '家长网页匿名同意 → 服务器汇总并隐藏小数 → 本页面', programQuestion: '要开设什么活动？', venuesSummary: '{n}处中{m}处', baselineOnSummary: '开启', baselineOffSummary: '关闭',
   demandTab: '需求概览', recommendTab: '日程·地点推荐', guideTab: '数据说明',
   filterTitle: '选择条件', filterOpen: '更改条件', reset: '重置', all: '全部', allFields: '全部领域', allLanguages: '全部语言',
   district: '街区', selected: '已选{n}处', grade: '孩子年级', startGrade: '起始年级', endGrade: '结束年级', gradeValue: '{n}年级',
@@ -87,7 +87,7 @@ const zh: Dictionary = {
   venues: '候选地点', selectAll: '全选', clearAll: '清空', available: '可预约{n}个时段',
   baseline: '现有计划', compareBaseline: '与现有计划比较', baselineClassSlot: '现有计划第{n}班时段', baselineClassVenue: '现有计划第{n}班地点',
   planForClass: '第{n}班', noVenues: '没有候选地点', chooseVenue: '请至少选择一个地点。', noReach: '没有符合条件的家庭', widen: '请增加地点或放宽条件。',
-  heatPlan: '方案{n}的时段', heatPlanCaption: '需求与推荐时段',
+  heatPlanCaption: '需求与推荐时段',
   option: '方案{n}', eligible: '对象{n}户', compared: '对比现有计划{rate}',
   classDetails: '各班详情', class: '班级', time: '星期·时段', place: '地点', reached: '可覆盖家庭', added: '新增覆盖', expected: '预计报名 / 名额',
   sameEffect: '效果相同', overCapacity: '超过名额', estimatedNote: '预计报名按模拟转化率{n}%计算',
