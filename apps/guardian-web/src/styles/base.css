@@ -40,8 +40,7 @@
 .link-btn .icon { width: 18px; height: 18px; }
 
 /* 분야 색 */
-.tone-peach { background: #ffebdd; } .tone-sky { background: #e5eeff; } .tone-leaf { background: #e4f4e3; } .tone-lilac { background: #f1e8ff; }
-@media (prefers-color-scheme: dark) { .tone-peach { background: #3b2a20; } .tone-sky { background: #1f2a40; } .tone-leaf { background: #1f3322; } .tone-lilac { background: #2f2540; } }
+.tone-peach { background: var(--tone-peach); } .tone-sky { background: var(--tone-sky); } .tone-leaf { background: var(--tone-leaf); } .tone-lilac { background: var(--tone-lilac); } .tone-sand { background: var(--tone-sand); }
 
 /* 형광펜: 확인되지 않은 것 */
 .marked { justify-self: start; padding: 0 2px; background: linear-gradient(transparent 38%, var(--mark) 38%, var(--mark) 92%, transparent 92%); color: inherit; box-decoration-break: clone; -webkit-box-decoration-break: clone; }

@@ -3,7 +3,7 @@ import { useI18n } from '../i18n'
 import type { Program } from '../data/types'
 import { INTEREST_VISUAL, itemsToCheck, programText } from '../lib/content'
 import { formatCost, formatSessionPlace, formatSessionWhen, formatStatus, topicLabel } from '../lib/format'
-import { navigate, programPath } from '../lib/router'
+import { hrefFor, navigate, programPath } from '../lib/router'
 import { Marked, StatusTag } from './feedback'
 
 /** 목록 한 줄. 목록·상세에서 대상 → 일정 → 장소 → 비용 → 신청을 같은 이름으로 씁니다(명세 5.1). */
@@ -11,19 +11,19 @@ export function ProgramItem({ program }: { program: Program }) {
   const { locale, t } = useI18n()
   const text = programText(program, locale)
   const visual = INTEREST_VISUAL[program.category]
-  const href = programPath(program.program_id)
+  const path = programPath(program.program_id)
   const checks = [...new Set(itemsToCheck(program).map((item) => topicLabel(locale, item.topic)))]
   const session = program.next_session
 
   const open = (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
     event.preventDefault()
-    navigate(href, { fromList: true })
+    navigate(path, { fromList: true })
   }
 
   return (
     <li>
-      <a className="item" href={href} onClick={open} aria-label={t('openDetail', { title: text.title })}>
+      <a className="item" href={hrefFor(path)} onClick={open} aria-label={t('openDetail', { title: text.title })}>
         <span className={`item-art tone-${visual.tone}`} aria-hidden="true">{visual.emoji}</span>
         <span className="item-body">
           <StatusTag status={program.application_status}>{formatStatus(program, locale)}</StatusTag>

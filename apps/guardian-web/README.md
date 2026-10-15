@@ -6,7 +6,7 @@
 
 저장소 맨 위에서 `npm install` 후 `npm run dev:guardian`. 이 폴더에서 `npm run dev`, `npm test`, `npm run build`도 됩니다.
 
-로컬 개발은 `.env.development`의 `VITE_DATA_MODE=demo`로 가상 공고를 씁니다. 일반 배포 빌드는 API 주소가 없으면 가상 공고로 대신하지 않고 “공고 서버가 아직 연결되지 않았어요”를 보여 줍니다. 시연용 배포가 필요하면 `VITE_DATA_MODE=demo npm run build`처럼 명시합니다. 시연 공고의 신청 링크·전화번호는 실제로 연결하지 않습니다.
+로컬 개발은 `.env.development`의 `VITE_DATA_MODE=demo`로 가상 공고를 씁니다. 일반 배포 빌드는 API 주소가 없으면 가상 공고로 대신하지 않고 “공고 서버가 아직 연결되지 않았어요”를 보여 줍니다. 시연용 배포가 필요하면 `VITE_DATA_MODE=demo npm run build`처럼 명시합니다. 서버에 SPA 경로 설정을 할 수 없는 정적 호스팅에서는 `VITE_ROUTER=hash`를 함께 주면 상세 주소가 `#/programs/{id}`가 됩니다. 시연 공고의 신청 링크·전화번호는 실제로 연결하지 않습니다.
 
 ## 화면 (유저플로우 v5, 7화면)
 

@@ -44,6 +44,14 @@
   --heat-4: #2e8b63;
   --heat-5: #1b5e44;
 
+  --tone-peach: #ffebdd;
+  --tone-sky: #e5eeff;
+  --tone-leaf: #e4f4e3;
+  --tone-lilac: #f1e8ff;
+  --tone-sand: #f4efe2;
+  --danger: #b42318;
+  --heat-ink-strong: #ffffff;
+
   --font: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Noto Sans SC', 'PingFang SC', 'Malgun Gothic', system-ui, sans-serif;
   --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
@@ -91,5 +99,54 @@
     --heat-3: #34755a;
     --heat-4: #4fa07d;
     --heat-5: #7fd1ad;
+    --tone-peach: #3b2a20;
+    --tone-sky: #1f2a40;
+    --tone-leaf: #1f3322;
+    --tone-lilac: #2f2540;
+    --tone-sand: #35301f;
+    --danger: #ff9b8f;
+    --heat-ink-strong: #10141f;
+    color-scheme: dark;
   }
+}
+
+/* 보는 사람이 어두운 화면을 직접 고른 경우(같은 값) */
+:root[data-theme='dark'] {
+  --ink: #e8eee9;
+  --ink-2: #c3ccc6;
+  --ink-3: #9aa59f;
+  --paper: #18201c;
+  --canvas: #111713;
+  --sunken: #1e2722;
+  --line: #2d3832;
+  --line-strong: #44524a;
+  --action: #7fd1ad;
+  --action-hover: #a1e0c4;
+  --action-soft: #1f3a2f;
+  --action-ink: #0f1712;
+  --mark: #6b5a12;
+  --mark-soft: #3a3213;
+  --mark-ink: #ffe9a3;
+  --status-open: #7fd6a8;
+  --status-open-soft: #173327;
+  --status-upcoming: #9cc0f5;
+  --status-upcoming-soft: #1a2a45;
+  --status-unknown: #f2c66d;
+  --status-unknown-soft: #3a2d12;
+  --status-closed: #b3b9c6;
+  --status-closed-soft: #262b37;
+  --heat-0: #1c2420;
+  --heat-1: #1f3a2f;
+  --heat-2: #285240;
+  --heat-3: #34755a;
+  --heat-4: #4fa07d;
+  --heat-5: #7fd1ad;
+  --tone-peach: #3b2a20;
+  --tone-sky: #1f2a40;
+  --tone-leaf: #1f3322;
+  --tone-lilac: #2f2540;
+  --tone-sand: #35301f;
+  --danger: #ff9b8f;
+  --heat-ink-strong: #10141f;
+  color-scheme: dark;
 }
