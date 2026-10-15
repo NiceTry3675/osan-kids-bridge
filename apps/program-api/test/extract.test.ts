@@ -397,6 +397,12 @@ describe('normalize: 안내 문장·대략의 일정·장소·신청 이름', ()
     expect(record.evidence.filter((entry) => entry.field === 'notices')).toHaveLength(2)
   })
 
+  it("'내용:'처럼 다른 항목이 다루는 줄은 안내 문장으로 남기지 않는다", () => {
+    const text = `${LIST_ROW}\n■ 내용: K-POP 안무 배우기, 마지막 회차 가족 앞 발표회\n■ 신청한 어린이만 참여합니다 (보호자·형제자매 동반 불가).`
+    const record = toProgramRecord(raw({ title, notices: ['K-POP 안무 배우기, 마지막 회차 가족 앞 발표회', '내용: K-POP 안무 배우기', '신청한 어린이만 참여합니다 (보호자·형제자매 동반 불가).'] }), context(text))
+    expect(record.notices).toEqual(['신청한 어린이만 참여합니다 (보호자·형제자매 동반 불가).'])
+  })
+
   it('회차·기간이 없을 때만 원문의 대략의 일정을 남긴다', () => {
     const text = '진로 탐색 캠프\n- 일정: 11월 중 운영 예정 (날짜·시간 추후 안내)'
     const note = toProgramRecord(raw({ title: '진로 탐색 캠프', schedule_note: '일정: 11월 중 운영 예정 (날짜·시간 추후 안내)' }), context(text))

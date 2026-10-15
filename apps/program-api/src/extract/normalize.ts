@@ -41,6 +41,8 @@ const ADDRESS_LIKE = /(?:로|길)\s*\d|\d+\s*번지|[시군구]\s|\(\s*\S+동\s*
 const GENERIC_ONLINE_LABEL = /^(?:온라인|인터넷|홈페이지)?\s*(?:신청|접수)$/
 /** 항목 이름 ('■ 신청 방법:', '- 일정:')과 머리 기호 */
 const LEADING_MARKS = /^[\s■□※•·*▶-]+/
+/** 일정·대상·내용처럼 다른 항목이 다루는 원문 줄의 머리 ('내용:', '일시 :') */
+const FIELD_LINE = /^(?:내\s*용|대\s*상|일\s*시|일\s*정|장\s*소|비\s*용|참\s*가\s*비|신\s*청|접\s*수|모\s*집|정\s*원|문\s*의|기\s*간|프로그램)\s*(?:방법|기간|인원|대상)?\s*[:：]/
 
 /** 표준 확인 사항이 다루는 주제 */
 const STANDARD_TOPICS: Record<string, RegExp> = {
@@ -615,6 +617,12 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
     if (!notice || notice.length > 120 || notices.includes(notice) || notices.length >= 4) continue
     if (!quoteInSource(notice, sourceText)) {
       warn(`안내 문장: 원문에 그대로 없어 뺐습니다 (값: '${notice}')`)
+      continue
+    }
+    // '내용:', '일시:'처럼 다른 항목이 다루는 줄은 안내 문장이 아니다
+    const line = sourceText.split('\n').find((text) => normalizeForMatch(text).includes(normalizeForMatch(notice))) ?? notice
+    if (FIELD_LINE.test(notice) || FIELD_LINE.test(line.replace(LEADING_MARKS, ''))) {
+      warn(`안내 문장: 다른 항목의 원문 줄이라 뺐습니다 (값: '${notice}')`)
       continue
     }
     notices.push(notice)
