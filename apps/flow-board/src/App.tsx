@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import { bundleFor } from './bundles'
 import { FLOWS } from './flows'
 import type { AppName } from './flows'
@@ -28,7 +29,7 @@ export default function App() {
       <header className="board-head">
         <div className="title">
           <h1>오산 아이 프로그램 유저플로우</h1>
-          <p>틀마다 실제 화면이 돌아가요. 눌러 보고, 틀 안에서 스크롤해 보세요.</p>
+          <p>틀마다 실제 화면이 돌아가요. 틀 안을 끌어서 넘기고, 눌러 보세요. 틀 밖을 끌면 다음 화면으로 넘어가요.</p>
         </div>
         <div className="switch" role="tablist" aria-label="누구의 흐름">
           {FLOWS.map((flow) => (
@@ -56,6 +57,7 @@ function FlowStrip({ app, hidden }: { app: AppName; hidden: boolean }) {
   const flow = FLOWS.find((item) => item.app === app)!
   const bundle = useMemo(() => bundleFor(app), [app])
   const strip = useRef<HTMLOListElement>(null)
+  useDragScroll(strip)
   const move = (direction: 1 | -1) => {
     const node = strip.current
     const cell = node?.querySelector<HTMLElement>('.cell')
@@ -77,4 +79,30 @@ function FlowStrip({ app, hidden }: { app: AppName; hidden: boolean }) {
       </ol>
     </section>
   )
+}
+
+/** 틀 밖(설명·틈)을 마우스로 끌면 화면 띠가 옆으로 넘어갑니다. 틀 안은 각 앱이 따로 받습니다. */
+function useDragScroll(ref: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const node = ref.current
+    if (!node) return
+    let start: { x: number; left: number; moved: boolean } | null = null
+    const down = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse' || event.button !== 0 || (event.target as Element).closest('button, iframe')) return
+      start = { x: event.clientX, left: node.scrollLeft, moved: false }
+    }
+    const move = (event: PointerEvent) => {
+      if (!start) return
+      const dx = event.clientX - start.x
+      if (!start.moved && Math.abs(dx) < 5) return
+      start.moved = true
+      node.classList.add('is-dragging')
+      node.scrollLeft = start.left - dx
+    }
+    const up = () => { start = null; node.classList.remove('is-dragging') }
+    node.addEventListener('pointerdown', down)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    return () => { node.removeEventListener('pointerdown', down); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up) }
+  }, [ref])
 }

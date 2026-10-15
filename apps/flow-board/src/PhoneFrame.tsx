@@ -6,7 +6,10 @@ import { KIND_LABEL } from './flows'
 import type { Screen } from './flows'
 
 /** 틀 안 앱이 보는 화면 크기(일반적인 휴대폰 너비) */
-export const VIEWPORT = { width: 375, height: 740 }
+export const VIEWPORT = { width: 375, height: 750 }
+/** 보드에 그리는 화면 크기. 창 크기와 상관없이 늘 같습니다. */
+export const SCREEN = { width: 320, height: 640 }
+const SCALE = SCREEN.width / VIEWPORT.width
 
 interface Props {
   screen: Screen
@@ -20,7 +23,6 @@ export function PhoneFrame({ screen, number, bundle, last }: Props) {
   const holder = useRef<HTMLDivElement>(null)
   const frame = useRef<HTMLIFrameElement>(null)
   const runId = useRef(0)
-  const [scale, setScale] = useState(0.7)
   const [mounted, setMounted] = useState(false)
   const [run, setRun] = useState(0)
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
@@ -41,14 +43,6 @@ export function PhoneFrame({ screen, number, bundle, last }: Props) {
     return () => { observer.disconnect(); window.clearTimeout(timer) }
   }, [mounted, number])
 
-  useEffect(() => {
-    const node = holder.current
-    if (!node) return
-    const observer = new ResizeObserver(([entry]) => setScale(entry.contentRect.width / VIEWPORT.width))
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [])
-
   const onLoad = () => {
     const id = ++runId.current
     const node = frame.current
@@ -64,7 +58,7 @@ export function PhoneFrame({ screen, number, bundle, last }: Props) {
   return (
     <li className="cell">
       <div className="phone">
-        <div className="phone-screen" ref={holder} style={{ aspectRatio: `${VIEWPORT.width} / ${VIEWPORT.height}` }}>
+        <div className="phone-screen" ref={holder} style={{ width: SCREEN.width, height: SCREEN.height }}>
           {mounted && (
             <iframe
               key={run}
@@ -74,7 +68,7 @@ export function PhoneFrame({ screen, number, bundle, last }: Props) {
               onLoad={onLoad}
               width={VIEWPORT.width}
               height={VIEWPORT.height}
-              style={{ transform: `scale(${scale})` }}
+              style={{ transform: `scale(${SCALE})` }}
             />
           )}
           {status !== 'ready' && (

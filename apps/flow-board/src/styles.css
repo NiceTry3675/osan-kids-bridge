@@ -21,7 +21,8 @@ body { background: var(--canvas); }
 
 /* 가로로 흐르는 일곱 화면. 이 띠만 옆으로 스크롤됩니다. */
 .strip {
-  --cell: clamp(248px, calc((100vw - 300px) / 7), 300px);
+  cursor: grab;
+  --cell: 334px; /* 화면 320px + 테두리 7px × 2. 창 크기와 상관없이 고정 */
   list-style: none; margin: 0;
   display: grid; grid-auto-flow: column; grid-auto-columns: var(--cell); gap: 40px;
   overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
@@ -30,7 +31,7 @@ body { background: var(--canvas); }
 }
 .cell { position: relative; display: grid; grid-template-rows: auto 1fr; gap: 14px; scroll-snap-align: start; min-width: 0; }
 
-.phone { padding: 7px; border-radius: 34px; background: var(--ink); box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset; }
+.phone { justify-self: start; padding: 7px; border-radius: 34px; background: var(--ink); box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset; }
 .phone-screen { position: relative; overflow: hidden; border-radius: 27px; background: var(--paper); }
 .phone-screen iframe { position: absolute; inset: 0 auto auto 0; border: 0; transform-origin: 0 0; background: var(--paper); }
 .phone-cover { position: absolute; inset: 0; display: grid; place-items: center; background: var(--paper); text-align: center; color: var(--ink-2); font-size: var(--text-sm); padding: 24px; }
@@ -38,7 +39,7 @@ body { background: var(--canvas); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* 화면 사이 화살표: 틀 높이의 가운데, 다음 틀과의 틈에 */
-.flow-arrow { position: absolute; top: calc(var(--cell) * 740 / 375 / 2 + 7px); right: -31px; width: 22px; height: 22px; }
+.flow-arrow { position: absolute; top: calc(640px / 2 + 7px - 11px); right: -31px; width: 22px; height: 22px; }
 .flow-arrow::before { content: ''; position: absolute; inset: 5px 7px 5px 3px; border-top: 2.5px solid var(--ink-3); border-right: 2.5px solid var(--ink-3); transform: rotate(45deg); }
 
 .cap { display: grid; gap: 6px; align-content: start; padding: 0 4px; }
@@ -60,8 +61,10 @@ body { background: var(--canvas); }
 .swatch { display: inline-block; width: 24px; height: 10px; border-radius: 3px; background: var(--mark); }
 
 @media (max-width: 600px) {
-  .strip { --cell: min(78vw, 300px); gap: 32px; }
+  .strip { gap: 32px; }
   .flow-arrow { right: -27px; }
   .pager { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+.strip.is-dragging { cursor: grabbing; user-select: none; scroll-snap-type: none; }
+.strip button { cursor: pointer; }
