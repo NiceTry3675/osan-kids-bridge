@@ -12,6 +12,21 @@ const weekdayKeys: Record<Weekday, MessageKey> = { mon: 'weekdayMon', tue: 'week
 const interestKeys: Record<Interest, MessageKey> = { experience_culture: 'interestExperience', korean_study: 'interestKorean', sports_arts: 'interestSports', career: 'interestCareer' }
 
 export function weekdayLabel(locale: Locale, day: Weekday): string { return translate(locale, weekdayKeys[day]) }
+
+const LANGUAGE_NAMES: Record<Locale, Record<string, string>> = {
+  'ko-easy': { ko: '한국어', en: '영어', vi: '베트남어', zh: '중국어', ja: '일본어', th: '태국어', tl: '필리핀어', ru: '러시아어', uz: '우즈베크어', mn: '몽골어', km: '크메르어', ne: '네팔어', id: '인도네시아어', my: '미얀마어' },
+  vi: { ko: 'tiếng Hàn', en: 'tiếng Anh', vi: 'tiếng Việt', zh: 'tiếng Trung', ja: 'tiếng Nhật', th: 'tiếng Thái', tl: 'tiếng Philippines', ru: 'tiếng Nga', uz: 'tiếng Uzbek', mn: 'tiếng Mông Cổ', km: 'tiếng Khmer', ne: 'tiếng Nepal', id: 'tiếng Indonesia', my: 'tiếng Myanmar' },
+  zh: { ko: '韩语', en: '英语', vi: '越南语', zh: '中文', ja: '日语', th: '泰语', tl: '菲律宾语', ru: '俄语', uz: '乌兹别克语', mn: '蒙古语', km: '高棉语', ne: '尼泊尔语', id: '印尼语', my: '缅甸语' },
+}
+
+/** 언어 코드의 화면 언어 이름 ('vi' → 베트남어) */
+export function languageName(locale: Locale, code: string): string { return LANGUAGE_NAMES[locale][code] ?? code }
+
+/** 오산시 밖 주소면 시·군 이름 ('경기도 화성시 동탄구 …' → '화성시') */
+export function cityOutsideOsan(address: string | null | undefined): string | null {
+  if (!address || address.includes('오산')) return null
+  return address.match(/[가-힣]+[시군](?=\s|$)/)?.[0] ?? null
+}
 export function interestLabel(locale: Locale, interest: Interest): string { return translate(locale, interestKeys[interest]) }
 
 export function formatDate(date: string | null, locale: Locale = 'ko-easy'): string {
@@ -20,7 +35,7 @@ export function formatDate(date: string | null, locale: Locale = 'ko-easy'): str
   const weekday = weekdayLabel(locale, weekdays[(new Date(year, month - 1, day).getDay() + 6) % 7].value)
   if (locale === 'vi') return `${day}/${month} ${weekday}`
   if (locale === 'zh') return `${month}月${day}日 ${weekday}`
-  return `${month}월 ${day}일 ${weekday}`
+  return `${month}월 ${day}일(${weekday})`
 }
 
 export function formatSession(session: ProgramSession | null, locale: Locale = 'ko-easy'): string {

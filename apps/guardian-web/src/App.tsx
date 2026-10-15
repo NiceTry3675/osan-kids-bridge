@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { getProgram, searchPrograms, usingDemoData } from './api'
-import { filterChips, formatDate, formatSession, formatWindow, interestLabel, validateWindow, weekdayLabel, weekdays } from './format'
+import { cityOutsideOsan, filterChips, formatDate, formatSession, formatWindow, interestLabel, languageName, validateWindow, weekdayLabel, weekdays } from './format'
 import { LanguageSwitcher, useLanguage, translate } from './language'
-import type { Locale } from './language'
+import type { Locale, MessageKey } from './language'
 import { clearSearchSession, readSearchSession, saveSearchSession } from './searchSession'
 import { emptyFilters } from './types'
-import type { AvailableWindow, Interest, Program, SearchFilters, SearchResponse, Weekday } from './types'
+import type { AvailableWindow, CompanionRule, Interest, Program, ProgramSession, ProgramVenue, SearchFilters, SearchResponse, Weekday } from './types'
 
 type View = 'browse' | 'filter' | 'results' | 'detail'
 type WindowMode = 'weekday' | 'date'
@@ -27,16 +27,56 @@ function statusLabel(program: Program, locale: Locale): string {
   }
 }
 
-function placeLabel(program: Program, locale: Locale): string {
-  const session = program.next_session
-  if (!session) return translate(locale, 'placeUnknown')
-  if (session.online) return translate(locale, 'online')
-  return session.place_name ?? translate(locale, 'placeUnknown')
+/** 장소 이름. 오산시 밖이면 시·군 이름을 붙인다 */
+function placeName(place: ProgramSession | ProgramVenue, locale: Locale): string {
+  if (place.online) return translate(locale, 'online')
+  const name = place.place_name ?? place.address
+  if (!name) return translate(locale, 'placeUnknown')
+  const city = cityOutsideOsan(place.address)
+  return city ? `${name} (${city})` : name
 }
 
-function costLabel(program: Program, locale: Locale): string {
-  return program.cost_krw === null ? translate(locale, 'costUnknown') : program.cost_krw === 0 ? translate(locale, 'free') : translate(locale, 'won', { amount: program.cost_krw.toLocaleString(locale === 'vi' ? 'vi-VN' : locale === 'zh' ? 'zh-CN' : 'ko-KR') })
+/** 다음 회차의 장소. 회차가 모두 지났으면 마지막 회차, 회차가 없으면 공고에 적힌 공통 장소 */
+function placeLabel(program: Program, locale: Locale): string {
+  const place = program.next_session ?? program.sessions[program.sessions.length - 1] ?? program.venue
+  return place ? placeName(place, locale) : translate(locale, 'placeUnknown')
 }
+
+/** 다음 회차. 회차가 없으면 원문이 밝힌 대략의 일정 ('11월 중 운영 예정') */
+function scheduleLabel(program: Program, locale: Locale): string {
+  if (!program.next_session && !program.sessions.length && program.schedule_note) return program.schedule_note
+  return formatSession(program.next_session, locale)
+}
+
+const COST_BASES: [RegExp, MessageKey][] = [[/가족\s*당|가정\s*당|가구\s*당/, 'perFamily'], [/(?:1\s*)?인\s*당|1\s*명\s*당/, 'perPerson'], [/(?:1\s*)?회\s*당|매\s*회/, 'perSession']]
+const COST_WORDS = /가족\s*당|가정\s*당|가구\s*당|(?:1\s*)?인\s*당|1\s*명\s*당|(?:1\s*)?회\s*당|매\s*회|재료비|참가비|비용|무료|[\d,.]+\s*원|[\s:·]/g
+
+/** 금액에 원문의 가족당·재료비 같은 기준을 붙인다 (금액만 보이면 한 사람 값으로 읽힌다) */
+function costLabel(program: Program, locale: Locale): string {
+  if (program.cost_krw === null) return translate(locale, 'costUnknown')
+  if (program.cost_krw === 0) return translate(locale, 'free')
+  const amount = translate(locale, 'won', { amount: program.cost_krw.toLocaleString(locale === 'vi' ? 'vi-VN' : locale === 'zh' ? 'zh-CN' : 'ko-KR') })
+  const raw = program.cost_raw ?? ''
+  const basis = COST_BASES.find(([pattern]) => pattern.test(raw))?.[1]
+  const qualifiers = [basis && translate(locale, basis), /재료비/.test(raw) && translate(locale, 'materialFee')].filter(Boolean) as string[]
+  if (!qualifiers.length) return amount
+  if (locale === 'vi') return `${amount} (${qualifiers.join(', ')})`
+  return locale === 'zh' ? `${qualifiers.join('')}${amount}` : `${qualifiers.join(' ')} ${amount}`
+}
+
+/** 원문 비용 표현에 금액·기준 말고 더 적힌 것이 있는가 ('10,000원 (악보·간식 포함)', '무료 (재료 제공)') */
+function costHasMore(raw: string | null): boolean {
+  return !!raw && raw.replace(COST_WORDS, '').length > 0
+}
+
+/** 상세의 비용: 원문에 더 적힌 것이 있으면 원문 표현도 보인다 (쉬운 한국어는 원문 표현만) */
+function costDetail(program: Program, locale: Locale): string {
+  const raw = program.cost_raw
+  if (!raw || (program.cost_krw !== null && !costHasMore(raw))) return costLabel(program, locale)
+  return locale === 'ko-easy' && program.cost_krw !== null ? raw : `${costLabel(program, locale)} · ${raw}`
+}
+
+const companionUnknown = (rule: CompanionRule | undefined) => !rule || rule === 'unknown'
 
 function isSafeUrl(value: string | null | undefined): value is string {
   if (!value) return false
@@ -64,7 +104,7 @@ function ProgramCard({ program, onOpen }: { program: Program; onOpen: (id: strin
         <span className="card-topline"><span className="card-category">{interestLabel(locale, program.category)}</span><span className={`status-text status-${program.application_status}`}>{statusLabel(program, locale)}</span></span>
         <strong className="card-title">{program.title}</strong>
         <span className="card-institution">{program.institution}</span>
-        <span className="card-info"><span className="meta-label">{program.time_match_status === 'matched' ? t('matchedSession') : t('schedule')}</span><span>{formatSession(program.next_session, locale)}</span></span>
+        <span className="card-info"><span className="meta-label">{program.time_match_status === 'matched' ? t('matchedSession') : t('schedule')}</span><span>{scheduleLabel(program, locale)}</span></span>
         <span className="card-info"><span className="meta-label">{t('place')}</span><span>{placeLabel(program, locale)}</span></span>
         <span className="card-info"><span className="meta-label">{t('targetOriginal')}</span><span>{program.target_raw}</span></span>
         <span className="card-info"><span className="meta-label">{t('cost')}</span><span>{costLabel(program, locale)}</span></span>
@@ -318,6 +358,12 @@ function App() {
   const firstMethod = detail?.application_methods.find((method) => method.type === 'online' && isSafeUrl(method.url))
     ?? detail?.application_methods.find((method) => method.type === 'phone' && method.phone)
     ?? detail?.application_methods.find((method) => method.type === 'visit' && method.address)
+  // 링크 없이 '홈페이지에서 신청'이라고만 적힌 온라인 신청
+  const onlineWithoutLink = detail?.application_methods.find((method) => method.type === 'online' && !method.url)
+  // 원문이 이미 밝힌 동반 규칙·한국어 수준은 다시 묻지 않는다
+  const askCompanion = !!detail && (companionUnknown(detail.guardian_companion) || companionUnknown(detail.sibling_companion))
+  const askKoreanLevel = !!detail && !detail.korean_level_required
+  const participationHint = askCompanion && askKoreanLevel ? t('askParticipationHint') : askCompanion ? t('askCompanionHint') : askKoreanLevel ? t('askKoreanLevelHint') : null
 
   return <div className="app-shell">
     <LanguageSwitcher />
@@ -359,7 +405,7 @@ function App() {
           <section className={`detail-hero category-bg-${detail.category}`}><span className="detail-category">{interestLabel(locale, detail.category)}</span><span className={`status-pill status-${detail.application_status}`}>{statusLabel(detail, locale)}</span><h1>{detail.title}</h1><p>{detail.institution}</p></section>
           <div className="detail-sections">
             {detail.summaries_by_language?.[locale] && <section className="detail-section summary-section"><h2>{t('summary')}</h2>{detail.summaries_by_language[locale].status !== 'approved' && <p className="section-note">{t('summaryUnreviewed')}</p>}{detail.summaries_by_language[locale].lines.map((line) => <p key={line}>{line}</p>)}</section>}
-            <section className="detail-section facts-section priority-facts"><h2>{t('quickFacts')}</h2><dl><div><dt>{detail.time_match_status === 'matched' ? t('matchedSession') : t('nextSchedule')}</dt><dd>{formatSession(detail.next_session, locale)}</dd></div><div><dt>{t('place')}</dt><dd>{placeLabel(detail, locale)}</dd></div><div><dt>{t('targetOriginal')}</dt><dd>{detail.target_raw}</dd></div><div><dt>{t('cost')}</dt><dd>{costLabel(detail, locale)}{detail.cost_krw === null && detail.cost_raw ? ` · ${detail.cost_raw}` : ''}</dd></div><div><dt>{t('application')}</dt><dd>{statusLabel(detail, locale)}{detail.application_end && detail.application_status === 'open' ? ` · ${t('until', { date: formatDate(detail.application_end, locale) })}` : ''}</dd></div><div><dt>{t('eligibility')}</dt><dd>{detail.eligibility_status === 'matched' ? t('eligibilityMatched') : detail.eligibility_status === 'unknown' ? t('eligibilityUnknown') : t('eligibilityNotApplied')}</dd></div></dl></section>
+            <section className="detail-section facts-section priority-facts"><h2>{t('quickFacts')}</h2><dl><div><dt>{detail.time_match_status === 'matched' ? t('matchedSession') : t('nextSchedule')}</dt><dd>{scheduleLabel(detail, locale)}</dd></div><div><dt>{t('place')}</dt><dd>{placeLabel(detail, locale)}</dd></div><div><dt>{t('targetOriginal')}</dt><dd>{detail.target_raw}</dd></div><div><dt>{t('cost')}</dt><dd>{costDetail(detail, locale)}</dd></div><div><dt>{t('application')}</dt><dd>{statusLabel(detail, locale)}{detail.application_end && detail.application_status === 'open' ? ` · ${t('until', { date: formatDate(detail.application_end, locale) })}` : ''}</dd></div><div><dt>{t('eligibility')}</dt><dd>{detail.eligibility_status === 'matched' ? t('eligibilityMatched') : detail.eligibility_status === 'unknown' ? t('eligibilityUnknown') : t('eligibilityNotApplied')}</dd></div></dl></section>
             <section className="detail-section participation-section">
               <h2>{t('checkBefore')}</h2>
               {detail.matched_reasons.length > 0 && <div className="detail-reasons">
@@ -377,20 +423,21 @@ function App() {
                 </div>}
               <div className="language-check">
                 <strong>{t('askLanguage')}</strong>
-                <p>{t('askLanguageHint')}</p>
+                <p>{detail.support_languages?.length ? t('supportLanguages', { languages: detail.support_languages.map((code) => languageName(locale, code)).join(', ') }) : t('askLanguageHint')}</p>
                 <strong>{t('askApplicationLanguage')}</strong>
                 <p>{t('askApplicationHint')}</p>
-                <p>{t('askParticipationHint')}</p>
+                {detail.korean_level_required && <p>{t('koreanLevelRequired', { level: detail.korean_level_required })}</p>}
+                {participationHint && <p>{participationHint}</p>}
               </div>
               {locale !== 'ko-easy' && <p className="original-language-note">{t('originalKoreanNotice')}</p>}
             </section>
-            <section className="detail-section"><h2>{t('allSessions')}</h2><p className="attendance-rule">{detail.attendance_rule === 'all_sessions' ? t('attendAll') : detail.attendance_rule === 'choose_one' ? t('chooseOne') : t('attendanceUnknown')}</p><div className="session-list">{detail.sessions.map((item) => <div className="session-row" key={item.id}><span><strong>{formatSession(item, locale)}</strong><small>{item.online ? t('online') : item.place_name ?? t('placeUnknown')}</small></span>{detail.matched_sessions.includes(item.id) && <span className="match-mark">{t('inputTimeMatch')}</span>}</div>)}</div></section>
-            <section className="detail-section"><h2>{t('programInfo')}</h2><p className="description">{detail.description}</p><h3 className="method-heading">{t('applicationMethods')}</h3><div className="method-list">{detail.application_methods.filter((method) => method.type !== 'online' || isSafeUrl(method.url)).map((method) => <div key={method.type} className="method-row"><span>{method.type === 'phone' ? t('phone') : method.type === 'visit' ? t('visit') : t('online')}</span><strong>{method.type === 'phone' ? method.phone : method.type === 'visit' ? method.address : method.label}</strong></div>)}</div></section>
+            <section className="detail-section"><h2>{t('allSessions')}</h2><p className="attendance-rule">{detail.attendance_rule === 'all_sessions' ? (detail.mid_join_allowed ? t('attendRemaining') : t('attendAll')) : detail.attendance_rule === 'choose_one' ? t('chooseOne') : t('attendanceUnknown')}</p><div className="session-list">{detail.sessions.map((item) => <div className="session-row" key={item.id}><span><strong>{formatSession(item, locale)}</strong><small>{placeName(item, locale)}</small></span>{detail.matched_sessions.includes(item.id) && <span className="match-mark">{t('inputTimeMatch')}</span>}</div>)}</div></section>
+            <section className="detail-section"><h2>{t('programInfo')}</h2><p className="description">{detail.description}</p>{detail.notices?.map((notice) => <p className="description notice-line" key={notice}>※ {notice}</p>)}<h3 className="method-heading">{t('applicationMethods')}</h3><div className="method-list">{detail.application_methods.filter((method) => method.type !== 'online' || !method.url || isSafeUrl(method.url)).map((method) => <div key={method.type} className="method-row"><span>{method.type === 'phone' ? t('phone') : method.type === 'visit' ? t('visit') : t('online')}</span><strong>{method.type === 'phone' ? method.phone : method.type === 'visit' ? method.address : method.label}</strong></div>)}</div></section>
             {!usingDemoData && <section className="detail-section source-section"><h2>{t('sourceInfo')}</h2>{detail.verified_at && <p>{t('verifiedAt', { date: formatDate(detail.verified_at, locale) })}</p>}{isSafeUrl(detail.source_url) && <button className="underlined-button" type="button" onClick={() => openExternal(detail.source_url!)}>{t('openSource')} ↗</button>}<button className="underlined-button" type="button" onClick={() => setHelpOpen(true)}>{t('linkTrouble')}</button></section>}
           </div>
           <footer className="detail-actions">
             {detail.application_status === 'open' && firstMethod && (firstMethod.type === 'online' ? <button className="button primary full" type="button" onClick={() => openExternal(firstMethod.url!)}>{usingDemoData ? t('applyDemo') : t('apply')}</button> : firstMethod.type === 'phone' ? <button className="button primary full" type="button" onClick={() => callPhone(firstMethod.phone!)}>{t('callInstitution')}</button> : <div className="action-note">{t('visitAddress', { address: firstMethod.address ?? '' })}</div>)}
-            {detail.application_status === 'open' && !firstMethod && <p className="action-note">{t('noMethod')}</p>}
+            {detail.application_status === 'open' && !firstMethod && (onlineWithoutLink ? <><p className="action-note">{t('onlineApplyLabel', { label: onlineWithoutLink.label })}</p>{!usingDemoData && isSafeUrl(detail.source_url) && <button className="button primary full" type="button" onClick={() => openExternal(detail.source_url!)}>{t('sourceApply')}</button>}</> : <p className="action-note">{t('noMethod')}</p>)}
             {detail.application_status === 'upcoming' && <><p className="action-note">{detail.application_start ? t('applyFrom', { date: formatDate(detail.application_start, locale) }) : t('applyStartUnknown')}</p>{!usingDemoData && isSafeUrl(detail.source_url) && <button className="button primary full" type="button" onClick={() => openExternal(detail.source_url!)}>{t('sourceApply')}</button>}</>}
             {detail.application_status === 'closed' && <><p className="action-note">{t('closedHint')}</p><button className="button primary full" type="button" onClick={goHome}>{t('browseOthers')}</button></>}
             {detail.application_status === 'unknown' && <><p className="action-note">{t('unknownApplicationHint')}</p>{!usingDemoData && isSafeUrl(detail.source_url) && <button className="button primary full" type="button" onClick={() => openExternal(detail.source_url!)}>{t('sourceCheck')}</button>}</>}
