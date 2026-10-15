@@ -96,7 +96,7 @@ function viDates(text: string): DateMention[] {
 
 const RULES: Record<DisplayLanguage, LanguageRules> = {
   'ko-easy': {
-    maxLine: 120,
+    maxLine: 140,
     script: /\p{Script=Hangul}/u,
     free: /무료/,
     unknown: /확인|물어|문의|알 수 없|미정|정해지지|나와 있지 않|적혀 있지 않/,
