@@ -114,7 +114,7 @@ const RULES: Record<DisplayLanguage, LanguageRules> = {
     dates: (text) => sequentialDates(text, KO_DATE, KO_WEEKDAYS),
   },
   vi: {
-    maxLine: 260,
+    maxLine: 300,
     script: /[ăâđêôơưàáạảãằắặẳẵầấậẩẫèéẹẻẽềếệểễìíịỉĩòóọỏõồốộổỗờớợởỡùúụủũừứựửữỳýỵỷỹ]/i,
     free: /miễn phí/i,
     unknown: /chưa rõ|chưa có thông tin|không có thông tin|chưa xác định|không rõ|không ghi|chưa ghi|cần (?:hỏi|xác nhận|kiểm tra)|hãy hỏi|vui lòng hỏi/i,
@@ -167,6 +167,8 @@ const URL_PATTERN = /(?:https?:\/\/|www\.)\S+/gi
 const PHONE_PATTERN = /(?<!\d)(?:0\d{1,2}[-.)\s]\s*\d{3,4}[-.\s]\d{4}|1\d{3}-\d{4})(?!\d)/g
 const TIME_PATTERN = /(?<!\d)([01]?\d|2[0-3]):([0-5]\d)(?!\d)/g
 const MIN_LINE = 8
+/** 끝났다는 말 (끝난 프로그램에는 써도 된다) */
+const ENDED_WORDS = /마감|hết hạn|đóng|kết thúc|截止|结束/
 /** 온라인 신청 이름 중 어디서 신청하는지 가리키지 않는 말 */
 const GENERIC_LABEL_WORD = /^(?:온라인|인터넷|홈페이지|프로그램|신청|접수|예약|등록|방법)$/
 
@@ -438,7 +440,8 @@ function claimIssues(lines: string[], facts: SummaryFacts, language: DisplayLang
     if (pattern.test(outside) && !support.includes(code)) issues.push(`확인되지 않은 언어 지원(${code})을 언급함`)
   }
   const judgement = outside.match(rules.judgement)
-  if (judgement) issues.push(`신청 상태나 참여 가능 여부를 단정함: "${judgement[0]}"`)
+  // 이미 끝난 프로그램이 끝났다는 말은 시간이 지나도 틀리지 않는다
+  if (judgement && !(facts.operation_ended && ENDED_WORDS.test(judgement[0]))) issues.push(`신청 상태나 참여 가능 여부를 단정함: "${judgement[0]}"`)
   if (facts.target_type !== 'all' && rules.anyone.test(outside)) issues.push('대상 제한이 없다고 확인되지 않았는데 누구나라고 씀')
   const wordNumber = rules.wordNumber ? outside.match(rules.wordNumber) : null
   if (wordNumber) issues.push(`숫자를 글자로 씀: "${wordNumber[0]}"`)

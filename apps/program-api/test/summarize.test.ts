@@ -450,6 +450,10 @@ describe('끝난 공고·중국어 동 이름', () => {
     expect(facts.check_items).toEqual(['참여 대상·자격'])
     expect(localizeFacts(facts, 'ko-easy').schedule.ended).toBe(true)
     expect(factsOf({ uncertain_items: ['신청 방법'] }).check_items).toContain('신청 방법')
+    // 끝난 프로그램이 끝났다고 쓰는 것은 현재 신청 상태 단정이 아니다
+    const ended = replaced('vi', 2, 'Miễn phí.', 'Miễn phí. Chương trình đã kết thúc.')
+    expect(check(ended, 'vi', facts).some((issue) => issue.includes('단정'))).toBe(false)
+    hasIssue(check(ended, 'vi'), '단정')
   })
 
   it('중국어 요약이 동 이름을 한자로 옮기면 문제로 본다 (제목 원문 따옴표 안은 괜찮다)', () => {
