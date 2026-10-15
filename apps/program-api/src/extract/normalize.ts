@@ -493,9 +493,16 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
   let costRaw = cleanText(r.cost_raw)
   if (costKrw !== null && costKrw < 0) costKrw = null
   if (costKrw !== null || costRaw) {
-    const checked = check('cost', r.cost_evidence)
+    let checked = check('cost', r.cost_evidence)
     const krw = costKrw
-    if (!accept('비용', costRaw ?? krw, checked, (text) => krw === null || supportsCost(krw, text) || supportsCost(krw, sourceLinesOf(text)))) {
+    // '무료'처럼 항목 이름 없이 값만 인용했으면 그 원문 줄을 근거로 남긴다 (검수 승인도 같은 근거로 대조한다)
+    if (krw !== null && checked.text && !supportsCost(krw, checked.text)) {
+      const lines = sourceLinesOf(checked.text)
+      if (lines && supportsCost(krw, lines)) {
+        checked = { entries: lines.split('\n').map((line) => ({ field: 'cost', quote: line.trim(), verified: true })), text: lines }
+      }
+    }
+    if (!accept('비용', costRaw ?? krw, checked, (text) => krw === null || supportsCost(krw, text))) {
       costKrw = null
       costRaw = null
     } else if (costRaw && !quoteInSource(costRaw, sourceText)) {

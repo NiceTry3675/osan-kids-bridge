@@ -445,6 +445,14 @@ describe('normalize: 안내 문장·대략의 일정·장소·신청 이름', ()
     expect(toProgramRecord({ ...kpopRaw, application_note: '접수기간 : 2026-10-01 00:00 ~ 2026-10-17 00:00' }, context(LIST_ROW)).application_note).toBeNull()
   })
 
+  it("값만 인용한 비용('무료')은 원문 줄 전체를 근거로 남겨 검수 승인도 통과한다", () => {
+    const text = `${LIST_ROW}\n■ 참가비: 무료`
+    const record = toProgramRecord({ ...kpopRaw, cost_evidence: ['무료'], cost_krw: 0, cost_raw: '무료' }, context(text))
+    expect(record.cost_krw).toBe(0)
+    expect(record.evidence.filter((entry) => entry.field === 'cost')).toEqual([{ field: 'cost', quote: '■ 참가비: 무료', verified: true }])
+    expect(unverifiedFacts(record)).not.toContain('비용')
+  })
+
   it('신청 마감이 첫 회차 뒤면 시작 후 접수 여부를 묻지 않는다', () => {
     const line = '■ 일시: 10월 10일(토), 10월 17일(토), 10월 24일(토), 10월 31일(토) 10:30~12:00'
     const text = `주말 미술 놀이\n${line}\n■ 접수: 2026-09-28 ~ 2026-10-20 18:00`
