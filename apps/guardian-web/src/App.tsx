@@ -383,8 +383,9 @@ function App() {
   const askCompanion = !!detail && (companionUnknown(detail.guardian_companion) || companionUnknown(detail.sibling_companion))
   const askKoreanLevel = !!detail && !detail.korean_level_required
   const participationHint = askCompanion && askKoreanLevel ? t('askParticipationHint') : askCompanion ? t('askCompanionHint') : askKoreanLevel ? t('askKoreanLevelHint') : null
-  // 신청이 끝난 공고에는 신청 기간·방법을 물을 필요가 없다
-  const askItems = detail ? detail.uncertain_items.filter((item) => detail.application_status !== 'closed' || !/^신청/.test(item)) : []
+  // 신청이 끝난 공고는 기관에 물을 것이 없다
+  const closed = detail?.application_status === 'closed'
+  const askItems = detail && !closed ? detail.uncertain_items : []
   const phoneMethods = detail?.application_methods.filter((method) => method.type === 'phone' && method.phone) ?? []
   const visitMethods = detail?.application_methods.filter((method) => method.type === 'visit' && method.address) ?? []
   const hasFallback = !!detail && (isSafeUrl(detail.source_url) || phoneMethods.length > 0)
@@ -438,7 +439,7 @@ function App() {
                   ? detail.matched_reasons.map((reason) => <p key={reason}>✓ {reason}</p>)
                   : <>{detail.age_grade_match_status === 'matched' && <p>✓ {t('ageMatched')}</p>}{detail.time_match_status === 'matched' && <p>✓ {t('inputTimeMatch')}</p>}</>}
               </div>}
-              {(detail.age_grade_match_status === 'unknown' || detail.time_match_status === 'unknown' || detail.eligibility_status === 'unknown' || askItems.length > 0) &&
+              {!closed && (detail.age_grade_match_status === 'unknown' || detail.time_match_status === 'unknown' || detail.eligibility_status === 'unknown' || askItems.length > 0) &&
                 <div className="notice-box">
                   <strong>{t('askInstitution')}</strong>
                   {detail.age_grade_match_status === 'unknown' && <p>· {t('askAge')}</p>}

@@ -366,7 +366,8 @@ function requiredIssues(lines: string[], scans: LineScan[], facts: SummaryFacts,
     for (const fact of [facts.period_start, facts.period_end]) {
       if (fact && !hasDate(scans, fact)) issues.push(`운영 기간 날짜(${md(monthDay(fact))})가 없음`)
     }
-    if (!rules.unknown.test(second)) issues.push('2줄에 회차 요일·시간 확인 필요라는 말이 없음')
+    // 끝난 프로그램은 요일·시간을 물을 필요가 없다
+    if (!facts.operation_ended && !rules.unknown.test(second)) issues.push('2줄에 회차 요일·시간 확인 필요라는 말이 없음')
   } else {
     if (!rules.unknown.test(second) && !(facts.schedule_note && rules.later.test(second))) issues.push('2줄에 일정 확인 필요라는 말이 없음')
     const noteNumbers = facts.schedule_note ? numberTokens(facts.schedule_note) : []
@@ -441,7 +442,7 @@ function claimIssues(lines: string[], facts: SummaryFacts, language: DisplayLang
   }
   const judgement = outside.match(rules.judgement)
   // 이미 끝난 프로그램이 끝났다는 말은 시간이 지나도 틀리지 않는다
-  if (judgement && !(facts.operation_ended && ENDED_WORDS.test(judgement[0]))) issues.push(`신청 상태나 참여 가능 여부를 단정함: "${judgement[0]}"`)
+  if (judgement && !((facts.operation_ended || facts.application_closed) && ENDED_WORDS.test(judgement[0]))) issues.push(`신청 상태나 참여 가능 여부를 단정함: "${judgement[0]}"`)
   if (facts.target_type !== 'all' && rules.anyone.test(outside)) issues.push('대상 제한이 없다고 확인되지 않았는데 누구나라고 씀')
   const wordNumber = rules.wordNumber ? outside.match(rules.wordNumber) : null
   if (wordNumber) issues.push(`숫자를 글자로 씀: "${wordNumber[0]}"`)

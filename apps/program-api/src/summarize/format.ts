@@ -242,6 +242,8 @@ export function localizeFacts(facts: SummaryFacts, language: DisplayLanguage) {
       inquiry: inquiry.length ? inquiry : null,
       /** 신청 기간 없이 원문이 신청을 대략만 밝힌 표현 (한국어 원문 표기) */
       note: facts.application_note,
+      /** 신청 마감이 이미 지남 */
+      closed: facts.application_closed,
     },
     support_languages: facts.support_languages?.map((code) => LANGUAGE_CODE_NAMES[language][code] ?? code) ?? null,
     /** 원문이 언어 지원을 '통역'이라고 밝힘 */

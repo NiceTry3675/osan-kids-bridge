@@ -444,10 +444,13 @@ describe('쉬는 날·남은 회차·신청 이름·신청 안내', () => {
 })
 
 describe('끝난 공고·중국어 동 이름', () => {
-  it('끝난 공고는 ended로 알리고 신청 확인 사항을 넘기지 않는다', () => {
+  it('끝났거나 신청이 마감된 공고는 그렇게 알리고 확인할 점을 넘기지 않는다', () => {
     const facts = factsOf({ sessions: [session('s1', '2026-06-10')], session_count: 1, uncertain_items: ['신청 방법', '참여 대상·자격'] })
     expect(facts.operation_ended).toBe(true)
-    expect(facts.check_items).toEqual(['참여 대상·자격'])
+    expect(facts.check_items).toEqual([])
+    const closed = factsOf({ application_end: '2026-10-14T18:00', uncertain_items: ['신청 방법', '형제자매 동반 가능 여부'] })
+    expect([closed.operation_ended, closed.application_closed, closed.check_items]).toEqual([false, true, []])
+    expect(localizeFacts(closed, 'zh').application.closed).toBe(true)
     expect(localizeFacts(facts, 'ko-easy').schedule.ended).toBe(true)
     expect(factsOf({ uncertain_items: ['신청 방법'] }).check_items).toContain('신청 방법')
     // 끝난 프로그램이 끝났다고 쓰는 것은 현재 신청 상태 단정이 아니다

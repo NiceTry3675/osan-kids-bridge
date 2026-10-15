@@ -1,6 +1,7 @@
 import type { ApplicationMethod, AttendanceRule, Audience, CompanionRule, ProgramRecord, TargetType, Weekday } from '../types'
 import { dongFromAddress } from '../geo/dong'
 import { isValidDate, isValidTime, lastApplicationDay, parseDateTime, weekdayOf } from '../match/dates'
+import { applicationStatus } from '../match/application'
 import { clockOf, compareSessions, hasOperationEnded, hasStarted, needsMidJoinCheck } from '../match/sessions'
 
 // 요약에 쓸 수 있는 사실만 모은다. 원문·소개(description)·근거 인용은 넣지 않는다 (명세 5.4).
@@ -68,6 +69,8 @@ export interface SummaryFacts {
   next_session: SessionFact | null
   /** 운영이 이미 끝난 공고 (지난 일은 시간이 지나도 바뀌지 않는다) */
   operation_ended: boolean
+  /** 신청 마감이 이미 지난 공고 */
+  application_closed: boolean
   period_start: DateFact | null
   period_end: DateFact | null
   session_count: number | null
@@ -169,9 +172,9 @@ export function skippedDates(sessions: DateFact[], total: number, sessionCount: 
 }
 
 function checkItems(record: ProgramRecord, now: Date): string[] {
-  const ended = hasOperationEnded(record, clockOf(now))
-  // 끝난 공고에는 신청 기간·방법을 물을 필요가 없다 (보호자 웹과 같다)
-  const items = [...new Set(record.uncertain_items.map((item) => item.trim()).filter((item) => item && !(ended && /^신청/.test(item))))]
+  // 끝났거나 신청이 마감된 공고는 기관에 물을 것이 없다 (보호자 웹도 확인할 점을 보이지 않는다)
+  if (hasOperationEnded(record, clockOf(now)) || applicationStatus(record, now) === 'closed') return []
+  const items = [...new Set(record.uncertain_items.map((item) => item.trim()).filter(Boolean))]
   const mentions = (word: string) => items.some((item) => item.includes(word))
   if (needsMidJoinCheck(record, clockOf(now)) && !mentions('중도')) items.push('중도 참여 가능 여부')
   if (record.audience === 'unknown' && !mentions('참여 대상') && !mentions('자녀가 참여')) items.push('자녀가 참여하는 프로그램인지')
@@ -214,6 +217,7 @@ export function summaryFacts(record: ProgramRecord, now: Date): SummaryFacts {
     schedule_note: dated.length || record.period_start || record.period_end ? null : textOrNull(record.schedule_note),
     next_session: nextIndex >= 0 ? sessions[nextIndex] : null,
     operation_ended: hasOperationEnded(record, clock),
+    application_closed: applicationStatus(record, now) === 'closed',
     period_start: dateFact(record.period_start),
     period_end: dateFact(record.period_end),
     session_count: record.session_count,
