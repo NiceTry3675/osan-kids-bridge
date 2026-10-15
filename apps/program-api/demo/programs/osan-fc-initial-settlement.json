@@ -1,0 +1,154 @@
+{
+  "program_id": "osan-fc-initial-settlement",
+  "title": "다문화가족초기정착지원",
+  "institution": "오산시가족센터",
+  "category": "experience_culture",
+  "audience": "adult",
+  "target_type": "multicultural_family",
+  "target_raw": "입국 초기 결혼이민자",
+  "description": "오산시 가족센터에서 입국 초기 결혼이민자를 대상으로 진행하는 초기 정착 지원 프로그램입니다.",
+  "grade_range": null,
+  "age_range": null,
+  "eligibility_requirements": [
+    "입국 초기 결혼이민자"
+  ],
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [],
+  "venue": {
+    "place_name": "2층 오산시가족센터",
+    "address": "경기도 오산시 청학로 80 (궐동)",
+    "dong": "남촌동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-03-28",
+  "period_end": "2026-12-31",
+  "session_count": 41,
+  "attendance_rule": "unknown",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": null,
+  "application_start": "2026-03-28T09:00",
+  "application_end": "2026-11-20T23:59",
+  "application_methods": [],
+  "application_note": null,
+  "uncertain_items": [
+    "운영 날짜·시간",
+    "신청 방법"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "다문화가족초기정착지원",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "■ 대상: 입국 초기 결혼이민자",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "입국 초기 결혼이민자",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "■ 대상: 입국 초기 결혼이민자",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "■ 대상: 입국 초기 결혼이민자",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 : 경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-03-28 ~ 2026-12-31",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 41회",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "■ 참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-03-28 09:00 ~ 2026-11-20 23:59",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "오산시가족센터가 '다문화가족초기정착지원'을 열어요. 성인 입국 초기 결혼이민자가 대상이에요.",
+        "3월 28일(토)부터 12월 31일(목)까지 총 41회 열려요. 요일과 시간은 기관에 물어보세요. 장소는 경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터예요.",
+        "비용은 무료예요. 신청은 3월 28일(토) 09:00부터 11월 20일(금) 23:59까지예요. 신청 방법과 중간에 들어와도 되는지는 기관에 물어보세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "Chương trình “다문화가족초기정착지원” (Hỗ trợ định cư ban đầu cho gia đình đa văn hóa) do 오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức. Đối tượng là người lớn, người nhập cư kết hôn mới nhập cảnh.",
+        "Thời gian từ 28/3 (Thứ Bảy) đến 31/12 (Thứ Năm) với tổng cộng 41 buổi, thứ và giờ cần hỏi lại đơn vị tổ chức. Địa điểm là 경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터 (tầng 2 Trung tâm Gia đình thành phố Osan, 80 Cheonghak-ro, Gwol-dong, thành phố Osan, Gyeonggi-do).",
+        "Chi phí là miễn phí. Đăng ký từ 28/3 (Thứ Bảy) 09:00 đến 20/11 (Thứ Sáu) 23:59, hãy hỏi đơn vị tổ chức về cách thức đăng ký và việc có thể vào học giữa chừng hay không."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "“다문화가족초기정착지원”（多元文化家庭初期定居支援）由오산시가족센터（乌山市家庭中心）举办，对象为入境初期的婚姻移民者（成人）。",
+        "活动期间为3月28日（周六）至12月31日（周四），共41次，星期与具体时间请向机构确认。地点为경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터（京畿道乌山市청학로80（궐동）2楼乌山市家庭中心）。",
+        "免费。报名时间为3月28日（周六） 09:00至11月20日（周五） 23:59，报名方式及是否可以中途加入请向机构确认。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "4db247d21c36b93b3002a31a9ff2cfa00b61eef53bf5be8094f8b401fcce1f23"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "참석 방식: 값이 근거 인용과 맞지 않아 비웠습니다 (값: 'all_sessions', 인용: '총 41회')"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "cf044433db77e95a70c89a00ba8d202d83caee41854771f0a7d54590b3b0b437"
+  }
+}

@@ -1,0 +1,159 @@
+{
+  "program_id": "osan-fc-doenjang",
+  "title": "다문화가족초기정착지원 된장체험",
+  "institution": "오산시가족센터",
+  "category": "experience_culture",
+  "audience": "adult",
+  "target_type": "multicultural_family",
+  "target_raw": "입국 5년 이하 결혼이민자",
+  "description": "오산시 가족센터에서 입국 5년 이하 결혼이민자를 대상으로 총 3회 된장체험 프로그램을 운영합니다.",
+  "grade_range": null,
+  "age_range": null,
+  "eligibility_requirements": [
+    "입국 5년 이하 결혼이민자"
+  ],
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [],
+  "venue": {
+    "place_name": "2층 오산시가족센터",
+    "address": "경기도 오산시 청학로 80 (궐동)",
+    "dong": "남촌동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-06-08",
+  "period_end": "2026-12-01",
+  "session_count": 3,
+  "attendance_rule": "unknown",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": null,
+  "application_start": "2026-05-08T09:00",
+  "application_end": "2026-10-16T18:00",
+  "application_methods": [],
+  "application_note": null,
+  "uncertain_items": [
+    "운영 날짜·시간",
+    "신청 방법"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "다문화가족초기정착지원 된장체험",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터 > 프로그램안내 > 프로그램신청",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "■ 대상: 입국 5년 이하 결혼이민자",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "입국 5년 이하 결혼이민자",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "다문화가족초기정착지원",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "■ 대상: 입국 5년 이하 결혼이민자",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "■ 대상: 입국 5년 이하 결혼이민자",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 : 경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-06-08 ~ 2026-12-01",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 3회",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "■ 참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-05-08 09:00 ~ 2026-10-16 18:00",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "오산시가족센터가 '다문화가족초기정착지원 된장체험'을 열어요. 입국 5년 이하 결혼이민자 성인이 대상이에요.",
+        "6월 8일(월)부터 12월 1일(화)까지 총 3회 열려요. 요일과 시간은 기관에 물어보세요. 장소는 2층 오산시가족센터예요.",
+        "무료예요. 5월 8일(금) 09:00부터 10월 16일(금) 18:00까지 신청해요. 신청 방법은 기관에 물어보세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "Chương trình “다문화가족초기정착지원 된장체험” (Trải nghiệm làm tương Doenjang hỗ trợ định cư ban đầu cho gia đình đa văn hóa) do 오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức. Đối tượng là người lớn, người nhập cư kết hôn nhập cảnh từ 5 năm trở xuống.",
+        "Chương trình diễn ra trong giai đoạn từ 8/6 (Thứ Hai) đến 1/12 (Thứ Ba) với tổng cộng 3 buổi tại 경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터 (tầng 2 Trung tâm Gia đình thành phố Osan, 80 Cheonghak-ro, Gwol-dong, thành phố Osan, tỉnh Gyeonggi). Hãy hỏi đơn vị tổ chức về thứ trong tuần và thời gian cụ thể.",
+        "Miễn phí. Thời gian đăng ký từ 8/5 (Thứ Sáu) 09:00 đến 16/10 (Thứ Sáu) 18:00. Hãy hỏi đơn vị tổ chức về cách thức đăng ký."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "오산시가족센터（乌山市家庭中心）举办“다문화가족초기정착지원 된장체험”（多元文化家庭初期定居支援大酱体验）。对象为入境5年以下的婚姻移民者成人。",
+        "活动期间为6月8日（周一）至12月1日（周二），共3次，星期与时间请向机构确认。地点为경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터（乌山市家庭中心2楼）。",
+        "费用免费。报名时间为5月8日（周五） 09:00至10月16日（周五） 18:00，报名方式与是否可以中途加入请向机构确认。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "c32ddb945583eebb2cbffd55ffaf713fc0877b0274b4d692316b01f0d9728030"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "참석 방식: 값이 근거 인용과 맞지 않아 비웠습니다 (값: 'all_sessions', 인용: '총 3회')"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "f1403865c3b2647204ab441829b89324ecd5be0a381a913a57825216f598515e"
+  }
+}

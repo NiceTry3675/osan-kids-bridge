@@ -1,0 +1,203 @@
+{
+  "program_id": "demo-kids-choir",
+  "title": "[모집] 어린이 합창 교실",
+  "institution": "대원동 행정복지센터",
+  "category": "sports_arts",
+  "audience": "child",
+  "target_type": "unknown",
+  "target_raw": "8~12세 어린이",
+  "description": "8~12세 어린이를 대상으로 대원동 행정복지센터 3층 강당에서 2회에 걸쳐 진행되는 합창 교실 프로그램입니다.",
+  "grade_range": null,
+  "age_range": [
+    8,
+    12
+  ],
+  "eligibility_requirements": null,
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "demo-kids-choir-s1",
+      "date": "2026-11-21",
+      "start_time": "14:00",
+      "end_time": "15:30",
+      "place_name": "대원동 행정복지센터 3층 강당",
+      "dong": "대원동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "demo-kids-choir-s2",
+      "date": "2026-11-28",
+      "start_time": "14:00",
+      "end_time": "15:30",
+      "place_name": "대원동 행정복지센터 3층 강당",
+      "dong": "대원동",
+      "online": false,
+      "address": null
+    }
+  ],
+  "venue": {
+    "place_name": "대원동 행정복지센터 3층 강당",
+    "address": null,
+    "dong": "대원동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": null,
+  "period_end": null,
+  "session_count": 2,
+  "attendance_rule": "all_sessions",
+  "mid_join_allowed": null,
+  "cost_krw": 10000,
+  "cost_raw": "10,000원 (악보·간식 포함)",
+  "capacity": 20,
+  "application_start": "2026-11-01T09:00",
+  "application_end": "2026-11-15T18:00",
+  "application_methods": [
+    {
+      "type": "visit",
+      "label": "대원동 행정복지센터 방문 접수",
+      "address": "대원동 행정복지센터"
+    }
+  ],
+  "application_note": null,
+  "uncertain_items": [
+    "참여 대상·자격",
+    "보호자·형제자매 동반 가능 여부"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "[모집] 어린이 합창 교실",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "8~12세 어린이",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "● 대상: 8~12세 어린이",
+      "verified": true
+    },
+    {
+      "field": "age_range",
+      "quote": "8~12세 어린이",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "● 장소: 대원동 행정복지센터 3층 강당",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "(2회 모두 참여)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-kids-choir-s1].date",
+      "quote": "11월 21일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-kids-choir-s1].time",
+      "quote": "14:00~15:30",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-kids-choir-s2].date",
+      "quote": "11월 28일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-kids-choir-s2].time",
+      "quote": "14:00~15:30",
+      "verified": true
+    },
+    {
+      "field": "attendance_rule",
+      "quote": "(2회 모두 참여)",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "● 참가비: 10,000원 (악보·간식 포함)",
+      "verified": true
+    },
+    {
+      "field": "capacity",
+      "quote": "● 정원: 20명",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "● 신청 기간: 11월 1일(일) 09:00 ~ 11월 15일(일) 18:00",
+      "verified": true
+    },
+    {
+      "field": "application_methods.visit",
+      "quote": "● 신청 방법: 대원동 행정복지센터 방문 접수",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "대원동 행정복지센터가 '[모집] 어린이 합창 교실'을 열어요. 8~12세 어린이가 대상이에요.",
+        "11월 21일(토), 11월 28일(토) 14:00~15:30에 해요. 장소는 대원동 행정복지센터 3층 강당이에요. 모든 회차에 참여하는 과정이에요.",
+        "비용은 10,000원이에요. 11월 1일(일) 09:00부터 11월 15일(일) 18:00까지 대원동 행정복지센터에 가서 신청해요. 보호자나 형제자매도 같이 가도 되는지는 기관에 물어보세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "대원동 행정복지센터 (Trung tâm Hành chính phường Daewon-dong) tổ chức chương trình “[모집] 어린이 합창 교실” (Lớp hợp xướng thiếu nhi). Đối tượng là trẻ em 8–12 tuổi.",
+        "Chương trình diễn ra vào ngày 21/11 (Thứ Bảy) và 28/11 (Thứ Bảy), thời gian 14:00–15:30 tại 대원동 행정복지센터 3층 강당 (hội trường tầng 3 Trung tâm Hành chính phường Daewon-dong). Đây là khóa học tham gia tất cả các buổi.",
+        "Chi phí là 10.000 won. Đăng ký từ 1/11 (Chủ Nhật) 09:00 đến 15/11 (Chủ Nhật) 18:00 bằng hình thức đăng ký trực tiếp (대원동 행정복지센터 – Trung tâm Hành chính phường Daewon-dong). Hãy hỏi đơn vị tổ chức về việc phụ huynh và anh chị em có thể đi cùng hay không."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "대원동 행정복지센터（대원동行政福利中心）开办“[모집] 어린이 합창 교실”（[招募] 儿童合唱教室），对象为8至12岁儿童。",
+        "日期为11月21日（周六）和11月28日（周六），时间均为14:00–15:30，地点在대원동 행정복지센터 3층 강당（대원동行政福利中心3楼礼堂）。本课程需参加全部场次。",
+        "费用为10,000韩元。报名时间为11月1日（周日）09:00至11月15日（周日）18:00，报名方式为现场报名（대원동 행정복지센터，即대원동行政福利中心）。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": null,
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "54e1a361bdba58ebaa627268f4a1cd88f2dcb75f3dc11ef2a215c376f162215d"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "기관 이름이 원문에 없어 수집 정보의 기관(대원동 행정복지센터)을 썼습니다",
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-11-21, 회차 2026-11-28, 신청 시작 2026-11-01, 신청 마감 2026-11-15"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "5c7597b5b4d6a3591b6090f7ee0e54a3dee2453b0397c2bd0a8c7276ad40c253"
+  }
+}

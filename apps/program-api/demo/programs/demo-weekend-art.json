@@ -1,0 +1,271 @@
+{
+  "program_id": "demo-weekend-art",
+  "title": "주말 미술 4회 과정 수강생 모집",
+  "institution": "신장동 청소년문화의집",
+  "category": "sports_arts",
+  "audience": "child",
+  "target_type": "all",
+  "target_raw": "초등 1~6학년 누구나",
+  "description": "신장동 청소년문화의집에서 초등 1~6학년을 대상으로 주말 미술 4회 연속 과정을 운영합니다.",
+  "grade_range": [
+    1,
+    6
+  ],
+  "age_range": null,
+  "eligibility_requirements": [],
+  "guardian_companion": "not_allowed",
+  "sibling_companion": "not_allowed",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "demo-weekend-art-s1",
+      "date": "2026-10-10",
+      "start_time": "10:30",
+      "end_time": "12:00",
+      "place_name": "신장동 청소년문화의집 2층 미술실",
+      "dong": "신장동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "demo-weekend-art-s2",
+      "date": "2026-10-17",
+      "start_time": "10:30",
+      "end_time": "12:00",
+      "place_name": "신장동 청소년문화의집 2층 미술실",
+      "dong": "신장동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "demo-weekend-art-s3",
+      "date": "2026-10-24",
+      "start_time": "10:30",
+      "end_time": "12:00",
+      "place_name": "신장동 청소년문화의집 2층 미술실",
+      "dong": "신장동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "demo-weekend-art-s4",
+      "date": "2026-10-31",
+      "start_time": "10:30",
+      "end_time": "12:00",
+      "place_name": "신장동 청소년문화의집 2층 미술실",
+      "dong": "신장동",
+      "online": false,
+      "address": null
+    }
+  ],
+  "venue": {
+    "place_name": "신장동 청소년문화의집 2층 미술실",
+    "address": null,
+    "dong": "신장동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": null,
+  "period_end": null,
+  "session_count": 4,
+  "attendance_rule": "all_sessions",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료 (재료 제공)",
+  "capacity": 12,
+  "application_start": "2026-09-28T09:00",
+  "application_end": "2026-10-20T18:00",
+  "application_methods": [
+    {
+      "type": "visit",
+      "label": "신장동 청소년문화의집 1층 안내데스크 방문 접수",
+      "address": "신장동 청소년문화의집 1층 안내데스크"
+    }
+  ],
+  "application_note": null,
+  "uncertain_items": [],
+  "notices": [
+    "신청한 어린이만 참여합니다 (보호자·형제자매 동반 불가)."
+  ],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "주말 미술 4회 과정 수강생 모집",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "신장동 청소년문화의집",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "초등 1~6학년 누구나",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "초등 1~6학년 누구나",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "신청한 어린이만 참여합니다",
+      "verified": true
+    },
+    {
+      "field": "grade_range",
+      "quote": "초등 1~6학년",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "초등 1~6학년 누구나",
+      "verified": true
+    },
+    {
+      "field": "guardian_companion",
+      "quote": "보호자·형제자매 동반 불가",
+      "verified": true
+    },
+    {
+      "field": "sibling_companion",
+      "quote": "보호자·형제자매 동반 불가",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "신장동 청소년문화의집 2층 미술실",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "4회 연속 과정",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-weekend-art-s1].date",
+      "quote": "10월 10일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-weekend-art-s1].time",
+      "quote": "10:30~12:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-weekend-art-s2].date",
+      "quote": "10월 17일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-weekend-art-s2].time",
+      "quote": "10:30~12:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-weekend-art-s3].date",
+      "quote": "10월 24일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-weekend-art-s3].time",
+      "quote": "10:30~12:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-weekend-art-s4].date",
+      "quote": "10월 31일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-weekend-art-s4].time",
+      "quote": "10:30~12:00",
+      "verified": true
+    },
+    {
+      "field": "attendance_rule",
+      "quote": "4회 연속 과정",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "수강료: 무료 (재료 제공)",
+      "verified": true
+    },
+    {
+      "field": "capacity",
+      "quote": "정원: 12명",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "9월 28일(월) 09:00 ~ 10월 20일(화) 18:00",
+      "verified": true
+    },
+    {
+      "field": "application_methods.visit",
+      "quote": "신장동 청소년문화의집 1층 안내데스크 방문 접수",
+      "verified": true
+    },
+    {
+      "field": "notices",
+      "quote": "신청한 어린이만 참여합니다 (보호자·형제자매 동반 불가).",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "'주말 미술 4회 과정 수강생 모집'은 신장동 청소년문화의집이 열어요. 초등 1~6학년이 대상이에요. 아이만 참여하고 보호자와 형제자매는 같이 올 수 없어요.",
+        "10월 10일(토), 10월 17일(토), 10월 24일(토), 10월 31일(토) 10:30~12:00에 해요. 장소는 신장동 청소년문화의집 2층 미술실이에요. 모든 회차에 참여하는 과정이에요.",
+        "무료예요. 9월 28일(월) 09:00부터 10월 20일(화) 18:00까지 방문 신청 (신장동 청소년문화의집 1층 안내데스크)으로 신청해요. 중간에 들어와도 되는지는 기관에 물어보세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "Chương trình “주말 미술 4회 과정 수강생 모집” (Tuyển học viên khóa học mỹ thuật cuối tuần 4 buổi) do 신장동 청소년문화의집 (Nhà văn hóa Thanh thiếu niên Sinjang-dong) tổ chức dành cho học sinh tiểu học lớp 1–6. Phụ huynh không vào lớp cùng và anh chị em không thể đi cùng.",
+        "Lớp học diễn ra vào 10/10 (Thứ Bảy), 17/10 (Thứ Bảy), 24/10 (Thứ Bảy), 31/10 (Thứ Bảy) lúc 10:30–12:00 tại 신장동 청소년문화의집 2층 미술실 (phòng mỹ thuật tầng 2 Nhà văn hóa Thanh thiếu niên Sinjang-dong). Đây là khóa học tham gia tất cả các buổi.",
+        "Miễn phí. Đăng ký từ 28/9 (Thứ Hai) 09:00 đến 20/10 (Thứ Ba) 18:00 bằng cách đăng ký trực tiếp (신장동 청소년문화의집 1층 안내데스크 – quầy hướng dẫn tầng 1 Nhà văn hóa Thanh thiếu niên Sinjang-dong). Hãy hỏi đơn vị tổ chức về việc có thể vào học giữa chừng hay không."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "신장동 청소년문화의집（신장동青少年文化之家）开办“주말 미술 4회 과정 수강생 모집”（周末美术4期课程学员招募）。对象为小学1至6年级，仅限儿童本人参与，家长不陪同上课，兄弟姐妹不能同行。",
+        "日期为10月10日（周六）、10月17日（周六）、10月24日（周六）、10月31日（周六），时间均为10:30–12:00。地点在신장동 청소년문화의집 2층 미술실（신장동青少年文化之家2楼美术室），这是需要参加所有场次的课程。",
+        "费用免费。报名时间为9月28日（周一） 09:00至10月20日（周二） 18:00，报名方式为现场报名（신장동 청소년문화의집 1층 안내데스크，即신장동青少年文化之家1楼服务台）。中途是否可以加入请向机构确认。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": null,
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "3cd24bdaa71e1ef03f0529aa11206c2b0e1babbaa1e8d907d4a90b3327ac76da"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-10-10, 회차 2026-10-17, 회차 2026-10-24, 회차 2026-10-31, 신청 시작 2026-09-28, 신청 마감 2026-10-20"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "6a3b4a5c06d3085a5f062e088d99edf009b6bf83aa991c7c3d1fad107ab898ca"
+  }
+}

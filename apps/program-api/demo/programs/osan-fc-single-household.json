@@ -1,0 +1,219 @@
+{
+  "program_id": "osan-fc-single-household",
+  "title": "1인가구 지원사업(생활꿀팁바구니)-영양제 꿀팁",
+  "institution": "오산시가족센터",
+  "category": "experience_culture",
+  "audience": "adult",
+  "target_type": "unknown",
+  "target_raw": "오산시 거주 1인가구",
+  "description": "오산시 가족센터에서 오산시에 거주하는 1인가구를 대상으로 영양제 꿀팁을 안내하는 1인가구 지원사업 프로그램이다.",
+  "grade_range": null,
+  "age_range": null,
+  "eligibility_requirements": [
+    "오산시 거주",
+    "1인가구"
+  ],
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "osan-fc-single-household-s1",
+      "date": "2026-10-14",
+      "start_time": "19:00",
+      "end_time": "20:30",
+      "place_name": "2층 오산시가족센터 내",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-single-household-s2",
+      "date": "2026-10-16",
+      "start_time": "19:00",
+      "end_time": "20:30",
+      "place_name": "2층 오산시가족센터 내",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-single-household-s3",
+      "date": "2026-10-21",
+      "start_time": "19:00",
+      "end_time": "20:30",
+      "place_name": "2층 오산시가족센터 내",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    }
+  ],
+  "venue": {
+    "place_name": "2층 오산시가족센터 내",
+    "address": "경기도 오산시 청학로 80 (궐동)",
+    "dong": "남촌동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-10-14",
+  "period_end": "2026-10-21",
+  "session_count": 3,
+  "attendance_rule": "unknown",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": null,
+  "application_start": "2026-08-28T09:00",
+  "application_end": "2026-10-21T18:00",
+  "application_methods": [
+    {
+      "type": "online",
+      "label": "오산시가족센터 홈페이지 프로그램 신청"
+    }
+  ],
+  "application_note": null,
+  "uncertain_items": [],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "1인가구 지원사업(생활꿀팁바구니)-영양제 꿀팁",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "오산시 거주 1인가구",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "■ 대상: 오산시 거주 1인가구",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "■ 대상: 오산시 거주 1인가구",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 : 경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터 내",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-10-14 ~ 2026-10-21",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 3회",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-single-household-s1].date",
+      "quote": "10월 14일(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-single-household-s1].time",
+      "quote": "19:00~20:30",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-single-household-s2].date",
+      "quote": "10월 16일(금)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-single-household-s2].time",
+      "quote": "19:00~20:30",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-single-household-s3].date",
+      "quote": "10월 21일(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-single-household-s3].time",
+      "quote": "19:00~20:30",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "■ 참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-08-28 09:00 ~ 2026-10-21 18:00",
+      "verified": true
+    },
+    {
+      "field": "application_methods.online",
+      "quote": "■ 신청 방법: 오산시가족센터 홈페이지 프로그램 신청",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "오산시가족센터가 '1인가구 지원사업(생활꿀팁바구니)-영양제 꿀팁'을 열어요. 오산시에 사는 1인가구 성인이 대상이에요.",
+        "10월 14일(수), 10월 16일(금), 10월 21일(수) 19:00~20:30에 해요. 장소는 2층 오산시가족센터 내예요.",
+        "무료예요. 8월 28일(금) 09:00부터 10월 21일(수) 18:00까지 온라인(오산시가족센터 홈페이지 프로그램 신청)으로 신청해요. 중간에 들어와도 되는지는 기관에 물어보세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức chương trình “1인가구 지원사업(생활꿀팁바구니)-영양제꿀팁” (Dự án hỗ trợ hộ gia đình 1 người (Giỏ mẹo vặt đời sống) - Mẹo dùng thực phẩm bổ sung). Đối tượng là người lớn thuộc hộ gia đình 1 người sinh sống tại 오산시 (thành phố Osan).",
+        "Lớp học diễn ra vào 14/10 (Thứ Tư), 16/10 (Thứ Sáu), 21/10 (Thứ Tư) lúc 19:00–20:30 tại 2층 오산시가족센터 내 (tầng 2 bên trong Trung tâm Gia đình thành phố Osan).",
+        "Chi phí miễn phí. Đăng ký từ 28/8 (Thứ Sáu) 09:00 đến 21/10 (Thứ Tư) 18:00 qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – trang web Trung tâm Gia đình thành phố Osan). Hãy hỏi đơn vị tổ chức về việc có thể vào học giữa chừng hay không."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "“1인가구 지원사업(생활꿀팁바구니)-영양제 꿀팁”（1人家庭支援项目(生活窍门篮子)-营养剂小窍门）由오산시가족센터（乌山市家庭中心）举办，对象为居住在乌山市的1人家庭成年人。",
+        "日期为10月14日（周三）、10月16日（周五）、10月21日（周三），时间均为19:00–20:30，地点在2층 오산시가족센터 내（乌山市家庭中心2楼内）。",
+        "免费。报名时间为8月28日（周五） 09:00至10月21日（周三） 18:00，通过网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网申请）。是否可以中途加入请向机构确认。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "ab6649c405997bf43f23bca3c790e0151705936026181f9188d4e16ea78204ab"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "참석 방식: 값이 근거 인용과 맞지 않아 비웠습니다 (값: 'all_sessions', 인용: '총 3회')",
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-10-14, 회차 2026-10-16, 회차 2026-10-21"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "d8cb62c3cbad66f322fe758722c3440161567b9d3aa002eb27eb492edc4f4813"
+  }
+}

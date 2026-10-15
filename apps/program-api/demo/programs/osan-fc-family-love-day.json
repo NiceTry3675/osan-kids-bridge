@@ -1,0 +1,176 @@
+{
+  "program_id": "osan-fc-family-love-day",
+  "title": "가족사랑의 날",
+  "institution": "오산시가족센터",
+  "category": "experience_culture",
+  "audience": "unknown",
+  "target_type": "all",
+  "target_raw": "오산시 거주 가족 누구나",
+  "description": "오산시 거주 가족 누구나를 대상으로 진행되는 가족사랑의 날 프로그램입니다.",
+  "grade_range": null,
+  "age_range": null,
+  "eligibility_requirements": null,
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "osan-fc-family-love-day-s1",
+      "date": "2026-06-10",
+      "start_time": "18:00",
+      "end_time": "19:30",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    }
+  ],
+  "venue": {
+    "place_name": "오산시가족센터 2층",
+    "address": "경기도 오산시 청학로 80 (궐동)",
+    "dong": "남촌동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-06-10",
+  "period_end": "2026-06-10",
+  "session_count": 1,
+  "attendance_rule": "all_sessions",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": null,
+  "application_start": "2026-05-26T09:00",
+  "application_end": "2026-10-30T18:00",
+  "application_methods": [],
+  "application_note": null,
+  "uncertain_items": [
+    "신청 마감(10월 30일)이 운영 종료일(6월 10일)보다 늦은 점",
+    "참여 대상·자격",
+    "보호자·형제자매 동반 가능 여부",
+    "신청 방법"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "가족사랑의 날",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "■ 대상: 오산시 거주 가족 누구나",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "오산시 거주 가족 누구나",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 : 경기도 오산시 청학로 80 (궐동) 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-06-10 ~ 2026-06-10",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 1회",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-family-love-day-s1].date",
+      "quote": "행사기간 : 2026-06-10 ~ 2026-06-10",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-family-love-day-s1].date",
+      "quote": "6월 10일(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-family-love-day-s1].time",
+      "quote": "18:00~19:30",
+      "verified": true
+    },
+    {
+      "field": "attendance_rule",
+      "quote": "총 1회",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "■ 참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-05-26 09:00 ~ 2026-10-30 18:00",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "오산시가족센터가 '가족사랑의 날'을 열어요. 오산시에 사는 가족이 대상이에요.",
+        "이미 끝난 프로그램이에요. 6월 10일(수) 18:00~19:30에 오산시가족센터 2층에서 열렸어요.",
+        "비용은 무료예요. 신청 기간은 5월 26일(화) 09:00부터 10월 30일(금) 18:00까지예요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức chương trình “가족사랑의 날” (Ngày yêu thương gia đình). Các gia đình cư trú tại thành phố Osan là đối tượng tham gia.",
+        "Chương trình đã diễn ra vào 10/6 (Thứ Tư) 18:00–19:30 tại 오산시가족센터 2층 (tầng 2 Trung tâm Gia đình thành phố Osan).",
+        "Chi phí là miễn phí. Thời gian đăng ký là từ 26/5 (Thứ Ba) 09:00 đến 30/10 (Thứ Sáu) 18:00."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "“가족사랑의 날”（家庭关爱之日）由오산시가족센터（乌山市家庭中心）举办，对象为乌山市家庭。",
+        "活动已于6月10日（周三） 18:00–19:30在오산시가족센터 2층（乌山市家庭中心2楼）举行。",
+        "免费。报名时间为5月26日（周二） 09:00至10月30日（周五） 18:00。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "672795e7efe2ca5a710e368e58a922b33dddf98e6640c1f3d61ff69e44873db7"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "참여하는 사람: 값이 근거 인용과 맞지 않아 비웠습니다 (값: 'parent_child', 인용: '■ 대상: 오산시 거주 가족 누구나')",
+    "참여 자격: 값이 근거 인용과 맞지 않아 비웠습니다 (값: [\"오산시 거주 가족\"], 인용: '오산시 거주')"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "ee44ee350d12012c869f102e8d6edc19236dc382bf68e2867e2c72a1ce5f2054"
+  }
+}

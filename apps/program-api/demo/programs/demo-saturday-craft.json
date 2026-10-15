@@ -1,0 +1,237 @@
+{
+  "program_id": "demo-saturday-craft",
+  "title": "토요 만들기 체험",
+  "institution": "중앙동 도서관 · 대원동 센터",
+  "category": "experience_culture",
+  "audience": "child",
+  "target_type": "all",
+  "target_raw": "초등 1~3학년 누구나",
+  "description": "중앙동 도서관과 대원동 센터에서 초등 1~3학년을 대상으로 종이와 나무를 활용해 작품을 만드는 토요 만들기 체험 프로그램입니다.",
+  "grade_range": [
+    1,
+    3
+  ],
+  "age_range": null,
+  "eligibility_requirements": [],
+  "guardian_companion": "not_allowed",
+  "sibling_companion": "not_allowed",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "demo-saturday-craft-s1",
+      "date": "2026-11-07",
+      "start_time": "10:10",
+      "end_time": "12:00",
+      "place_name": "중앙동 도서관 2층",
+      "dong": "중앙동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "demo-saturday-craft-s2",
+      "date": "2026-11-14",
+      "start_time": "13:00",
+      "end_time": "15:00",
+      "place_name": "대원동 센터 1층 강의실",
+      "dong": "대원동",
+      "online": false,
+      "address": null
+    }
+  ],
+  "venue": null,
+  "schedule_note": null,
+  "period_start": null,
+  "period_end": null,
+  "session_count": null,
+  "attendance_rule": "choose_one",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료 (재료 제공)",
+  "capacity": 12,
+  "application_start": "2026-10-14T09:00",
+  "application_end": "2026-11-05T18:00",
+  "application_methods": [
+    {
+      "type": "visit",
+      "label": "중앙동 도서관 안내데스크 방문 접수",
+      "address": "중앙동 도서관 안내데스크"
+    }
+  ],
+  "application_note": null,
+  "uncertain_items": [],
+  "notices": [
+    "작품은 집에 가져갈 수 있어요.",
+    "앞치마를 준비해 주세요."
+  ],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "토요 만들기 체험",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "중앙동 도서관 · 대원동 센터",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "대상 초등 1~3학년 누구나",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "초등 1~3학년 누구나",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "대상 초등 1~3학년 누구나",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "신청한 어린이만 참여해요",
+      "verified": true
+    },
+    {
+      "field": "grade_range",
+      "quote": "초등 1~3학년",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "초등 1~3학년 누구나",
+      "verified": true
+    },
+    {
+      "field": "guardian_companion",
+      "quote": "보호자·형제자매 동반 불가",
+      "verified": true
+    },
+    {
+      "field": "sibling_companion",
+      "quote": "보호자·형제자매 동반 불가",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-saturday-craft-s1].date",
+      "quote": "11월 7일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-saturday-craft-s1].time",
+      "quote": "10:10~12:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-saturday-craft-s1].place",
+      "quote": "중앙동 도서관 2층",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-saturday-craft-s2].date",
+      "quote": "11월 14일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-saturday-craft-s2].time",
+      "quote": "13:00~15:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-saturday-craft-s2].place",
+      "quote": "대원동 센터 1층 강의실",
+      "verified": true
+    },
+    {
+      "field": "attendance_rule",
+      "quote": "회차 아래 회차 중 하나를 골라 참여",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "비용 무료 (재료 제공)",
+      "verified": true
+    },
+    {
+      "field": "capacity",
+      "quote": "정원 회차별 12명",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "신청 기간 10월 14일(수) 09:00 ~ 11월 5일(목) 18:00",
+      "verified": true
+    },
+    {
+      "field": "application_methods.visit",
+      "quote": "신청 방법 중앙동 도서관 안내데스크 방문 접수",
+      "verified": true
+    },
+    {
+      "field": "notices",
+      "quote": "작품은 집에 가져갈 수 있어요.",
+      "verified": true
+    },
+    {
+      "field": "notices",
+      "quote": "앞치마를 준비해 주세요.",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "중앙동 도서관 · 대원동 센터가 '토요 만들기 체험'을 열어요. 초등 1~3학년이 대상이에요. 아이만 참여하고 보호자와 형제자매는 같이 올 수 없어요.",
+        "11월 7일(토) 10:10~12:00에는 중앙동 도서관 2층, 11월 14일(토) 13:00~15:00에는 대원동 센터 1층 강의실에서 해요. 원하는 날을 하나 골라 참여해요.",
+        "무료예요. 10월 14일(수) 09:00부터 11월 5일(목) 18:00까지 방문 신청 (중앙동 도서관 안내데스크)으로 신청해요. 앞치마를 준비해 주세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "중앙동 도서관 · 대원동 센터 (Thư viện Jungang-dong · Trung tâm Daewon-dong) mở chương trình “토요 만들기 체험” (Trải nghiệm làm đồ thủ công thứ Bảy). Đối tượng là học sinh tiểu học lớp 1–3. Phụ huynh không vào lớp cùng và anh chị em không thể đi cùng.",
+        "Chương trình diễn ra vào 7/11 (Thứ Bảy) 10:10–12:00 tại 중앙동 도서관 2층 (tầng 2 thư viện Jungang-dong) và 14/11 (Thứ Bảy) 13:00–15:00 tại 대원동 센터 1층 강의실 (phòng học tầng 1 Trung tâm Daewon-dong). Chọn buổi muốn tham gia.",
+        "Miễn phí. Đăng ký từ 14/10 (Thứ Tư) 09:00 đến 5/11 (Thứ Năm) 18:00 bằng hình thức đăng ký trực tiếp (중앙동 도서관 안내데스크 – quầy hướng dẫn thư viện Jungang-dong). Hãy chuẩn bị tạp dề."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "“토요 만들기 체험”（周六手工制作体验）由중앙동 도서관 · 대원동 센터（중앙동图书馆·대원동中心）举办。对象为小学1至3年级，家长不陪同上课，兄弟姐妹不可同行。",
+        "11月7日（周六） 10:10–12:00在중앙동 도서관 2층（중앙동图书馆2楼），11月14日（周六） 13:00–15:00在대원동 센터 1층 강의실（대원동中心1楼讲义室）。可选择想参加的场次参加。",
+        "免费。报名时间为10月14日（周三） 09:00至11月5日（周四） 18:00，现场报名 (중앙동 도서관 안내데스크，即중앙동图书馆服务台)。请准备围裙。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": null,
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "poster.png"
+    ],
+    "content_hash": "b71e897430003739f5cf8f2b2c41493a57774263fd47c827a84617557ea4845f"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-11-07, 회차 2026-11-14, 신청 시작 2026-10-14, 신청 마감 2026-11-05"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "19e960fd7f45b5f1df03bdaa4a248124fa5a3764761724f140443a9cf5fbcb57"
+  }
+}

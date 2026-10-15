@@ -227,7 +227,8 @@ export function isEntryPoint(script: string | undefined = process.argv[1], modul
   }
 }
 
-if (isEntryPoint()) {
+/** 환경 변수 설정대로 서버를 띄운다 (npm start, npm run demo) */
+export function startServer(): Server {
   const now = nowSource()
   const host = process.env.HOST ?? '127.0.0.1'
   const port = serverPort()
@@ -239,4 +240,7 @@ if (isEntryPoint()) {
   const stop = () => server.close(() => process.exit(0))
   process.on('SIGINT', stop)
   process.on('SIGTERM', stop)
+  return server
 }
+
+if (isEntryPoint()) startServer()

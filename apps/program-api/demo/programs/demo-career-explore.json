@@ -1,0 +1,143 @@
+{
+  "program_id": "demo-career-explore",
+  "title": "초등 고학년 진로 탐색 '나는 커서 무엇이 될까'",
+  "institution": "세마동 행정복지센터",
+  "category": "career",
+  "audience": "child",
+  "target_type": "unknown",
+  "target_raw": "초등 3~6학년",
+  "description": "초등 3~6학년을 대상으로 세마동 행정복지센터에서 운영 예정인 초등 고학년 진로 탐색 프로그램입니다.",
+  "grade_range": [
+    3,
+    6
+  ],
+  "age_range": null,
+  "eligibility_requirements": null,
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [],
+  "venue": {
+    "place_name": "세마동 행정복지센터",
+    "address": null,
+    "dong": "세마동",
+    "online": false
+  },
+  "schedule_note": "11월 중 운영 예정 (날짜·시간 추후 안내)",
+  "period_start": null,
+  "period_end": null,
+  "session_count": null,
+  "attendance_rule": "unknown",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": null,
+  "application_start": null,
+  "application_end": null,
+  "application_methods": [],
+  "application_note": "일정 확정 후 별도 안내",
+  "uncertain_items": [
+    "운영 날짜·시간",
+    "참여 대상·자격",
+    "보호자·형제자매 동반 가능 여부",
+    "신청 기간",
+    "신청 방법"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "초등 고학년 진로 탐색 '나는 커서 무엇이 될까'",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "초등 3~6학년",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "- 대상: 초등 3~6학년",
+      "verified": true
+    },
+    {
+      "field": "grade_range",
+      "quote": "- 대상: 초등 3~6학년",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "- 장소: 세마동 행정복지센터",
+      "verified": true
+    },
+    {
+      "field": "schedule_note",
+      "quote": "11월 중 운영 예정 (날짜·시간 추후 안내)",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "- 참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "application_note",
+      "quote": "일정 확정 후 별도 안내",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "“초등 고학년 진로 탐색 '나는 커서 무엇이 될까'”는 세마동 행정복지센터가 열어요. 초등 3~6학년이 대상이에요.",
+        "11월 중에 열 예정이고 날짜와 시간은 나중에 알려 줘요. 장소는 세마동 행정복지센터예요.",
+        "무료예요. 신청은 일정이 정해진 뒤 따로 알려 줘요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "세마동 행정복지센터 (Trung tâm Hành chính phường Sema-dong) tổ chức chương trình “초등 고학년 진로 탐색 '나는 커서 무엇이 될까'” (Khám phá định hướng nghề nghiệp cho học sinh tiểu học lớp lớn 'Lớn lên em sẽ làm gì'). Đối tượng là học sinh tiểu học lớp 3–6.",
+        "Chương trình dự kiến diễn ra trong tháng 11 tại 세마동 행정복지센터 (Trung tâm Hành chính phường Sema-dong). Hãy hỏi đơn vị tổ chức về ngày và giờ cụ thể.",
+        "Miễn phí. Thông tin đăng ký và cách đăng ký sẽ được thông báo riêng sau khi lịch trình được xác định."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "“초등 고학년 진로 탐색 '나는 커서 무엇이 될까'”（小学高年级职业探索“我长大后会成为什么”）由세마동 행정복지센터（세마동行政福利中心）举办，对象为小学3至6年级。",
+        "预计11月内运营，准确日期和时间请向机构确认。地点在세마동 행정복지센터（세마동行政福利中心）。",
+        "免费。报名将在日程确定后另行通知，报名方式请向机构确认。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": null,
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "4deb898079c679da7c28c00c1ac9ab021fb86da61439343ac994e90597b75809"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "기관 이름이 원문에 없어 수집 정보의 기관(세마동 행정복지센터)을 썼습니다"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "f152b8be829c404e8ccc5b748eb264912ec851a29d25912e64ab667f496e7123"
+  }
+}

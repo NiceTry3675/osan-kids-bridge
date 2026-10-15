@@ -1,0 +1,154 @@
+{
+  "program_id": "osan-fc-relationship",
+  "title": "다문화가족 관계향상지원",
+  "institution": "오산시가족센터",
+  "category": "experience_culture",
+  "audience": "adult",
+  "target_type": "multicultural_family",
+  "target_raw": "다문화가족 부부",
+  "description": "오산시 가족센터에서 다문화가족 부부를 대상으로 운영하는 다문화가족 관계향상지원 프로그램입니다.",
+  "grade_range": null,
+  "age_range": null,
+  "eligibility_requirements": [
+    "다문화가족",
+    "부부"
+  ],
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [],
+  "venue": {
+    "place_name": "복합청사 2층 오산시가족센터",
+    "address": "경기도 오산시 청학로 80 (궐동)",
+    "dong": "남촌동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-06-09",
+  "period_end": "2026-10-13",
+  "session_count": 23,
+  "attendance_rule": "unknown",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": null,
+  "application_start": "2026-05-21T09:00",
+  "application_end": "2026-10-30T18:00",
+  "application_methods": [],
+  "application_note": null,
+  "uncertain_items": [
+    "신청 마감(10월 30일)이 운영 종료일(10월 13일)보다 늦은 점",
+    "운영 날짜·시간",
+    "신청 방법"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "다문화가족 관계향상지원",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "■ 대상: 다문화가족 부부",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "다문화가족 부부",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "■ 대상: 다문화가족 부부",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "■ 대상: 다문화가족 부부",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 : 경기도 오산시 청학로 80 (궐동) 복합청사 2층 오산시가족센터",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-06-09 ~ 2026-10-13",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 23회",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "■ 참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-05-21 09:00 ~ 2026-10-30 18:00",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "오산시가족센터가 '다문화가족 관계향상지원'을 열어요. 성인 다문화가족 부부가 대상이에요.",
+        "6월 9일(화)부터 10월 13일(화)까지 총 23회로 이미 열렸어요. 장소는 경기도 오산시 청학로 80 (궐동) 복합청사 2층 오산시가족센터였어요.",
+        "무료예요. 신청 기간은 5월 21일(목) 09:00부터 10월 30일(금) 18:00까지였어요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "“다문화가족 관계향상지원” (Hỗ trợ cải thiện mối quan hệ gia đình đa văn hóa) do 오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức. Đối tượng là người lớn thuộc gia đình đa văn hóa và là vợ chồng.",
+        "Chương trình đã diễn ra từ 9/6 (Thứ Ba) đến 13/10 (Thứ Ba) với tổng cộng 23 buổi tại 경기도 오산시 청학로 80 (궐동) 복합청사 2층 오산시가족센터 (tầng 2 Tòa nhà phức hợp Trung tâm Gia đình thành phố Osan, 80 Cheonghak-ro, Gwol-dong, thành phố Osan, tỉnh Gyeonggi).",
+        "Chi phí là miễn phí. Thời gian đăng ký đã là từ 21/5 (Thứ Năm) 09:00 đến 30/10 (Thứ Sáu) 18:00."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "“다문화가족 관계향상지원”（多元文化家庭关系提升支援）由오산시가족센터（乌山市家庭中心）举办，对象为多元文化家庭夫妇（成人）。",
+        "课程已于6月9日（周二）至10月13日（周二）举办（共23次），地点为경기도 오산시 청학로 80 (궐동) 복합청사 2층 오산시가족센터（京畿道乌山市青鹤路80 궐동综合办公大楼2楼乌山市家庭中心）。",
+        "费用免费，报名时间为5月21日（周四）09:00至10月30日（周五）18:00。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "da668b14bef0844667f288381634d440bdcb49fbda1c346c9ac2c20b3e52c18e"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "84c594637ea9258e787045603a2d3211625f5b21aabf7d46cd009867b3bcb385"
+  }
+}

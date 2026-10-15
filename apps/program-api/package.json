@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
+    "demo": "tsx src/cli/demo.ts serve",
+    "demo:approve": "tsx src/cli/demo.ts approve",
+    "demo:ingest": "tsx src/cli/demo.ts ingest",
     "ingest": "tsx src/cli/ingest.ts",
     "review": "tsx src/cli/review.ts",
     "typecheck": "tsc --noEmit",

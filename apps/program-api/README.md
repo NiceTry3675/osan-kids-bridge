@@ -86,10 +86,33 @@ npm run review -- reset <ID>                      # 검수 대기로 되돌림
 - `summaries_by_language`에는 사람이 승인했고 승인 뒤 사실·문구가 바뀌지 않은 요약만 담깁니다(검수자 이름·승인 해시는 빼고 `approved_at`만).
   시연처럼 언어별 검수자가 아직 없을 때는 `SHOW_MACHINE_CHECKED_SUMMARIES=1`로 자동 대조를 통과한 요약도 내보낼 수 있습니다. 이때 `status`가 `machine_checked`로 그대로 가므로 화면에서 검수 전 번역으로 표시해야 합니다. `machine_draft`는 이 설정에서도 내보내지 않습니다.
 - `source_evidence`는 원문에서 찾은 근거 인용(`{field, quote}`)입니다. 보호자 화면에서 사실의 원문 표현을 함께 보여 줄 때 씁니다. 기관의 실제 지원 언어(`support_languages`)와 신청 페이지 언어(`application_languages`)는 ISO 639-1 코드(`vi`, `zh` 등)이며 `null`은 미상, `[]`는 확인 결과 없음입니다.
-- `application_start`·`application_end`는 보호자 웹 호환을 위해 날짜(`YYYY-MM-DD`)만 보내고, 원문에 시각이 있으면 `application_start_at`·`application_end_at`에 `YYYY-MM-DDTHH:MM`으로 담습니다. 마감이 `00:00`이면 `application_end`는 전날(신청할 수 있는 마지막 날)입니다.
+- `application_start`·`application_end`는 보호자 웹 호환을 위해 날짜(`YYYY-MM-DD`)만 보내고, 원문에 시각이 있으면 `application_start_at`·`application_end_at`에 `YYYY-MM-DDTHH:MM`으로 담습니다. 마감이 새벽(`06:00` 전, 예: `00:00`·`01:00`)이면 `application_end`는 전날(신청할 수 있는 마지막 날)이고, 3줄 요약도 같은 날짜로 씁니다.
+- 회차 없이 기간만 있는 공고는 원문의 공통 장소를 `venue`(`place_name`·`address`·`dong`·`online`)로 보냅니다. 보호자 웹은 회차가 없을 때 이 장소를 보여 줍니다.
+- 회차도 기간도 없이 일정을 대략만 밝힌 공고('11월 중 운영 예정')는 그 원문 표현을 `schedule_note`로 보냅니다. 신청 기간 없이 신청을 대략만 밝힌 표현('일정 확정 후 별도 안내')은 `application_note`로 보냅니다.
+- `support_interpretation`은 원문이 기관의 언어 지원을 '통역'이라고 밝혔는지입니다(`true`면 수업 언어가 아니라 통역 지원 언어).
+- `notices`는 보호자에게 알리는 안내 문장(보호자 대기 장소, 준비물 등)을 원문 그대로 담습니다. 원문에 글자 그대로 있는 문장만 남깁니다.
+- 자녀가 참여하지 않는 공고(성인·보호자만)와 학년·나이 제한이 없는 '누구나' 공고는 학년·나이를 입력해도 `age_grade_match_status`가 `not_applied`입니다.
 - `display_language`는 검증만 하고 판정에는 쓰지 않습니다. 판정 문구(`matched_reasons`, `uncertain_items`)는 한국어입니다.
 - 공고 파일이 바뀌면(수정 시각·크기 확인) 다음 요청부터 다시 읽습니다. 서버를 다시 켤 필요가 없습니다.
 - CORS는 `CORS_ORIGINS`의 출처만 허용합니다.
+
+## 시연 데이터 (`demo/`)
+
+MVP 시연용 공고 25건이 `demo/`에 들어 있습니다. 서비스 계정 키 없이도 바로 띄울 수 있도록 추출·요약이 끝난 결과(`demo/programs`)까지 커밋되어 있습니다.
+
+- 오산시가족센터 신청 목록 19건: 실제 목록의 제목·운영 기간·접수 기간·장소에 시연에 필요한 대상·시간·비용·신청 방법을 채운 원문입니다. 채운 내용은 실제 공고와 다를 수 있습니다.
+- 보호자 화면 흐름(v4) 시나리오 6건: 토요일 오전만 되는 초등 2학년 보호자가 찾는 장면을 재현합니다. 그중 `demo-saturday-craft`, `demo-korean-play`는 원문 없이 포스터 이미지만 있어 Gemini 포스터 판독 경로를 보여 줍니다.
+- 각 공고의 `source.json` `note`에 시연용 원문임을 적어 두었습니다. 화면에는 표시하지 않습니다.
+
+```bash
+npm run demo                      # 시연 데이터로 API 실행 (기준 시각 2026-10-15 10:00 고정, 자동 대조를 통과한 요약도 표시)
+npm run demo:ingest -- <ID ...>   # demo/inbox의 공고를 Gemini로 다시 추출·요약하고 바로 승인 (현장 시연, 키 필요)
+npm run demo:approve              # 근거가 확인된 시연 공고를 '시연 데이터' 검수자로 승인
+```
+
+현장에서 포스터를 새로 넣어 보여 주려면 `demo/inbox/<새-ID>/`에 `poster.png`와 `source.json`을 넣고 `npm run demo:ingest -- <새-ID>`를 실행한 뒤 보호자 웹을 새로고침합니다. 한 건에 30초~1분 정도 걸립니다.
+
+시나리오 검색(초등 2학년, 토요일 10:05~12:10)의 기대 결과: `results`에 토요 만들기 체험(11월 7일 10:10~12:00)·주말 한국어 놀이교실(11월 14일 10:30~12:00), `needs_confirmation`에 주말 미술 4회 과정(1회차가 지나 중도 참여 확인 필요)이 나오고, 마감된 가족 김밥 만들기 체험과 보호자 대상 공고는 나오지 않습니다.
 
 ## 보호자 웹과 함께 실행
 
