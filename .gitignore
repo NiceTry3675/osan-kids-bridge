@@ -1,5 +1,25 @@
+# 서비스 계정 키·비밀값 (절대 커밋하지 않음)
+/*.json
+!/package.json
+!/package-lock.json
+!/tsconfig*.json
+*service-account*.json
+*-sa-key*.json
+gemini*-*.json
+*.pem
+*.p12
+*.key
+.env
+.env.local
+.env.*.local
+
+# 빌드·의존성
 node_modules/
 dist/
-*.tsbuildinfo
-.DS_Store
 dist-preview/
+*.tsbuildinfo
+
+# OS·에디터
+.DS_Store
+.vscode/
+.idea/

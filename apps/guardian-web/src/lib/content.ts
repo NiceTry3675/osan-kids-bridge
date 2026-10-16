@@ -26,7 +26,7 @@ export interface ProgramText {
 /** 검수본이 있으면 그 언어의 글을, 없으면 한국어 원문을 돌려줍니다. */
 export function programText(program: Program, locale: Locale): ProgramText {
   const summary = program.summaries_by_language[locale] ?? null
-  if (summary) return { ...summary, reviewed: true, missingTranslation: false, lang: undefined, summary }
+  if (summary) return { ...summary, reviewed: summary.status !== 'machine_checked', missingTranslation: false, lang: undefined, summary }
   return {
     title: program.title,
     institution: program.institution,

@@ -1,0 +1,493 @@
+{
+  "program_id": "osan-fc-group-music",
+  "title": "중도-집단음악",
+  "institution": "오산시가족센터",
+  "category": "sports_arts",
+  "audience": "child",
+  "target_type": "multicultural_family",
+  "target_raw": "중도입국 중학생 (중학교 1~3학년)",
+  "description": "오산시가족센터에서 중도입국 중학생을 대상으로 합주와 노래를 통한 친구 사귀기 집단음악 프로그램을 운영합니다.",
+  "grade_range": [
+    7,
+    9
+  ],
+  "age_range": null,
+  "eligibility_requirements": [
+    "중도입국"
+  ],
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "osan-fc-group-music-s1",
+      "date": "2026-06-24",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "osan-fc-group-music-s2",
+      "date": "2026-07-08",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "osan-fc-group-music-s3",
+      "date": "2026-07-22",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "osan-fc-group-music-s4",
+      "date": "2026-08-05",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "osan-fc-group-music-s5",
+      "date": "2026-08-19",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "osan-fc-group-music-s6",
+      "date": "2026-09-02",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "osan-fc-group-music-s7",
+      "date": "2026-09-16",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "osan-fc-group-music-s8",
+      "date": "2026-09-30",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "osan-fc-group-music-s9",
+      "date": "2026-10-14",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "osan-fc-group-music-s10",
+      "date": "2026-10-28",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "osan-fc-group-music-s11",
+      "date": "2026-11-11",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "대호중학교 음악실",
+      "dong": null,
+      "online": false,
+      "address": null
+    },
+    {
+      "id": "osan-fc-group-music-s12",
+      "date": "2026-11-25",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "대호중학교 음악실",
+      "dong": null,
+      "online": false,
+      "address": null
+    }
+  ],
+  "venue": {
+    "place_name": "2층 오산시가족센터 및 대호중학교",
+    "address": "경기도 오산시 청학로 80 (궐동)",
+    "dong": "남촌동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-06-24",
+  "period_end": "2026-12-31",
+  "session_count": 12,
+  "attendance_rule": "all_sessions",
+  "mid_join_allowed": true,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": null,
+  "application_start": "2026-06-01T01:00",
+  "application_end": "2026-10-30T01:00",
+  "application_methods": [
+    {
+      "type": "online",
+      "label": "오산시가족센터 홈페이지 프로그램 신청"
+    }
+  ],
+  "application_note": null,
+  "uncertain_items": [
+    "보호자·형제자매 동반 가능 여부"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "중도-집단음악",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터 > 프로그램안내 > 프로그램신청",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "■ 대상: 중도입국 중학생 (중학교 1~3학년)",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "중도입국 중학생 (중학교 1~3학년)",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "■ 대상: 중도입국 중학생 (중학교 1~3학년)",
+      "verified": true
+    },
+    {
+      "field": "grade_range",
+      "quote": "중학교 1~3학년",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "중도입국",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 : 경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터 및 대호중학교",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-06-24 ~ 2026-12-31",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 12회",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s1].date",
+      "quote": "6/24(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s1].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s1].place",
+      "quote": "■ 장소: 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s2].date",
+      "quote": "7/8(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s2].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s2].place",
+      "quote": "■ 장소: 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s3].date",
+      "quote": "7/22(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s3].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s3].place",
+      "quote": "■ 장소: 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s4].date",
+      "quote": "8/5(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s4].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s4].place",
+      "quote": "■ 장소: 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s5].date",
+      "quote": "8/19(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s5].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s5].place",
+      "quote": "■ 장소: 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s6].date",
+      "quote": "9/2(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s6].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s6].place",
+      "quote": "■ 장소: 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s7].date",
+      "quote": "9/16(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s7].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s7].place",
+      "quote": "■ 장소: 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s8].date",
+      "quote": "9/30(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s8].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s8].place",
+      "quote": "■ 장소: 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s9].date",
+      "quote": "10/14(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s9].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s9].place",
+      "quote": "■ 장소: 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s10].date",
+      "quote": "10/28(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s10].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s10].place",
+      "quote": "■ 장소: 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s11].date",
+      "quote": "11/11(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s11].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s11].place",
+      "quote": "11/11, 11/25는 대호중학교 음악실",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s12].date",
+      "quote": "11/25(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s12].time",
+      "quote": "격주 수요일 16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-group-music-s12].place",
+      "quote": "11/11, 11/25는 대호중학교 음악실",
+      "verified": true
+    },
+    {
+      "field": "attendance_rule",
+      "quote": "일시: 격주 수요일 16:30~18:00 (총 12회)",
+      "verified": true
+    },
+    {
+      "field": "mid_join_allowed",
+      "quote": "■ 중도 참여 가능",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "■ 참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-06-01 01:00 ~ 2026-10-30 01:00",
+      "verified": true
+    },
+    {
+      "field": "application_methods.online",
+      "quote": "■ 신청 방법: 오산시가족센터 홈페이지 프로그램 신청",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "오산시가족센터가 '중도-집단음악'을 열어요. 중도입국 중학교 1~3학년 학생이 대상이에요.",
+        "남은 일정은 10월 28일(수) 오산시가족센터 2층, 11월 11일(수)과 11월 25일(수) 대호중학교 음악실이에요. 시간은 16:30~18:00이에요. 중간에 들어와도 되고 남은 회차에 참여해요.",
+        "무료예요. 신청은 6월 1일(월) 01:00부터 10월 29일(목)까지 온라인(오산시가족센터 홈페이지 프로그램 신청)으로 해요. 보호자나 형제자매도 같이 가도 되는지는 기관에 물어보세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức chương trình “중도-집단음악” (Âm nhạc nhóm cho học sinh nhập cư giữa chừng). Đối tượng là học sinh nhập cư giữa chừng, học sinh trung học cơ sở năm 1–3.",
+        "Các buổi còn lại diễn ra vào 28/10 (Thứ Tư) tại 오산시가족센터 2층 (tầng 2 Trung tâm Gia đình thành phố Osan), 11/11 (Thứ Tư) và 25/11 (Thứ Tư) tại 대호중학교 음악실 (phòng âm nhạc Trường THCS Daeho), thời gian là 16:30–18:00. Có thể vào học giữa chừng và tham gia các buổi còn lại.",
+        "Miễn phí. Đăng ký từ 1/6 (Thứ Hai) 01:00 đến 29/10 (Thứ Năm) qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – đăng ký trên trang web Trung tâm Gia đình thành phố Osan). Hãy hỏi đơn vị tổ chức về việc phụ huynh và anh chị em có thể đi cùng hay không."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": [],
+      "heading": {
+        "title": "Âm nhạc nhóm cho học sinh nhập cư giữa chừng",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "học sinh trung học cơ sở nhập cư giữa chừng (lớp 1–3 trung học cơ sở)"
+      }
+    },
+    "zh": {
+      "lines": [
+        "“중도-집단음악”（中途入国青少年团体音乐）由오산시가족센터（乌山市家庭中心）举办，对象为中途入国的初中1至3年级学生。",
+        "剩余场次为10月28日（周三）16:30–18:00在오산시가족센터 2층（乌山市家庭中心2楼），11月11日（周三）与11月25日（周三）16:30–18:00在대호중학교 음악실（대호중학교音乐室）。可以中途加入，进入后参加剩余场次。",
+        "费用免费。报名时间为6月1日（周一）01:00至10月29日（周四），报名方式为网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网报名）。家长及兄弟姐妹是否可以同行请向机构确认。"
+      ],
+      "heading": {
+        "title": "中途入国青少年团体音乐",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "中途入国初中生（初中1～3年级）"
+      },
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "644787d7a74953d7b3d007998f494353fa494a7f94f342972de64300fce6293f"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "안내 문장: 다른 항목의 원문 줄이라 뺐습니다 (값: '내용: 합주와 노래로 친구 사귀기')",
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-06-24, 회차 2026-07-08, 회차 2026-07-22, 회차 2026-08-05, 회차 2026-08-19, 회차 2026-09-02, 회차 2026-09-16, 회차 2026-09-30, 회차 2026-10-14, 회차 2026-10-28, 회차 2026-11-11, 회차 2026-11-25"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "9d502c50151144d14c6c31cd778132540aaecdbe697d8394f44c1d0126eaefae"
+  }
+}

@@ -1,0 +1,229 @@
+{
+  "program_id": "demo-korean-play",
+  "title": "주말 한국어 놀이교실",
+  "institution": "오산시가족센터",
+  "category": "korean_study",
+  "audience": "child",
+  "target_type": "multicultural_family",
+  "target_raw": "다문화가족 초등 1~4학년 자녀",
+  "description": "오산시가족센터에서 다문화가족 초등 1~4학년 자녀를 대상으로 놀이와 동화를 활용한 한국어 수업을 진행합니다.",
+  "grade_range": [
+    1,
+    4
+  ],
+  "age_range": null,
+  "eligibility_requirements": [
+    "다문화가족"
+  ],
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": [
+    "vi",
+    "zh"
+  ],
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "demo-korean-play-s1",
+      "date": "2026-11-14",
+      "start_time": "10:30",
+      "end_time": "12:00",
+      "place_name": "오산시가족센터 3층 교육실",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80"
+    }
+  ],
+  "venue": {
+    "place_name": "오산시가족센터 3층 교육실",
+    "address": "경기도 오산시 청학로 80",
+    "dong": "남촌동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": null,
+  "period_end": null,
+  "session_count": null,
+  "attendance_rule": "all_sessions",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": 12,
+  "application_start": "2026-10-15T09:00",
+  "application_end": "2026-11-10T18:00",
+  "application_methods": [
+    {
+      "type": "online",
+      "label": "오산시가족센터 홈페이지 프로그램 신청",
+      "url": "https://osan.familynet.or.kr"
+    }
+  ],
+  "application_note": null,
+  "uncertain_items": [
+    "보호자·형제자매 동반 가능 여부"
+  ],
+  "notices": [
+    "보호자는 수업 중 2층 가족 쉼터에서 기다릴 수 있습니다."
+  ],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "주말 한국어 놀이교실",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시가족센터",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "대상 다문화가족 초등 1~4학년 자녀",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "다문화가족 초등 1~4학년 자녀",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "대상 다문화가족 초등 1~4학년 자녀",
+      "verified": true
+    },
+    {
+      "field": "grade_range",
+      "quote": "초등 1~4학년",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "다문화가족 초등 1~4학년 자녀",
+      "verified": true
+    },
+    {
+      "field": "support_languages",
+      "quote": "베트남어·중국어 통역 지원",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 오산시가족센터 3층 교육실",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "(경기도 오산시 청학로 80)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-korean-play-s1].date",
+      "quote": "11월 14일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-korean-play-s1].time",
+      "quote": "10:30~12:00",
+      "verified": true
+    },
+    {
+      "field": "attendance_rule",
+      "quote": "일시 11월 14일(토) 10:30~12:00",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "비용 무료",
+      "verified": true
+    },
+    {
+      "field": "capacity",
+      "quote": "선착순 12명",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "신청 기간 10월 15일(목) 09:00 ~ 11월 10일(화) 18:00",
+      "verified": true
+    },
+    {
+      "field": "application_methods.online",
+      "quote": "신청 방법 오산시가족센터 홈페이지 프로그램 신청",
+      "verified": true
+    },
+    {
+      "field": "application_methods.online",
+      "quote": "https://osan.familynet.or.kr",
+      "verified": true
+    },
+    {
+      "field": "notices",
+      "quote": "보호자는 수업 중 2층 가족 쉼터에서 기다릴 수 있습니다.",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "'주말 한국어 놀이교실'을 오산시가족센터가 열어요. 다문화가족 초등 1~4학년 자녀가 대상이에요.",
+        "11월 14일(토) 10:30~12:00에 해요. 장소는 오산시가족센터 3층 교육실이에요.",
+        "무료예요. 10월 15일(목) 09:00부터 11월 10일(화) 18:00까지 온라인 신청(오산시가족센터 홈페이지 프로그램 신청)으로 신청해요. 베트남어·중국어 통역이 있어요. 보호자는 수업 동안 2층 가족 쉼터에서 기다릴 수 있어요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) mở chương trình “주말 한국어 놀이교실” (Lớp chơi tiếng Hàn cuối tuần). Đối tượng là học sinh tiểu học lớp 1–4 thuộc gia đình đa văn hóa.",
+        "Chương trình diễn ra vào 14/11 (Thứ Bảy) 10:30–12:00 tại 오산시가족센터 3층 교육실 (phòng học tầng 3 Trung tâm Gia đình thành phố Osan).",
+        "Miễn phí. Đăng ký từ 15/10 (Thứ Năm) 09:00 đến 10/11 (Thứ Ba) 18:00 qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – đăng ký trên trang web Trung tâm Gia đình thành phố Osan). Có thông dịch tiếng Việt và tiếng Trung, phụ huynh có thể đợi tại khu nghỉ ngơi gia đình tầng 2 trong giờ học."
+      ],
+      "heading": {
+        "title": "Lớp chơi tiếng Hàn cuối tuần",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Con em lớp 1–4 tiểu học thuộc gia đình đa văn hóa"
+      },
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "“주말 한국어 놀이교실”（周末韩语游乐课堂）由오산시가족센터（乌山市家庭中心）举办。对象为多元文化家庭小学1至4年级子女。",
+        "活动时间为11月14日（周六） 10:30–12:00，地点在오산시가족센터 3층 교육실（乌山市家庭中心3楼教室）。",
+        "费用免费。报名时间为10月15日（周四） 09:00至11月10日（周二） 18:00，报名方式为网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网报名）。提供越南语、中文翻译，家长在课程期间可在2楼家庭休息室等候。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": [],
+      "heading": {
+        "title": "周末韩语游乐课堂",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "多元文化家庭小学1～4年级子女"
+      }
+    }
+  },
+  "source": {
+    "url": null,
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "poster.png"
+    ],
+    "content_hash": "47a46ccaaaf0154a553527681ff72659bec1b7bba3126936ca2629a8c692f1cd",
+    "demo": true
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-11-14, 신청 시작 2026-10-15, 신청 마감 2026-11-10"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "e8a283f98ea56c052b450b5aeed48330e34456cdffff3dd137691a8ad8a249cb"
+  }
+}

@@ -1,0 +1,168 @@
+{
+  "program_id": "osan-fc-mentoring",
+  "title": "결혼이민자 멘토·멘티 운영",
+  "institution": "오산시가족센터",
+  "category": "experience_culture",
+  "audience": "adult",
+  "target_type": "multicultural_family",
+  "target_raw": "결혼이민자 (멘토·멘티)",
+  "description": "오산시가족센터에서 결혼이민자 멘토·멘티를 대상으로 운영하는 프로그램입니다.",
+  "grade_range": null,
+  "age_range": null,
+  "eligibility_requirements": [
+    "결혼이민자 (멘토·멘티)"
+  ],
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [],
+  "venue": {
+    "place_name": "오산시가족센터 외",
+    "address": "경기도 오산시 청학로 80 (궐동)",
+    "dong": "남촌동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-03-02",
+  "period_end": "2026-10-29",
+  "session_count": 150,
+  "attendance_rule": "unknown",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": null,
+  "application_start": "2026-04-02T09:00",
+  "application_end": "2026-11-30T18:00",
+  "application_methods": [],
+  "application_note": null,
+  "uncertain_items": [
+    "신청 마감(11월 30일)이 운영 종료일(10월 29일)보다 늦은 점",
+    "운영 날짜·시간",
+    "신청 방법"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "결혼이민자 멘토·멘티 운영",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "■ 대상: 결혼이민자 (멘토·멘티)",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "결혼이민자 (멘토·멘티)",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "결혼이민자 멘토·멘티 운영",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "■ 대상: 결혼이민자 (멘토·멘티)",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "결혼이민자 (멘토·멘티)",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 : 경기도 오산시 청학로 80 (궐동) 오산시가족센터 외",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-03-02 ~ 2026-10-29",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 150회",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "■ 참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-04-02 09:00 ~ 2026-11-30 18:00",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "오산시가족센터가 '결혼이민자 멘토·멘티 운영'을 열어요. 성인 결혼이민자(멘토·멘티)가 대상이에요.",
+        "3월 2일(월)부터 10월 29일(목)까지 총 150회 열려요. 요일과 시간은 기관에 물어보세요. 장소는 오산시가족센터 등 여러 곳이에요.",
+        "무료예요. 신청은 4월 2일(목) 09:00부터 11월 30일(월) 18:00까지예요. 신청 방법과, 신청 마감(11월 30일)이 끝나는 날(10월 29일)보다 늦은 점은 기관에 물어보세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) mở chương trình “결혼이민자 멘토·멘티 운영” (Chương trình cố vấn mentor – mentee cho người nhập cư kết hôn). Đối tượng là người lớn thuộc diện người nhập cư kết hôn (mentor – mentee).",
+        "Chương trình diễn ra từ 2/3 (Thứ Hai) đến 29/10 (Thứ Năm) với tổng cộng 150 buổi tại 오산시가족센터 (Trung tâm Gia đình thành phố Osan, Gwol-dong) và các địa điểm khác. Hãy hỏi đơn vị tổ chức về thứ trong tuần và thời gian cụ thể.",
+        "Miễn phí. Thời gian đăng ký từ 2/4 (Thứ Năm) 09:00 đến 30/11 (Thứ Hai) 18:00. Hãy hỏi đơn vị tổ chức về cách đăng ký."
+      ],
+      "heading": {
+        "title": "Chương trình cố vấn mentor – mentee cho người nhập cư kết hôn",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Người nhập cư kết hôn (mentor – mentee)"
+      },
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "“결혼이민자 멘토·멘티 운영”（婚姻移民者导师·学员项目）由오산시가족센터（乌山市家庭中心）举办。对象为成人婚姻移民者（导师·学员）。",
+        "活动期间为3月2日（周一）至10月29日（周四），共150次，星期与具体时间请向机构确认。地点为오산시가족센터（乌山市家庭中心）等多个地点。",
+        "免费。报名时间为4月2日（周四） 09:00至11月30日（周一） 18:00，报名方法请向机构确认。报名截止日期晚于活动结束日期，请向机构确认。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": [],
+      "heading": {
+        "title": "婚姻移民者导师·学员项目",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "婚姻移民者（导师·学员）"
+      }
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "6196fa090e08c967d74fbcb169804fed1311d66a021b8109b8d7d24ca5eabc9a"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "bc11a4d0bdad12bec5b99452949e0ecb9a6720b221990afb96142fe36ea6ad4a"
+  }
+}

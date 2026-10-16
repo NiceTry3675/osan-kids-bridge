@@ -1,0 +1,235 @@
+{
+  "program_id": "osan-fc-sports-day",
+  "title": "2026년 가족친화문화 프로그램- 우리 zip. 운동회",
+  "institution": "오산시가족센터",
+  "category": "experience_culture",
+  "audience": "parent_child",
+  "target_type": "all",
+  "target_raw": "초등학생 자녀를 둔 오산시 거주 가족 누구나",
+  "description": "오산시 가족센터에서 오산시에 거주하는 초등학생 자녀 가족을 대상으로 가족 이어달리기, 줄다리기, 보물찾기 등을 진행하는 운동회 프로그램이다.",
+  "grade_range": [
+    1,
+    6
+  ],
+  "age_range": null,
+  "eligibility_requirements": [
+    "오산시 거주"
+  ],
+  "guardian_companion": "required",
+  "sibling_companion": "allowed",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "osan-fc-sports-day-s1",
+      "date": "2026-10-31",
+      "start_time": "10:00",
+      "end_time": "12:00",
+      "place_name": "오산오색문화체육센터 대체육관",
+      "dong": "중앙동",
+      "online": false,
+      "address": "경기도 오산시 오산천로 271 (오산동)"
+    }
+  ],
+  "venue": {
+    "place_name": "오산오색문화체육센터 대체육관",
+    "address": "경기도 오산시 오산천로 271 (오산동)",
+    "dong": "중앙동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-10-31",
+  "period_end": "2026-10-31",
+  "session_count": 1,
+  "attendance_rule": "all_sessions",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": 30,
+  "application_start": "2026-10-02T09:00",
+  "application_end": "2026-10-23T01:00",
+  "application_methods": [
+    {
+      "type": "online",
+      "label": "오산시가족센터 홈페이지 프로그램 신청"
+    }
+  ],
+  "application_note": null,
+  "uncertain_items": [],
+  "notices": [
+    "운동하기 편한 복장으로 참여해 주세요."
+  ],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "2026년 가족친화문화 프로그램- 우리 zip. 운동회",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "■ 대상: 초등학생 자녀를 둔 오산시 거주 가족 누구나",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "초등학생 자녀를 둔 오산시 거주 가족 누구나",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "■ 가족 단위로 보호자와 자녀가 함께 참여합니다.",
+      "verified": true
+    },
+    {
+      "field": "grade_range",
+      "quote": "초등학생 자녀를 둔 오산시 거주 가족 누구나",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "초등학생 자녀를 둔 오산시 거주 가족 누구나",
+      "verified": true
+    },
+    {
+      "field": "guardian_companion",
+      "quote": "■ 가족 단위로 보호자와 자녀가 함께 참여합니다.",
+      "verified": true
+    },
+    {
+      "field": "sibling_companion",
+      "quote": "형제자매도 함께 참여할 수 있습니다.",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "경기도 오산시 오산천로 271 (오산동)",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "■ 장소: 오산오색문화체육센터 대체육관",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-10-31 ~ 2026-10-31",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 1회",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-sports-day-s1].date",
+      "quote": "행사기간 : 2026-10-31 ~ 2026-10-31",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-sports-day-s1].date",
+      "quote": "10월 31일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-sports-day-s1].time",
+      "quote": "10:00~12:00",
+      "verified": true
+    },
+    {
+      "field": "attendance_rule",
+      "quote": "총 1회",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "■ 참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "capacity",
+      "quote": "■ 모집 인원: 30가족",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-10-02 09:00 ~ 2026-10-23 01:00",
+      "verified": true
+    },
+    {
+      "field": "application_methods.online",
+      "quote": "■ 신청 방법: 오산시가족센터 홈페이지 프로그램 신청",
+      "verified": true
+    },
+    {
+      "field": "notices",
+      "quote": "운동하기 편한 복장으로 참여해 주세요.",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "오산시가족센터가 '2026년 가족친화문화 프로그램- 우리 zip. 운동회'를 열어요. 오산시 거주 초등 1~6학년 자녀와 보호자가 함께 참여해요. 보호자도 꼭 같이 와야 하고 형제자매도 같이 와도 돼요.",
+        "10월 31일(토) 10:00~12:00에 해요. 장소는 오산오색문화체육센터 대체육관이에요.",
+        "무료예요. 10월 2일(금) 09:00부터 10월 22일(목)까지 온라인 신청(오산시가족센터 홈페이지 프로그램 신청)으로 신청해요. 운동하기 편한 복장으로 참여해 주세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "“2026년 가족친화문화 프로그램- 우리 zip. 운동회” (Chương trình văn hóa thân thiện với gia đình năm 2026: Ngày hội thể thao gia đình chúng mình) do 오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức. Chương trình dành cho phụ huynh và con đang học học sinh tiểu học lớp 1–6 cư trú tại 오산시 (thành phố Osan). Phụ huynh phải đi cùng và anh chị em có thể đi cùng.",
+        "Chương trình diễn ra vào 31/10 (Thứ Bảy) 10:00–12:00 tại 오산오색문화체육센터 대체육관 (nhà thi đấu lớn Trung tâm Văn hóa Thể thao Osaek Osan).",
+        "Chi phí là miễn phí. Đăng ký từ 2/10 (Thứ Sáu) 09:00 đến 22/10 (Thứ Năm) qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – đăng ký chương trình trên trang web Trung tâm Gia đình thành phố Osan). Hãy mặc trang phục thoải mái để vận động."
+      ],
+      "heading": {
+        "title": "Chương trình văn hóa thân thiện với gia đình năm 2026: Ngày hội thể thao gia đình chúng mình",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Mọi gia đình cư trú tại thành phố Osan có con là học sinh tiểu học"
+      },
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "“2026년 가족친화문화 프로그램- 우리 zip. 운동회”（2026年家庭友好文化项目：我们家运动会）由오산시가족센터（乌山市家庭中心）举办。对象为居住在乌山市且有小学1至6年级子女的家庭，家长与子女需共同参加，兄弟姐妹可以同行。",
+        "时间为10月31日（周六） 10:00–12:00，地点在오산오색문화체육센터 대체육관（乌山五色文化体育中心大体育馆）。",
+        "费用免费。报名时间为10月2日（周五） 09:00至10月22日（周四），通过网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网报名）。请穿着便于运动的服装参加。"
+      ],
+      "heading": {
+        "title": "2026年家庭友好文化项目：我们家运动会",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "居住在乌山市且育有小学生子女的所有家庭"
+      },
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "db3cbefceff0f214934b2343f66d32d104e9f781e379d8e4722e3c01b38f8f74"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "77ef42a4aa1cfbc5a90072378a02f101bffcb0d1452d22604da07bfee6c5c026"
+  }
+}

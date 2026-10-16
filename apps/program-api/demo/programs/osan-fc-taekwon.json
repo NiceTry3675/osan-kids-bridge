@@ -1,0 +1,672 @@
+{
+  "program_id": "osan-fc-taekwon",
+  "title": "2026년 태권체조",
+  "institution": "오산시가족센터",
+  "category": "sports_arts",
+  "audience": "child",
+  "target_type": "multicultural_family",
+  "target_raw": "다문화가족 초등 1~4학년 자녀",
+  "description": "오산시가족센터에서 다문화가족 초등 1~4학년 자녀를 대상으로 진행하는 태권체조 프로그램입니다.",
+  "grade_range": [
+    1,
+    4
+  ],
+  "age_range": null,
+  "eligibility_requirements": [
+    "다문화가족"
+  ],
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "osan-fc-taekwon-s1",
+      "date": "2026-04-30",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s2",
+      "date": "2026-05-06",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s3",
+      "date": "2026-05-13",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s4",
+      "date": "2026-05-20",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s5",
+      "date": "2026-05-27",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s6",
+      "date": "2026-06-03",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s7",
+      "date": "2026-06-10",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s8",
+      "date": "2026-06-17",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s9",
+      "date": "2026-06-24",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s10",
+      "date": "2026-07-01",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s11",
+      "date": "2026-07-08",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s12",
+      "date": "2026-07-15",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s13",
+      "date": "2026-07-22",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s14",
+      "date": "2026-08-19",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s15",
+      "date": "2026-08-26",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s16",
+      "date": "2026-09-02",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s17",
+      "date": "2026-09-09",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s18",
+      "date": "2026-09-16",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s19",
+      "date": "2026-09-30",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s20",
+      "date": "2026-10-07",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s21",
+      "date": "2026-10-14",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s22",
+      "date": "2026-10-21",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s23",
+      "date": "2026-10-28",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-taekwon-s24",
+      "date": "2026-11-04",
+      "start_time": "16:00",
+      "end_time": "17:00",
+      "place_name": "오산시가족센터 2층",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    }
+  ],
+  "venue": {
+    "place_name": "오산시가족센터 2층",
+    "address": "경기도 오산시 청학로 80 (궐동)",
+    "dong": "남촌동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-04-30",
+  "period_end": "2026-11-04",
+  "session_count": 24,
+  "attendance_rule": "all_sessions",
+  "mid_join_allowed": true,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": null,
+  "application_start": "2026-04-14T09:00",
+  "application_end": "2026-11-01T18:00",
+  "application_methods": [
+    {
+      "type": "online",
+      "label": "오산시가족센터 홈페이지 프로그램 신청"
+    }
+  ],
+  "application_note": null,
+  "uncertain_items": [
+    "보호자·형제자매 동반 가능 여부"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "2026년 태권체조",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "■ 대상: 다문화가족 초등 1~4학년 자녀",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "다문화가족 초등 1~4학년 자녀",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "다문화가족 초등 1~4학년 자녀",
+      "verified": true
+    },
+    {
+      "field": "grade_range",
+      "quote": "초등 1~4학년",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "다문화가족",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 : 경기도 오산시 청학로 80 (궐동) 오산시가족센터 2층",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-04-30 ~ 2026-11-04",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 24회",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s1].date",
+      "quote": "4/30(목)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s1].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s2].date",
+      "quote": "5/6(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s2].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s3].date",
+      "quote": "5/13(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s3].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s4].date",
+      "quote": "5/20(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s4].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s5].date",
+      "quote": "5/27(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s5].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s6].date",
+      "quote": "6/3(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s6].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s7].date",
+      "quote": "6/10(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s7].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s8].date",
+      "quote": "6/17(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s8].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s9].date",
+      "quote": "6/24(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s9].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s10].date",
+      "quote": "7/1(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s10].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s11].date",
+      "quote": "7/8(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s11].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s12].date",
+      "quote": "7/15(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s12].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s13].date",
+      "quote": "7/22(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s13].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s14].date",
+      "quote": "8/19(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s14].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s15].date",
+      "quote": "8/26(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s15].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s16].date",
+      "quote": "9/2(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s16].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s17].date",
+      "quote": "9/9(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s17].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s18].date",
+      "quote": "9/16(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s18].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s19].date",
+      "quote": "9/30(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s19].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s20].date",
+      "quote": "10/7(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s20].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s21].date",
+      "quote": "10/14(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s21].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s22].date",
+      "quote": "10/21(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s22].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s23].date",
+      "quote": "10/28(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s23].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s24].date",
+      "quote": "11/4(수)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-taekwon-s24].time",
+      "quote": "16:00~17:00",
+      "verified": true
+    },
+    {
+      "field": "attendance_rule",
+      "quote": "남은 회차는 모두 참여해야 합니다.",
+      "verified": true
+    },
+    {
+      "field": "mid_join_allowed",
+      "quote": "중도 참여 가능하며",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "■ 참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-04-14 09:00 ~ 2026-11-01 18:00",
+      "verified": true
+    },
+    {
+      "field": "application_methods.online",
+      "quote": "■ 신청 방법: 오산시가족센터 홈페이지 프로그램 신청",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "오산시가족센터가 '2026년 태권체조'를 열어요. 다문화가족 초등 1~4학년 자녀가 대상이에요.",
+        "남은 날은 10월 21일(수), 10월 28일(수), 11월 4일(수) 16:00~17:00예요. 장소는 오산시가족센터 2층이에요. 중간에 들어와도 되고, 들어온 뒤 남은 날에 참여해요.",
+        "무료예요. 4월 14일(화) 09:00부터 11월 1일(일) 18:00까지 온라인(오산시가족센터 홈페이지 프로그램 신청)으로 신청해요. 보호자나 형제자매도 같이 가도 되는지는 기관에 물어보세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "Trung tâm Gia đình thành phố Osan (오산시가족센터) tổ chức chương trình “2026년 태권체조” (Thể dục Taekwondo năm 2026). Con em gia đình đa văn hóa là học sinh tiểu học lớp 1–4 là đối tượng tham gia.",
+        "Các buổi còn lại diễn ra vào 21/10 (Thứ Tư), 28/10 (Thứ Tư), 4/11 (Thứ Tư) lúc 16:00–17:00 tại tầng 2 Trung tâm Gia đình thành phố Osan (오산시가족센터 2층). Có thể vào học giữa chừng và tham gia các buổi còn lại.",
+        "Miễn phí. Đăng ký từ 14/4 (Thứ Ba) 09:00 đến 1/11 (Chủ Nhật) 18:00 qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – đăng ký chương trình trên trang web Trung tâm Gia đình thành phố Osan). Hãy hỏi đơn vị tổ chức về việc phụ huynh và anh chị em có thể đi cùng hay không."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": [],
+      "heading": {
+        "title": "Thể dục Taekwondo năm 2026",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Con em gia đình đa văn hóa lớp 1–4 tiểu học"
+      }
+    },
+    "zh": {
+      "lines": [
+        "오산시가족센터（乌山市家庭中心）举办“2026년 태권체조”（2026年跆拳体操），对象为多元文化家庭小学1至4年级子女。",
+        "剩余场次为10月21日（周三）、10月28日（周三）、11月4日（周三），时间均为16:00–17:00，地点在오산시가족센터 2층（乌山市家庭中心2楼）。可以中途加入，加入后参加剩余场次。",
+        "费用免费。报名时间为4月14日（周二） 09:00至11月1日（周日） 18:00，通过网上报名 (오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网申请项目)。家长及兄弟姐妹是否可以同行请向机构确认。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": [],
+      "heading": {
+        "title": "2026年跆拳体操",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "多元文化家庭小学1～4年级子女"
+      }
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "5700d6afad09568918f9f17cf23fd117dea1fbbe9bc48b19a0ee5795012001b6"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-04-30, 회차 2026-05-06, 회차 2026-05-13, 회차 2026-05-20, 회차 2026-05-27, 회차 2026-06-03, 회차 2026-06-10, 회차 2026-06-17, 회차 2026-06-24, 회차 2026-07-01, 회차 2026-07-08, 회차 2026-07-15, 회차 2026-07-22, 회차 2026-08-19, 회차 2026-08-26, 회차 2026-09-02, 회차 2026-09-09, 회차 2026-09-16, 회차 2026-09-30, 회차 2026-10-07, 회차 2026-10-14, 회차 2026-10-21, 회차 2026-10-28, 회차 2026-11-04"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "200487ff22e6564a6add898cd52cc1863cf6d8cf3afb0fcff85fe8ecfc6eed34"
+  }
+}

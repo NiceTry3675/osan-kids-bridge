@@ -1,0 +1,230 @@
+{
+  "program_id": "osan-fc-bodeum-training",
+  "title": "2026년 온가족보듬사업-보듬매니저 보수교육",
+  "institution": "오산시가족센터",
+  "category": "experience_culture",
+  "audience": "adult",
+  "target_type": "unknown",
+  "target_raw": "온가족보듬사업 보듬매니저",
+  "description": "오산시 가족센터에서 온가족보듬사업 보듬매니저를 대상으로 진행하는 보수교육 프로그램입니다.",
+  "grade_range": null,
+  "age_range": null,
+  "eligibility_requirements": [
+    "온가족보듬사업 보듬매니저"
+  ],
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "osan-fc-bodeum-training-s1",
+      "date": "2026-09-04",
+      "start_time": "10:00",
+      "end_time": "12:00",
+      "place_name": "2층 오산시가족센터",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-bodeum-training-s2",
+      "date": "2026-09-25",
+      "start_time": "10:00",
+      "end_time": "12:00",
+      "place_name": "2층 오산시가족센터",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    },
+    {
+      "id": "osan-fc-bodeum-training-s3",
+      "date": "2026-10-17",
+      "start_time": "10:00",
+      "end_time": "12:00",
+      "place_name": "2층 오산시가족센터",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    }
+  ],
+  "venue": {
+    "place_name": "2층 오산시가족센터",
+    "address": "경기도 오산시 청학로 80 (궐동)",
+    "dong": "남촌동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-09-04",
+  "period_end": "2026-10-17",
+  "session_count": 3,
+  "attendance_rule": "unknown",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": null,
+  "application_start": "2026-09-01T10:00",
+  "application_end": "2026-10-31T18:00",
+  "application_methods": [
+    {
+      "type": "online",
+      "label": "오산시가족센터 홈페이지 프로그램 신청"
+    }
+  ],
+  "application_note": null,
+  "uncertain_items": [
+    "신청 마감(10월 31일)이 운영 종료일(10월 17일)보다 늦은 점"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "2026년 온가족보듬사업-보듬매니저 보수교육",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "온가족보듬사업 보듬매니저",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "대상: 온가족보듬사업 보듬매니저",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "대상: 온가족보듬사업 보듬매니저",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 : 경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-09-04 ~ 2026-10-17",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 3회",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-bodeum-training-s1].date",
+      "quote": "9월 4일(금)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-bodeum-training-s1].time",
+      "quote": "10:00~12:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-bodeum-training-s2].date",
+      "quote": "9월 25일(금)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-bodeum-training-s2].time",
+      "quote": "10:00~12:00",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-bodeum-training-s3].date",
+      "quote": "10월 17일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-bodeum-training-s3].time",
+      "quote": "10:00~12:00",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-09-01 10:00 ~ 2026-10-31 18:00",
+      "verified": true
+    },
+    {
+      "field": "application_methods.online",
+      "quote": "신청 방법: 오산시가족센터 홈페이지 프로그램 신청",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "'2026년 온가족보듬사업-보듬매니저 보수교육'은 오산시가족센터가 열어요. 온가족보듬사업 보듬매니저인 성인이 대상이에요.",
+        "9월 4일(금), 9월 25일(금), 10월 17일(토) 10:00~12:00에 해요. 장소는 2층 오산시가족센터예요.",
+        "무료예요. 9월 1일(화) 10:00부터 10월 31일(토) 18:00까지 온라인 신청 (오산시가족센터 홈페이지 프로그램 신청)으로 신청해요. 신청 마감(10월 31일)이 프로그램 끝나는 날(10월 17일)보다 늦으니 기관에 물어보세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức chương trình “2026년 온가족보듬사업-보듬매니저 보수교육” (Đào tạo bổ túc cho quản lý dự án Ôn gia đình 보듬 năm 2026). Đối tượng là người lớn làm quản lý dự án Ôn gia đình 보듬 (온가족보듬사업 보듬매니저).",
+        "Lớp học diễn ra vào 4/9 (Thứ Sáu), 25/9 (Thứ Sáu), 17/10 (Thứ Bảy) cùng lúc 10:00–12:00 tại 2층 오산시가족센터 (tầng 2 Trung tâm Gia đình thành phố Osan). Hãy hỏi đơn vị tổ chức về việc có thể vào học giữa chừng hay không.",
+        "Miễn phí. Đăng ký từ 1/9 (Thứ Ba) 10:00 đến 31/10 (Thứ Bảy) 18:00 qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – trang web Trung tâm Gia đình thành phố Osan)."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": [],
+      "heading": {
+        "title": "Chương trình Chăm sóc Cả Gia đình năm 2026: Đào tạo bổ túc cho người quản lý chăm sóc",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Người quản lý chăm sóc thuộc chương trình Chăm sóc Cả Gia đình"
+      }
+    },
+    "zh": {
+      "lines": [
+        "“2026년 온가족보듬사업-보듬매니저 보수교육”（2026年全家关爱项目-关爱经理进修培训）由오산시가족센터（乌山市家庭中心）举办，对象为成人的全家关爱项目关爱经理（온가족보듬사업 보듬매니저）。",
+        "日期为9月4日（周五）、9月25日（周五）、10月17日（周六），时间均为10:00–12:00，地点在2층 오산시가족센터（乌山市家庭中心2楼）。",
+        "费用免费。报名时间为9月1日（周二） 10:00至10月31日（周六） 18:00，通过网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网项目申请）申请，能否中途加入请向机构确认。"
+      ],
+      "heading": {
+        "title": "2026年全家关爱项目-关爱经理进修培训",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "全家关爱项目关爱经理"
+      },
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "8966c2727d736c040685b15f42b17bc86a025f65ff382942e1b92b6328dd3e9d"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "참석 방식: 값이 근거 인용과 맞지 않아 비웠습니다 (값: 'all_sessions', 인용: '총 3회')",
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-09-04, 회차 2026-09-25, 회차 2026-10-17"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "a54931d5db430fbe8c0f78e42b316396ec9b33de18f30d36b6372f07be42e6fb"
+  }
+}

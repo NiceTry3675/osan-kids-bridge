@@ -1,0 +1,206 @@
+{
+  "program_id": "osan-fc-soap",
+  "title": "나만의 천연 비누 만들기",
+  "institution": "오산시가족센터",
+  "category": "experience_culture",
+  "audience": "parent_child",
+  "target_type": "unknown",
+  "target_raw": "초등학생 자녀와 보호자 (가족 단위 참여)",
+  "description": "오산시가족센터에서 초등학생 자녀와 보호자를 대상으로 나만의 천연 비누 만들기 프로그램을 진행합니다.",
+  "grade_range": [
+    1,
+    6
+  ],
+  "age_range": null,
+  "eligibility_requirements": null,
+  "guardian_companion": "required",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "osan-fc-soap-s1",
+      "date": "2026-10-22",
+      "start_time": "16:30",
+      "end_time": "18:00",
+      "place_name": "2층 오산시가족센터",
+      "dong": "남촌동",
+      "online": false,
+      "address": "경기도 오산시 청학로 80 (궐동)"
+    }
+  ],
+  "venue": {
+    "place_name": "2층 오산시가족센터",
+    "address": "경기도 오산시 청학로 80 (궐동)",
+    "dong": "남촌동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-10-22",
+  "period_end": "2026-10-22",
+  "session_count": 1,
+  "attendance_rule": "all_sessions",
+  "mid_join_allowed": null,
+  "cost_krw": 5000,
+  "cost_raw": "가족당 재료비 5,000원",
+  "capacity": 10,
+  "application_start": "2026-10-14T09:00",
+  "application_end": "2026-10-21T18:00",
+  "application_methods": [
+    {
+      "type": "online",
+      "label": "오산시가족센터 홈페이지 프로그램 신청"
+    }
+  ],
+  "application_note": null,
+  "uncertain_items": [
+    "참여 대상·자격",
+    "형제자매 동반 가능 여부"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "나만의 천연 비누 만들기",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터 > 프로그램안내 > 프로그램신청",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "초등학생 자녀와 보호자 (가족 단위 참여)",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "초등학생 자녀와 보호자 (가족 단위 참여)",
+      "verified": true
+    },
+    {
+      "field": "grade_range",
+      "quote": "초등학생 자녀와 보호자",
+      "verified": true
+    },
+    {
+      "field": "guardian_companion",
+      "quote": "가족 단위 참여",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 : 경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-10-22 ~ 2026-10-22",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 1회",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-soap-s1].date",
+      "quote": "10월 22일(목)",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-soap-s1].time",
+      "quote": "16:30~18:00",
+      "verified": true
+    },
+    {
+      "field": "attendance_rule",
+      "quote": "총 1회",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "참가비: 가족당 재료비 5,000원",
+      "verified": true
+    },
+    {
+      "field": "capacity",
+      "quote": "모집 인원: 10가족",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-10-14 09:00 ~ 2026-10-21 18:00",
+      "verified": true
+    },
+    {
+      "field": "application_methods.online",
+      "quote": "신청 방법: 오산시가족센터 홈페이지 프로그램 신청",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "오산시가족센터가 '나만의 천연 비누 만들기'를 열어요. 초등 1~6학년 자녀와 보호자가 대상이에요. 보호자도 꼭 같이 와야 해요.",
+        "10월 22일(목) 16:30~18:00에 해요. 장소는 2층 오산시가족센터예요.",
+        "가족당 재료비 5,000원이에요. 10월 14일(수) 09:00부터 10월 21일(수) 18:00까지 온라인 신청 (오산시가족센터 홈페이지 프로그램 신청)으로 신청해요. 형제자매도 같이 가도 되는지는 기관에 물어보세요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức chương trình “나만의 천연 비누 만들기” (Tự làm xà phòng thiên nhiên của riêng mình). Đối tượng là học sinh tiểu học lớp 1–6 cùng phụ huynh, và phụ huynh bắt buộc phải đi cùng.",
+        "Chương trình diễn ra vào 22/10 (Thứ Năm) 16:30–18:00 tại tầng 2 오산시가족센터 (tầng 2 Trung tâm Gia đình thành phố Osan).",
+        "Chi phí là 5.000 won mỗi gia đình (tiền nguyên liệu). Đăng ký từ 14/10 (Thứ Tư) 09:00 đến 21/10 (Thứ Tư) 18:00 qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – trang web Trung tâm Gia đình thành phố Osan). Hãy hỏi đơn vị tổ chức về việc anh chị em có thể đi cùng hay không."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": [],
+      "heading": {
+        "title": "Tự làm xà phòng thiên nhiên của riêng mình",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Con em học sinh tiểu học và phụ huynh (tham gia theo đơn vị gia đình)"
+      }
+    },
+    "zh": {
+      "lines": [
+        "“나만의 천연 비누 만들기”（制作属于自己的天然肥皂）由오산시가족센터（乌山市家庭中心）举办。对象为小学1至6年级学生与家长共同参与，家长须陪同。",
+        "时间为10月22日（周四）16:30–18:00，地点在2층 오산시가족센터（乌山市家庭中心2楼）。",
+        "每个家庭材料费5,000韩元。报名时间为10月14日（周三）09:00至10月21日（周三）18:00，网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网报名）。兄弟姐妹能否同行请向机构确认。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": [],
+      "heading": {
+        "title": "制作属于自己的天然肥皂",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "小学生子女与家长（以家庭为单位参与）"
+      }
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "ef16d28a69b7d2fd5922c4895a3c02168a44dca3bc1a041f93e0480883e34d76"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-10-22"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "b70ddd2261393b15e851554a3dff90698e13c77bb0afb68263450b9d3dcaa33b"
+  }
+}

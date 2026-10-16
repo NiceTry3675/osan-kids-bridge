@@ -1,0 +1,6 @@
+node_modules/
+*.tsbuildinfo
+.env
+.env.local
+# 실제 공고 원문·포스터·추출 결과는 이용 조건 확인 전까지 저장소에 올리지 않는다
+data/local/

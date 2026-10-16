@@ -62,6 +62,8 @@ export interface ReviewedSummary {
   target: string
   description: string
   reviewed_at: string
+  /** 사람이 승인하지 않고 자동 대조만 통과한 번역이면 'machine_checked'(시연 서버만 보냄). 없거나 'approved'면 검수본 */
+  status?: 'approved' | 'machine_checked'
 }
 
 /** 기관에 확인해야 할 항목. topic으로 화면 언어의 문구를 고르고, note_ko는 원문에 적힌 관련 표현입니다. */

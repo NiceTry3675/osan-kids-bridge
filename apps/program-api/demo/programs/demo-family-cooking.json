@@ -1,0 +1,184 @@
+{
+  "program_id": "demo-family-cooking",
+  "title": "가족 김밥 만들기 체험",
+  "institution": "중앙동 행정복지센터",
+  "category": "experience_culture",
+  "audience": "parent_child",
+  "target_type": "unknown",
+  "target_raw": "초등학생 자녀와 보호자 (보호자와 자녀가 함께 참여)",
+  "description": "초등학생 자녀와 보호자가 함께 참여하는 가족 김밥 만들기 체험 프로그램으로 중앙동 행정복지센터 2층 요리실에서 진행된다.",
+  "grade_range": [
+    1,
+    6
+  ],
+  "age_range": null,
+  "eligibility_requirements": null,
+  "guardian_companion": "required",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "demo-family-cooking-s1",
+      "date": "2026-10-24",
+      "start_time": "10:00",
+      "end_time": "12:00",
+      "place_name": "중앙동 행정복지센터 2층 요리실",
+      "dong": "중앙동",
+      "online": false,
+      "address": null
+    }
+  ],
+  "venue": {
+    "place_name": "중앙동 행정복지센터 2층 요리실",
+    "address": null,
+    "dong": "중앙동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": null,
+  "period_end": null,
+  "session_count": null,
+  "attendance_rule": "all_sessions",
+  "mid_join_allowed": null,
+  "cost_krw": 8000,
+  "cost_raw": "가족당 재료비 8,000원",
+  "capacity": 8,
+  "application_start": "2026-10-01T09:00",
+  "application_end": "2026-10-14T18:00",
+  "application_methods": [],
+  "application_note": null,
+  "uncertain_items": [
+    "참여 대상·자격",
+    "형제자매 동반 가능 여부",
+    "신청 방법"
+  ],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "가족 김밥 만들기 체험",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "초등학생 자녀와 보호자 (보호자와 자녀가 함께 참여)",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "보호자와 자녀가 함께 참여",
+      "verified": true
+    },
+    {
+      "field": "grade_range",
+      "quote": "초등학생",
+      "verified": true
+    },
+    {
+      "field": "guardian_companion",
+      "quote": "보호자와 자녀가 함께 참여",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소: 중앙동 행정복지센터 2층 요리실",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-family-cooking-s1].date",
+      "quote": "10월 24일(토)",
+      "verified": true
+    },
+    {
+      "field": "sessions[demo-family-cooking-s1].time",
+      "quote": "10:00~12:00",
+      "verified": true
+    },
+    {
+      "field": "attendance_rule",
+      "quote": "10월 24일(토) 10:00~12:00",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "참가비: 가족당 재료비 8,000원",
+      "verified": true
+    },
+    {
+      "field": "capacity",
+      "quote": "정원: 8가족",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "신청 기간: 10월 1일(목) 09:00 ~ 10월 14일(수) 18:00",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "중앙동 행정복지센터가 '가족 김밥 만들기 체험'을 열어요. 초등 1~6학년 자녀와 보호자가 대상이에요. 보호자도 꼭 같이 와야 해요.",
+        "10월 24일(토) 10:00~12:00에 해요. 장소는 중앙동 행정복지센터 2층 요리실이에요.",
+        "비용은 가족당 재료비 8,000원이에요. 신청은 10월 1일(목) 09:00부터 10월 14일(수) 18:00까지였어요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "중앙동 행정복지센터 (Trung tâm Hành chính phường Jungang-dong) tổ chức chương trình “가족 김밥 만들기 체험” (Trải nghiệm làm kimbap gia đình). Đối tượng là học sinh tiểu học lớp 1–6, phụ huynh và con cùng tham gia và phụ huynh phải đi cùng.",
+        "Chương trình diễn ra vào 24/10 (Thứ Bảy) 10:00–12:00 tại 중앙동 행정복지센터 2층 요리실 (phòng nấu ăn tầng 2 Trung tâm Hành chính phường Jungang-dong).",
+        "Chi phí là 8.000 won mỗi gia đình (tiền nguyên liệu). Đăng ký đã diễn ra từ 1/10 (Thứ Năm) 09:00 đến 14/10 (Thứ Tư) 18:00."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": [],
+      "heading": {
+        "title": "Trải nghiệm làm kimbap gia đình",
+        "institution": "Trung tâm Hành chính phường Jungang-dong (중앙동 행정복지센터)",
+        "target": "Con em học sinh tiểu học và phụ huynh (phụ huynh và con em cùng tham gia)"
+      }
+    },
+    "zh": {
+      "lines": [
+        "중앙동 행정복지센터（중앙동行政福利中心）举办“가족 김밥 만들기 체험”（家庭紫菜包饭制作体验）。对象为小学1至6年级子女及其家长，由家长与子女共同参与，家长必须一同前往。",
+        "时间为10月24日（周六） 10:00–12:00，地点在중앙동 행정복지센터 2층 요리실（중앙동行政福利中心2楼料理室）。",
+        "费用为每个家庭材料费8,000韩元。报名已于10月14日（周三） 18:00截止。"
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": [],
+      "heading": {
+        "title": "家庭紫菜包饭制作体验",
+        "institution": "중앙동行政福利中心（중앙동 행정복지센터）",
+        "target": "小学生子女与家长（家长与子女共同参与）"
+      }
+    }
+  },
+  "source": {
+    "url": null,
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "455246eb7da078da7ba80f02409d249ff7412bddbf6d3d9609e095b1f05f27b7",
+    "demo": true
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "기관 이름이 원문에 없어 수집 정보의 기관(중앙동 행정복지센터)을 썼습니다",
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-10-24, 신청 시작 2026-10-01, 신청 마감 2026-10-14"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "ce7c9854416237dc8c1ed023cf8ef1c67cd128d93ac13d75fc553d92c0008d82"
+  }
+}

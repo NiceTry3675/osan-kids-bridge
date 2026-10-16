@@ -1,0 +1,202 @@
+{
+  "program_id": "osan-fc-school-prep",
+  "title": "경기육아나눔터 10월 부모교육 '우리 아이 초등 입학 준비 시작!'",
+  "institution": "오산시가족센터",
+  "category": "experience_culture",
+  "audience": "parent_only",
+  "target_type": "parent_only",
+  "target_raw": "2027년 초등 입학 예정 자녀를 둔 부모",
+  "description": "오산시 가족센터에서 2027년 초등 입학 예정 자녀를 둔 부모를 대상으로 초등 입학 준비 부모교육을 운영합니다.",
+  "grade_range": null,
+  "age_range": null,
+  "eligibility_requirements": [
+    "2027년 초등 입학 예정 자녀를 둔 부모"
+  ],
+  "guardian_companion": "unknown",
+  "sibling_companion": "unknown",
+  "korean_level_required": null,
+  "support_languages": null,
+  "application_languages": null,
+  "sessions": [
+    {
+      "id": "osan-fc-school-prep-s1",
+      "date": "2026-10-19",
+      "start_time": "10:00",
+      "end_time": "11:30",
+      "place_name": "삼미 16단지 1608동 1층, 경기육아나눔터 삼미점",
+      "dong": "신장동",
+      "online": false,
+      "address": "경기도 오산시 내삼미로 109 (내삼미동, 삼미마을)"
+    }
+  ],
+  "venue": {
+    "place_name": "삼미 16단지 1608동 1층, 경기육아나눔터 삼미점",
+    "address": "경기도 오산시 내삼미로 109 (내삼미동, 삼미마을)",
+    "dong": "신장동",
+    "online": false
+  },
+  "schedule_note": null,
+  "period_start": "2026-10-19",
+  "period_end": "2026-10-19",
+  "session_count": 1,
+  "attendance_rule": "all_sessions",
+  "mid_join_allowed": null,
+  "cost_krw": 0,
+  "cost_raw": "무료",
+  "capacity": 15,
+  "application_start": "2026-10-01T00:00",
+  "application_end": "2026-10-19T00:00",
+  "application_methods": [
+    {
+      "type": "online",
+      "label": "오산시가족센터 홈페이지 프로그램 신청"
+    }
+  ],
+  "application_note": null,
+  "uncertain_items": [],
+  "notices": [],
+  "evidence": [
+    {
+      "field": "title",
+      "quote": "경기육아나눔터 10월 부모교육 '우리 아이 초등 입학 준비 시작!'",
+      "verified": true
+    },
+    {
+      "field": "institution",
+      "quote": "오산시 가족센터",
+      "verified": true
+    },
+    {
+      "field": "target_type",
+      "quote": "2027년 초등 입학 예정 자녀를 둔 부모",
+      "verified": true
+    },
+    {
+      "field": "target_raw",
+      "quote": "2027년 초등 입학 예정 자녀를 둔 부모",
+      "verified": true
+    },
+    {
+      "field": "audience",
+      "quote": "2027년 초등 입학 예정 자녀를 둔 부모",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "2027년 초등 입학 예정 자녀를 둔 부모",
+      "verified": true
+    },
+    {
+      "field": "venue",
+      "quote": "장소 : 경기도 오산시 내삼미로 109 (내삼미동, 삼미마을) 삼미 16단지 1608동 1층, 경기육아나눔터 삼미점",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "행사기간 : 2026-10-19 ~ 2026-10-19",
+      "verified": true
+    },
+    {
+      "field": "session_count",
+      "quote": "총 1회",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-school-prep-s1].date",
+      "quote": "10월 19일(월) 10:00~11:30",
+      "verified": true
+    },
+    {
+      "field": "sessions[osan-fc-school-prep-s1].time",
+      "quote": "10:00~11:30",
+      "verified": true
+    },
+    {
+      "field": "attendance_rule",
+      "quote": "총 1회",
+      "verified": true
+    },
+    {
+      "field": "cost",
+      "quote": "■ 참가비: 무료",
+      "verified": true
+    },
+    {
+      "field": "capacity",
+      "quote": "■ 모집 인원: 15명",
+      "verified": true
+    },
+    {
+      "field": "application_period",
+      "quote": "접수기간 : 2026-10-01 00:00 ~ 2026-10-19 00:00",
+      "verified": true
+    },
+    {
+      "field": "application_methods.online",
+      "quote": "■ 신청 방법: 오산시가족센터 홈페이지 프로그램 신청",
+      "verified": true
+    }
+  ],
+  "summaries_by_language": {
+    "ko-easy": {
+      "lines": [
+        "“경기육아나눔터 10월 부모교육 '우리 아이 초등 입학 준비 시작!'”을 오산시가족센터가 열어요. 2027년 초등 입학 예정 자녀를 둔 부모가 대상이에요. 보호자만 참여해요.",
+        "10월 19일(월) 10:00~11:30에 해요. 장소는 삼미 16단지 1608동 1층, 경기육아나눔터 삼미점이에요.",
+        "비용은 무료예요. 10월 1일(목) 00:00부터 10월 18일(일)까지 온라인 신청(오산시가족센터 홈페이지 프로그램 신청)으로 신청해요."
+      ],
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "vi": {
+      "lines": [
+        "Trung tâm Gia đình thành phố Osan (오산시가족센터) tổ chức chương trình “경기육아나눔터 10월 부모교육 '우리 아이 초등 입학 준비 시작!'” (Giáo dục phụ huynh tháng 10 tại Điểm chia sẻ nuôi dạy con Gyeonggi: 'Bắt đầu chuẩn bị cho con vào lớp 1!'). Chương trình chỉ dành riêng cho phụ huynh tham gia, đối tượng là phụ huynh có con dự kiến vào tiểu học năm 2027.",
+        "Buổi học diễn ra vào 19/10 (Thứ Hai) 10:00–11:30 tại 삼미 16단지 1608동 1층, 경기육아나눔터 삼미점 (tầng 1 tòa 1608 khu Sammi 16-danji, Điểm chia sẻ nuôi dạy con Gyeonggi chi nhánh Sammi).",
+        "Chi phí: miễn phí. Đăng ký từ 1/10 (Thứ Năm) 00:00 đến 18/10 (Chủ Nhật) qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – đăng ký chương trình trên trang web Trung tâm Gia đình thành phố Osan)."
+      ],
+      "heading": {
+        "title": "Giáo dục phụ huynh tháng 10 tại Điểm chia sẻ nuôi dạy con Gyeonggi: 'Bắt đầu chuẩn bị cho con vào tiểu học!'",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Phụ huynh có con dự kiến vào tiểu học năm 2027"
+      },
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    },
+    "zh": {
+      "lines": [
+        "오산시가족센터（乌山市家庭中心）举办“경기육아나눔터 10월 부모교육 '우리 아이 초등 입학 준비 시작!'”（京畿共享育儿空间10月家长教育：‘我们孩子小学入学准备开始！’）。对象为2027年预备小学入学子女的家长，仅限家长参加。",
+        "时间为10月19日（周一） 10:00–11:30。地点在삼미 16단지 1608동 1층, 경기육아나눔터 삼미점（삼미16园区1608栋1楼，京畿共享育儿空间삼미店）。",
+        "免费。报名时间为10月1日（周四） 00:00至10月18日（周日），通过网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网项目申请）报名。"
+      ],
+      "heading": {
+        "title": "京畿共享育儿空间10月家长教育：“我们孩子小学入学准备开始！”",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "2027年预备小学入学子女的家长"
+      },
+      "status": "machine_checked",
+      "generated_at": "2026-10-15T01:00:00.000Z",
+      "issues": []
+    }
+  },
+  "source": {
+    "url": "https://osan.familynet.or.kr/center/lay1/program/S295T322C451/recruitReceipt/list.do",
+    "retrieved_at": "2026-10-15",
+    "files": [
+      "page.txt"
+    ],
+    "content_hash": "5890f14b85d3bd1b95aaa8f03f2749662a0667039bda29b83166805aa3f560bd"
+  },
+  "extracted_at": "2026-10-15T01:00:00.000Z",
+  "model": "gemini-3.8-flash",
+  "warnings": [
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-10-19"
+  ],
+  "review": {
+    "status": "approved",
+    "reviewed_at": "2026-10-15T01:00:00.000Z",
+    "reviewer": "시연 데이터",
+    "notes": null,
+    "facts_hash": "984a8e1af1a4ae6435ccfa1971dd7a802933e9e8187fd97ad32c2223ccb954f7"
+  }
+}
