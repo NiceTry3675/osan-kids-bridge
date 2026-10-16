@@ -28,7 +28,7 @@ GOOGLE_APPLICATION_CREDENTIALS=../../<서비스-계정-키>.json
 # 선택: GOOGLE_CLOUD_PROJECT (기본은 키의 project_id), GEMINI_LOCATION=global, GEMINI_MODEL=gemini-3.8-flash
 ```
 
-모델은 Vertex AI의 `gemini-3.8-flash`입니다. 그 밖의 설정: `PROGRAM_DATA_DIR`(기본 `data/local`), `PORT`(기본 8787), `HOST`(기본 127.0.0.1), `CORS_ORIGINS`(기본 `http://127.0.0.1:5173,http://localhost:5173`, `*`는 모두 허용), `PROGRAM_API_NOW`(판정 기준 시각을 ISO로 고정, 시연·시험용), `SHOW_MACHINE_CHECKED_SUMMARIES=1`(아래 요약 설명 참고).
+모델은 Vertex AI의 `gemini-3.8-flash`입니다. 그 밖의 설정: `PROGRAM_DATA_DIR`(기본 `data/local`), `PORT`(기본 8787), `HOST`(기본 127.0.0.1), `CORS_ORIGINS`(기본 `http://127.0.0.1:5173,http://localhost:5173`와 기관 대시보드의 `5174`, `*`는 모두 허용), `PROGRAM_API_NOW`(판정 기준 시각을 ISO로 고정, 시연·시험용), `SHOW_MACHINE_CHECKED_SUMMARIES=1`(아래 요약 설명 참고).
 
 ## 실제 공고 자료의 보관
 
@@ -103,11 +103,59 @@ npm run review -- reset <ID>                      # 검수 대기로 되돌림
 - 공고 파일이 바뀌면(수정 시각·크기 확인) 다음 요청부터 다시 읽습니다. 서버를 다시 켤 필요가 없습니다.
 - CORS는 `CORS_ORIGINS`의 출처만 허용합니다.
 
+## 포스터 통번역 (원본 디자인 유지 + 검증 루프)
+
+기관 담당자가 만든 한국어 포스터를 **디자인은 그대로 두고 글만** 베트남어·중국어로 옮깁니다. 이미지 생성 모델이 만든 결과를 다른 모델과 코드가 다시 읽어 검증하고, 틀린 곳만 짚어 다시 만들게 합니다.
+
+```text
+① 원본 판독(Gemini) → ② 번역표(문구마다 한국어 ↔ 번역, 코드 검사) → ③ 이미지 편집(OpenAI, 원본 + 번역표)
+→ ④ QR 원본 이식·재스캔 → ⑤ 검증(Gemini가 결과를 처음부터 다시 읽음 + 코드 대조) → 틀리면 ③으로 (최대 3회) → ⑥ 통과한 것만 내보냄
+```
+
+- **번역표 코드 검사**: 문구마다 전화번호·시각·날짜·숫자·주소가 그대로인지 확인합니다(`src/poster/tokens.ts`). 한국어 `10/19`(월/일)와 베트남어 `19/10`(일/월)을 같은 날로 보고, 베트남어에서 월/일 순서로 쓰면 다른 날로 잡습니다. 걸린 문구는 이유를 알려 모델이 다시 고칩니다.
+- **QR**: 이미지 모델은 QR을 '비슷한 무늬'로 다시 그립니다. 원본 QR을 읽고, 번역본에서 QR 자리를 찾아 원본 픽셀을 옮긴 뒤 다시 스캔해 주소가 같은지 확인합니다(`src/poster/qr.ts`). 납작하게 늘어난 QR도 비율을 지켜 옮깁니다.
+- **검증**: 생성(OpenAI)과 다른 모델(Gemini)이 결과를 다시 읽고, ⓐ 번역표의 값이 모두 있는지·없던 값이 생기지 않았는지(코드) ⓑ 옮겨야 할 한국어가 남았는지(코드, 로고 글자는 제외) ⓒ QR 주소가 같은지(코드) ⓓ 문구가 뜻이 맞게·글자가 깨지지 않고 들어갔는지(모델)를 봅니다. 문제가 있으면 '직전 결과 + 원본 + 지적 목록'으로 다시 편집합니다.
+- 3회 안에 통과하지 못하면 내보내지 않고, 보호자 화면은 원본 포스터와 검수된 다국어 안내를 보여 줍니다. 자동 검증을 통과한 결과는 `machine_checked`이고, 사람이 확인하면 `approved`로 바꿉니다.
+- 실제 기관 포스터와 번역본은 이용 조건 확인 전까지 커밋하지 않습니다. 원본은 `data/local/inbox/<ID>/poster.*`, 결과는 `data/local/translated/`(`<ID>.<언어>.png`, 검증 기록 `<ID>.<언어>.json`, 시도별 이미지 `<ID>.<언어>.attempt-N.png`)에 둡니다. 시연 데이터(`demo/`)로 서버를 띄워도 포스터는 이 폴더(`POSTER_DATA_DIR`, 기본 `data/local`)에서 읽습니다.
+- OpenAI 키는 `OPENAI_API_KEY`(저장소 맨 위 `.env` 또는 이 폴더의 `.env.local`), 모델은 `OPENAI_IMAGE_MODEL`(기본 `gpt-image-2.5-sunburst`)입니다. 한 장 한 언어에 1회차로 통과하면 1분 30초쯤 걸립니다.
+
+```bash
+npm run poster -- [ID ...] [--lang vi,zh] [--attempts 3] [--force]   # inbox에 포스터가 있는 공고를 옮긴다
+npm run poster -- <ID> --lang vi --force --demo-fault                 # 시연용: 1회차 지시에 일부러 오류를 넣어 루프가 잡아 고치는 장면
+npm run poster -- list                                                # 공고·언어별 상태
+npm run poster -- approve <ID> --lang vi --reviewer 이름               # 사람이 확인한 번역 포스터 승인
+```
+
+## AI 상담 에이전트
+
+보호자 웹의 'AI에게 물어보기'가 부르는 상담 에이전트입니다(`src/agent/`). Gemini가 도구를 골라 쓰고, 도구는 **검수·게시된 공고와 기존 판정 로직만** 씁니다.
+
+| 도구 | 하는 일 |
+|---|---|
+| `search_programs` | 학년·나이·가능 시간·분야로 공고 찾기 (명세 5.1 판정 그대로) |
+| `get_program` | 공고 한 건의 사실 전부와 원문 근거 인용. 미상은 '공고에 없음'으로 |
+| `check_fit` | 아이 조건과 비교 (명세 4장 판정). 자격은 확정하지 않음 |
+| `draft_inquiry` | 공고에 답이 없는 질문을 기관에 보낼 한국어 문의문으로. 연락처는 공고에서 확인된 것만 |
+| `flag_unanswered` | 공고에 답이 없던 질문 표시 (저장하지 않음) |
+| `respond` | 보호자 언어로 답하고 근거 인용을 붙여 끝냄 |
+
+- 공고에 없는 것은 추측하지 않고 "공고에는 없어요"라고 말한 뒤 문의문을 만듭니다. 참여 자격을 단정하지 않고 확인된 것과 확인할 것을 나눕니다. 이름·국적·연락처는 묻지 않습니다.
+- 모델이 낸 원문 인용은 코드가 그 공고의 검증된 근거·안내 문장에서 다시 찾아, 없으면 버립니다(`verifiedCitations`).
+- 보호자가 '기관에 이름 없이 알리기'를 누를 때만 `{공고, 주제, 일반화한 질문, 날짜}`를 `<데이터 폴더>/questions/questions.jsonl`에 남깁니다. 기관 대시보드의 '보호자 질문' 탭이 이것을 공고별·주제별로 모아 '공고에 무엇을 적어야 하는지'를 보여 줍니다.
+
+| 요청 | 동작 |
+|---|---|
+| `POST /agent/chat` | `{messages: [{role, text}], locale, program_id?}` → `{reply, citations, follow_ups, steps, programs, inquiry, unanswered}`. 모델 오류는 503 |
+| `POST /agent/questions` | `{program_id, topic, question_ko}` 저장 (게시된 공고만) |
+| `GET /agent/questions` | 공고별·주제별 집계 |
+| `GET /posters/{id}` | 원본 포스터 유무와 내보낼 수 있는 번역 포스터의 검증 요약 |
+| `GET /posters/{id}/original` · `/vi` · `/zh` | 포스터 이미지. 번역본은 승인됐거나 시연 설정(`SHOW_MACHINE_CHECKED_SUMMARIES=1`)에서 자동 검증을 통과한 것만, 원본이 바뀌면 내림 |
+
 ## 시연 데이터 (`demo/`)
 
 MVP 시연용 공고 25건이 `demo/`에 들어 있습니다. 서비스 계정 키 없이도 바로 띄울 수 있도록 추출·요약이 끝난 결과(`demo/programs`)까지 커밋되어 있습니다.
 
-- 오산시가족센터 신청 목록 19건: 실제 목록의 제목·운영 기간·접수 기간·장소에 시연에 필요한 대상·시간·비용·신청 방법을 채운 원문입니다. 채운 내용은 실제 공고와 다를 수 있습니다.
+- 오산시가족센터 신청 목록 19건: 실제 목록의 제목·운영 기간·접수 기간·장소에 시연에 필요한 대상·시간·비용·신청 방법을 채운 원문입니다. 채운 내용은 실제 공고와 다를 수 있습니다. 그중 K-pop 방송댄스·우리 zip. 운동회는 실제 포스터(2026-10-17 확인)의 내용을 옮겨 적어 번역 포스터와 사실이 맞습니다.
 - 보호자 화면 흐름(v4) 시나리오 6건: 토요일 오전만 되는 초등 2학년 보호자가 찾는 장면을 재현합니다. 그중 `demo-saturday-craft`, `demo-korean-play`는 원문 없이 포스터 이미지만 있어 Gemini 포스터 판독 경로를 보여 줍니다.
 - 각 공고의 `source.json` `note`에 시연용 원문임을 적어 두었습니다. 화면에는 표시하지 않습니다. 시나리오 6건은 실제로 없는 공고라 `"demo": true`도 적어 두었고, 오산시가족센터 19건은 원문 목록 페이지로 연결됩니다.
 - 베트남어·중국어 요약은 자동 대조를 통과한 `machine_checked`이며 제목·기관·대상 머리글까지 채워져 있습니다(언어별 검수자 승인 전).
