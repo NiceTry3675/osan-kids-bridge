@@ -150,20 +150,30 @@
     },
     "vi": {
       "lines": [
-        "Trung tâm Gia đình thành phố Osan (오산시가족센터) tổ chức chương trình “경기육아나눔터 10월 부모교육 '우리 아이 초등 입학 준비 시작!'” (Giáo dục phụ huynh tháng 10 tại Điểm chia sẻ nuôi dạy con Gyeonggi 'Bắt đầu chuẩn bị cho con vào tiểu học!'). Đối tượng là phụ huynh có con dự kiến vào tiểu học năm 2027 và chỉ phụ huynh tham gia.",
-        "Chương trình diễn ra vào 19/10 (Thứ Hai) 10:00–11:30 tại 삼미 16단지 1608동 1층, 경기육아나눔터 삼미점 (tầng 1 tòa 1608 khu Sammi 16, Điểm chia sẻ nuôi dạy con Gyeonggi chi nhánh Sammi).",
-        "Miễn phí. Đăng ký từ 1/10 (Thứ Năm) 00:00 đến 18/10 (Chủ Nhật) qua hình thức đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – đăng ký chương trình trên trang web Trung tâm Gia đình thành phố Osan)."
+        "Trung tâm Gia đình thành phố Osan (오산시가족센터) tổ chức chương trình “경기육아나눔터 10월 부모교육 '우리 아이 초등 입학 준비 시작!'” (Giáo dục phụ huynh tháng 10 tại Điểm chia sẻ nuôi dạy con Gyeonggi: 'Bắt đầu chuẩn bị cho con vào lớp 1!'). Chương trình chỉ dành riêng cho phụ huynh tham gia, đối tượng là phụ huynh có con dự kiến vào tiểu học năm 2027.",
+        "Buổi học diễn ra vào 19/10 (Thứ Hai) 10:00–11:30 tại 삼미 16단지 1608동 1층, 경기육아나눔터 삼미점 (tầng 1 tòa 1608 khu Sammi 16-danji, Điểm chia sẻ nuôi dạy con Gyeonggi chi nhánh Sammi).",
+        "Chi phí: miễn phí. Đăng ký từ 1/10 (Thứ Năm) 00:00 đến 18/10 (Chủ Nhật) qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – đăng ký chương trình trên trang web Trung tâm Gia đình thành phố Osan)."
       ],
+      "heading": {
+        "title": "Giáo dục phụ huynh tháng 10 tại Điểm chia sẻ nuôi dạy con Gyeonggi: 'Bắt đầu chuẩn bị cho con vào tiểu học!'",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Phụ huynh có con dự kiến vào tiểu học năm 2027"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []
     },
     "zh": {
       "lines": [
-        "“경기육아나눔터 10월 부모교육 '우리 아이 초등 입학 준비 시작!'”（京畿共享育儿空间10月家长教育“我们孩子的小学入学准备开始！”）由오산시가족센터（乌山市家庭中心）举办，对象为育有预计2027年升入小学子女的家长，仅限家长参加。",
-        "时间为10月19日（周一） 10:00–11:30，地点在삼미 16단지 1608동 1층, 경기육아나눔터 삼미점（삼미16小区1608栋1楼，京畿共享育儿空间삼미店）。",
-        "费用免费。报名时间为10月1日（周四） 00:00至10月18日（周日），通过网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网项目申请）报名。"
+        "오산시가족센터（乌山市家庭中心）举办“경기육아나눔터 10월 부모교육 '우리 아이 초등 입학 준비 시작!'”（京畿共享育儿空间10月家长教育：‘我们孩子小学入学准备开始！’）。对象为2027年预备小学入学子女的家长，仅限家长参加。",
+        "时间为10月19日（周一） 10:00–11:30。地点在삼미 16단지 1608동 1층, 경기육아나눔터 삼미점（삼미16园区1608栋1楼，京畿共享育儿空间삼미店）。",
+        "免费。报名时间为10月1日（周四） 00:00至10月18日（周日），通过网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网项目申请）报名。"
       ],
+      "heading": {
+        "title": "京畿共享育儿空间10月家长教育：“我们孩子小学入学准备开始！”",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "2027年预备小学入学子女的家长"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []

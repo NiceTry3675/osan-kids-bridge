@@ -136,7 +136,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "Trải nghiệm làm kimbap gia đình",
+        "institution": "Trung tâm Hành chính phường Jungang-dong (중앙동 행정복지센터)",
+        "target": "Con em học sinh tiểu học và phụ huynh (phụ huynh và con em cùng tham gia)"
+      }
     },
     "zh": {
       "lines": [
@@ -146,7 +151,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "家庭紫菜包饭制作体验",
+        "institution": "중앙동行政福利中心（중앙동 행정복지센터）",
+        "target": "小学生子女与家长（家长与子女共同参与）"
+      }
     }
   },
   "source": {
@@ -155,7 +165,8 @@
     "files": [
       "page.txt"
     ],
-    "content_hash": "455246eb7da078da7ba80f02409d249ff7412bddbf6d3d9609e095b1f05f27b7"
+    "content_hash": "455246eb7da078da7ba80f02409d249ff7412bddbf6d3d9609e095b1f05f27b7",
+    "demo": true
   },
   "extracted_at": "2026-10-15T01:00:00.000Z",
   "model": "gemini-3.8-flash",

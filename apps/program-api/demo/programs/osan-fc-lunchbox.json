@@ -155,20 +155,30 @@
     },
     "vi": {
       "lines": [
-        "“경기육아나눔터 10월 부모자녀체험 '성장도시락 완성하기'” (Trải nghiệm cha mẹ và con tháng 10 tại điểm chia sẻ nuôi dạy con Gyeonggi 'Hoàn thành hộp cơm tăng trưởng') do 오산시가족센터 (Trung tâm Gia đình thành phố Osan) mở. Trẻ 4–7 tuổi (tuổi tròn) và phụ huynh cùng tham gia là đối tượng, phụ huynh phải đi cùng.",
+        "“경기육아나눔터 10월 부모자녀체험 '성장도시락 완성하기'” (Trải nghiệm cha mẹ và con tháng 10 tại điểm chia sẻ nuôi dạy con Gyeonggi: 'Hoàn thành hộp cơm trưởng thành') do 오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức. Đối tượng là trẻ 4–7 tuổi (tuổi tròn) cùng phụ huynh, và phụ huynh phải đi cùng.",
         "Chương trình diễn ra vào 19/10 (Thứ Hai) 16:00–17:30 tại 삼미 16단지 1608동 1층, 경기육아나눔터 삼미점 (tầng 1 tòa 1608 khu Sammi 16, điểm chia sẻ nuôi dạy con Gyeonggi chi nhánh Sammi).",
-        "Miễn phí. Đăng ký từ 1/10 (Thứ Năm) 00:00 đến 22/10 (Thứ Năm) qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – đăng ký chương trình trên trang web Trung tâm Gia đình thành phố Osan). Hạn đăng ký (22/10) muộn hơn ngày diễn ra chương trình (19/10)."
+        "Miễn phí. Đăng ký từ 1/10 (Thứ Năm) 00:00 đến 22/10 (Thứ Năm) qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – đăng ký chương trình trên trang web Trung tâm Gia đình thành phố Osan). Hãy xác nhận lại với đơn vị tổ chức vì ngày kết thúc đăng ký muộn hơn ngày diễn ra."
       ],
+      "heading": {
+        "title": "Trải nghiệm cha mẹ và con tháng 10 tại điểm chia sẻ nuôi dạy con Gyeonggi: 'Hoàn thành hộp cơm trưởng thành'",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Con 4–7 tuổi (tuổi tròn) và cha mẹ"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []
     },
     "zh": {
       "lines": [
-        "“경기육아나눔터 10월 부모자녀체험 '성장도시락 완성하기'”（京畿共享育儿空间10月亲子体验“完成成长便当”）由오산시가족센터（乌山市家庭中心）举办，对象为4至7周岁子女与家长共同参与，家长须一同前来。",
-        "活动时间为10月19日（周一） 16:00–17:30，地点在삼미 16단지 1608동 1층, 경기육아나눔터 삼미점（삼미16小区1608栋1楼，京畿共享育儿空间삼미店）。",
-        "费用免费。报名时间为10月1日（周四） 00:00至10月22日（周四），通过网上报名 (오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网申请课程)；报名截止日晚于活动结束日以及兄弟姐妹是否可以同行请向机构确认。"
+        "오산시가족센터（乌山市家庭中心）举办“경기육아나눔터 10월 부모자녀체험 '성장도시락 완성하기'”（京畿共享育儿空间10月亲子体验：“完成成长便当”），对象为4至7周岁子女与家长，家长必须陪同参加。",
+        "活动时间为10月19日（周一） 16:00–17:30，地点在삼미 16단지 1608동 1층, 경기육아나눔터 삼미점（삼미 16단지 1608栋1楼，京畿共享育儿空间삼미店）。",
+        "费用免费。报名时间为10月1日（周四） 00:00至10月22日（周四），报名方式为网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网项目申请）。报名截止日晚于活动日，兄弟姐妹是否可以同行请向机构确认。"
       ],
+      "heading": {
+        "title": "京畿共享育儿空间10月亲子体验：“完成成长便当”",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "满4～7岁子女与家长"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []

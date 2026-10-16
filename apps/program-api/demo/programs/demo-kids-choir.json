@@ -160,10 +160,15 @@
     },
     "vi": {
       "lines": [
-        "대원동 행정복지센터 (Trung tâm Hành chính phường Daewon-dong) tổ chức chương trình “[모집] 어린이 합창 교실” (Lớp hợp xướng thiếu nhi). Đối tượng là trẻ em 8–12 tuổi.",
-        "Chương trình diễn ra vào ngày 21/11 (Thứ Bảy) và 28/11 (Thứ Bảy), thời gian 14:00–15:30 tại 대원동 행정복지센터 3층 강당 (hội trường tầng 3 Trung tâm Hành chính phường Daewon-dong). Đây là khóa học tham gia tất cả các buổi.",
-        "Chi phí là 10.000 won. Đăng ký từ 1/11 (Chủ Nhật) 09:00 đến 15/11 (Chủ Nhật) 18:00 bằng hình thức đăng ký trực tiếp (대원동 행정복지센터 – Trung tâm Hành chính phường Daewon-dong). Hãy hỏi đơn vị tổ chức về việc phụ huynh và anh chị em có thể đi cùng hay không."
+        "대원동 행정복지센터 (Trung tâm Hành chính phường Daewon-dong) mở chương trình “[모집] 어린이 합창 교실” ([Chiêu sinh] Lớp hợp xướng thiếu nhi). Đối tượng là trẻ em 8–12 tuổi.",
+        "Chương trình diễn ra vào ngày 21/11 (Thứ Bảy) và 28/11 (Thứ Bảy), thời gian là 14:00–15:30 tại 대원동 행정복지센터 3층 강당 (hội trường tầng 3 Trung tâm Hành chính phường Daewon-dong). Đây là khóa học cần tham gia tất cả các buổi.",
+        "Chi phí là 10.000 won. Đăng ký từ 1/11 (Chủ Nhật) 09:00 đến 15/11 (Chủ Nhật) 18:00 bằng cách đăng ký trực tiếp (대원동 행정복지센터 – Trung tâm Hành chính phường Daewon-dong). Hãy hỏi đơn vị tổ chức về việc phụ huynh hoặc anh chị em có thể đi cùng hay không."
       ],
+      "heading": {
+        "title": "[Chiêu sinh] Lớp hợp xướng thiếu nhi",
+        "institution": "Trung tâm Hành chính phường Daewon-dong (대원동 행정복지센터)",
+        "target": "Trẻ em 8–12 tuổi"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []
@@ -176,7 +181,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "[招募] 儿童合唱教室",
+        "institution": "대원동行政福利中心（대원동 행정복지센터）",
+        "target": "8～12岁儿童"
+      }
     }
   },
   "source": {
@@ -185,7 +195,8 @@
     "files": [
       "page.txt"
     ],
-    "content_hash": "54e1a361bdba58ebaa627268f4a1cd88f2dcb75f3dc11ef2a215c376f162215d"
+    "content_hash": "54e1a361bdba58ebaa627268f4a1cd88f2dcb75f3dc11ef2a215c376f162215d",
+    "demo": true
   },
   "extracted_at": "2026-10-15T01:00:00.000Z",
   "model": "gemini-3.8-flash",

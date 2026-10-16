@@ -169,7 +169,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "Chương trình không gian giao lưu và kết nối gia đình đa mục đích - Chợ đồ cũ Namchon-dong lần thứ 3",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Mọi người dân thành phố Osan (tuyển gia đình tham gia làm người bán)"
+      }
     },
     "zh": {
       "lines": [
@@ -179,7 +184,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "多功能家庭沟通交流空间项目 - 第3届남촌동二手交换市集",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "任何乌山市民（招募作为卖家参与的家庭）"
+      }
     }
   },
   "source": {

@@ -3,6 +3,7 @@ import { generateJson } from '../src/llm/gemini'
 import { checkSummary, numberTokens } from '../src/summarize/check'
 import { skippedDates, summaryFacts } from '../src/summarize/facts'
 import { ageLabel, costLabel, dateLabel, gradeLabel, localizeFacts } from '../src/summarize/format'
+import { checkHeading, HEADING_SCHEMA } from '../src/summarize/heading'
 import { buildVerifyPrompt, SUMMARY_SCHEMA, summarySystemPrompt } from '../src/summarize/prompt'
 import { capitalizeSentences, summarizeRecord } from '../src/summarize/summarize'
 import type { DisplayLanguage, ProgramRecord, ProgramSession } from '../src/types'
@@ -100,6 +101,12 @@ const GOOD: Record<DisplayLanguage, string[]> = {
     '10月24日（周六）、10月31日（周六）、11月7日（周六）、11月14日（周六）10:00–12:00，地点：오산시가족센터 2층 교육실。',
     '免费。报名时间：10月12日（周一）09:00至10月22日（周四）18:00，可网上报名或拨打电话031-378-9000。兄弟姐妹能否同行，请向机构确认。',
   ],
+}
+
+/** 위 record()의 머리글 (checkHeading을 통과한다) */
+const HEADING = {
+  vi: { title: 'Lớp khoa học thứ Bảy cho con em gia đình đa văn hóa', institution: 'Trung tâm Gia đình thành phố Osan (오산시가족센터)', target: 'Con em gia đình đa văn hóa, học sinh lớp 1–4 tiểu học' },
+  zh: { title: '多元文化家庭子女周六科学班', institution: '乌山市家庭中心（오산시가족센터）', target: '多元文化家庭小学1～4年级子女' },
 }
 
 const factsOf = (overrides: Partial<ProgramRecord> = {}) => summaryFacts(record(overrides), NOW)
@@ -558,6 +565,8 @@ describe('summarizeRecord (모델 호출은 가짜)', () => {
   const draft = (lines: string[]) => ({ line1: lines[0], line2: lines[1], line3: lines[2] })
   type Options = Parameters<typeof generateJson>[0]
   const isDraft = (options: Options) => options.schema === SUMMARY_SCHEMA
+  const isHeading = (options: Options) => options.schema === HEADING_SCHEMA
+  const languageOf = (options: Options) => (['vi', 'zh'] as const).find((code) => options.system.includes(code === 'vi' ? '언어: 베트남어' : '언어: 중국어')) ?? 'ko-easy'
   const textOf = (options: Options) => options.parts.map((part) => part.text ?? '').join('\n')
 
   // 화살표 함수가 mock을 돌려주면 vitest가 정리 함수로 불러 버린다
@@ -565,11 +574,11 @@ describe('summarizeRecord (모델 호출은 가짜)', () => {
     mockedJson.mockReset()
   })
 
-  it('검사와 모델 대조를 모두 통과하면 machine_checked (언어마다 생성 1회 + 대조 1회)', async () => {
+  it('검사와 모델 대조를 모두 통과하면 machine_checked (언어마다 생성 1회 + 대조 1회, 베트남어·중국어는 머리글 생성 1회 + 대조 1회 더)', async () => {
     mockedJson.mockImplementation(async (options) => {
+      if (isHeading(options)) return HEADING[languageOf(options) as 'vi' | 'zh']
       if (!isDraft(options)) return { issues: [] }
-      const language = (['vi', 'zh'] as const).find((code) => options.system.includes(code === 'vi' ? '언어: 베트남어' : '언어: 중국어')) ?? 'ko-easy'
-      return draft(GOOD[language])
+      return draft(GOOD[languageOf(options)])
     })
     const summaries = await summarizeRecord(record(), { now: NOW })
     expect(Object.keys(summaries).sort()).toEqual(['ko-easy', 'vi', 'zh'])
@@ -579,7 +588,13 @@ describe('summarizeRecord (모델 호출은 가짜)', () => {
       expect(summary.generated_at).toBe(NOW.toISOString())
     }
     expect(summaries.vi?.lines).toEqual(GOOD.vi)
-    expect(mockedJson).toHaveBeenCalledTimes(6)
+    expect(summaries.vi?.heading).toEqual(HEADING.vi)
+    expect(summaries.zh?.heading).toEqual(HEADING.zh)
+    expect(summaries['ko-easy']).not.toHaveProperty('heading')
+    expect(mockedJson).toHaveBeenCalledTimes(10)
+    // 머리글은 첫 줄의 제목 번역에 맞추도록 첫 줄을 받는다
+    const headingCall = mockedJson.mock.calls.find(([options]) => isHeading(options) && languageOf(options) === 'vi')![0]
+    expect(textOf(headingCall)).toContain(GOOD.vi[0])
     // 원문 소개·근거는 모델에게 가지 않는다
     for (const [options] of mockedJson.mock.calls) {
       expect(textOf(options)).not.toContain('원문 소개')
@@ -589,7 +604,7 @@ describe('summarizeRecord (모델 호출은 가짜)', () => {
 
   it('결정적 검사에 걸리면 문제를 알려 주고 한 번 다시 쓰게 한다', async () => {
     const drafts = [draft(replaced('vi', 2, 'Miễn phí. ', '')), draft(GOOD.vi)]
-    mockedJson.mockImplementation(async (options) => (isDraft(options) ? drafts.shift() : { issues: [] }))
+    mockedJson.mockImplementation(async (options) => (isHeading(options) ? HEADING.vi : isDraft(options) ? drafts.shift() : { issues: [] }))
     const { vi: summary } = await summarizeRecord(record(), { languages: ['vi'], now: NOW })
     expect(summary?.status).toBe('machine_checked')
     expect(summary?.lines).toEqual(GOOD.vi)
@@ -599,13 +614,34 @@ describe('summarizeRecord (모델 호출은 가짜)', () => {
   })
 
   it('문제가 남으면 machine_draft와 문제 목록. approved는 쓰지 않는다', async () => {
-    mockedJson.mockImplementation(async (options) => (isDraft(options)
-      ? draft(GOOD.zh)
-      : { issues: [{ line: 2, kind: 'addition', quote: '地点', detail: '없는 장소' }] }))
+    mockedJson.mockImplementation(async (options) => (isHeading(options)
+      ? HEADING.zh
+      : isDraft(options)
+        ? draft(GOOD.zh)
+        : options.system.includes('번역 검수자') ? { issues: [] } : { issues: [{ line: 2, kind: 'addition', quote: '地点', detail: '없는 장소' }] }))
     const { zh: summary } = await summarizeRecord(record(), { languages: ['zh'], now: NOW })
     expect(summary?.status).toBe('machine_draft')
     expect(summary?.issues).toEqual(['모델 대조 2줄 사실에 없는 내용: "地点" 없는 장소'])
-    expect(mockedJson).toHaveBeenCalledTimes(4)
+    expect(mockedJson).toHaveBeenCalledTimes(6)
+  })
+
+  it('머리글에 문제가 남으면 그 언어 요약 전체가 machine_draft', async () => {
+    const wrong = { ...HEADING.vi, target: 'Học sinh lớp 1–6 tiểu học' }
+    mockedJson.mockImplementation(async (options) => (isHeading(options) ? wrong : isDraft(options) ? draft(GOOD.vi) : { issues: [] }))
+    const { vi: summary } = await summarizeRecord(record(), { languages: ['vi'], now: NOW })
+    expect(summary?.status).toBe('machine_draft')
+    expect(summary?.heading).toEqual(wrong)
+    hasIssue(summary?.issues ?? [], '머리글 대상: 숫자가 원문 대상과 다름')
+    // 머리글은 문제를 알려 주고 한 번 다시 쓰게 한다
+    const retry = mockedJson.mock.calls.filter(([options]) => isHeading(options))[1][0]
+    expect(textOf(retry)).toContain('<이전 번역의 문제>')
+  })
+
+  it('머리글 값 전체를 감싼 따옴표만 걷어내고 부제를 닫는 따옴표는 남긴다', async () => {
+    const quoted = { ...HEADING.vi, title: 'Lớp khoa học thứ Bảy: “Em là nhà khoa học?”', institution: `"${HEADING.vi.institution}"` }
+    mockedJson.mockImplementation(async (options) => (isHeading(options) ? quoted : isDraft(options) ? draft(GOOD.vi) : { issues: [] }))
+    const { vi: summary } = await summarizeRecord(record(), { languages: ['vi'], now: NOW })
+    expect(summary?.heading).toEqual({ ...HEADING.vi, title: 'Lớp khoa học thứ Bảy: “Em là nhà khoa học?”' })
   })
 
   it('모델 대조가 실패하면 통과로 보지 않는다', async () => {
@@ -617,5 +653,50 @@ describe('summarizeRecord (모델 호출은 가짜)', () => {
     expect(summary?.status).toBe('machine_draft')
     hasIssue(summary?.issues ?? [], '모델 대조 실패')
     expect(mockedJson).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('머리글 검사 (보호자 웹의 제목·기관·대상)', () => {
+  const facts = () => factsOf()
+  const issuesOf = (language: 'vi' | 'zh', overrides: Partial<typeof HEADING.vi>) => checkHeading({ ...HEADING[language], ...overrides }, facts(), language)
+
+  it('원문과 맞는 머리글은 통과한다', () => {
+    expect(checkHeading(HEADING.vi, facts(), 'vi')).toEqual([])
+    expect(checkHeading(HEADING.zh, facts(), 'zh')).toEqual([])
+  })
+
+  it('비었거나, 숫자·학교급·다문화가족 조건이 원문과 다르면 문제', () => {
+    hasIssue(issuesOf('vi', { title: '' }), '머리글 제목: 비어 있음')
+    hasIssue(issuesOf('vi', { target: 'Con em gia đình đa văn hóa, lớp 1–6 tiểu học' }), '머리글 대상: 숫자가 원문 대상과 다름')
+    hasIssue(issuesOf('vi', { target: 'Con em gia đình đa văn hóa lớp 1–4' }), '원문의 학교급(초등)이 빠짐')
+    hasIssue(issuesOf('zh', { target: '小学1～4年级子女' }), '원문의 다문화가족 조건이 빠짐')
+    hasIssue(issuesOf('zh', { target: '多元文化家庭初中1～4年级子女' }), '원문에 없는 학교급(중학교)을 씀')
+    hasIssue(issuesOf('vi', { target: 'Bất kỳ ai, con em gia đình đa văn hóa lớp 1–4 tiểu học' }), '원문에 없는 누구나')
+  })
+
+  it('중도입국만 대상인 공고는 중국어 대상에 多元文化家庭을 붙이지 않아도 된다', () => {
+    const midEntry = factsOf({ target_raw: '중도입국 중학생 (중학교 1~3학년)', grade_range: [7, 9], eligibility_requirements: ['중도입국'] })
+    expect(checkHeading({ ...HEADING.zh, target: '中途入国初中生（初中1～3年级）' }, midEntry, 'zh')).toEqual([])
+  })
+
+  it('기관은 한국어 원문 이름을 괄호 안에 그대로 붙이고, 제목·대상에는 한국어를 쓰지 않는다 (중국어의 동 이름만 예외)', () => {
+    hasIssue(issuesOf('vi', { institution: 'Trung tâm Gia đình thành phố Osan' }), '한국어 원문 이름(오산시가족센터)을 괄호 안에 그대로 붙이지 않음')
+    hasIssue(issuesOf('vi', { title: 'Lớp khoa học 토요 cho con em' }), '머리글 제목: 한국어를 번역하지 않고 씀: 토요')
+    hasIssue(issuesOf('zh', { title: '多元文化家庭子女周六科学班 서울' }), '원문에 없는 한국어: 서울')
+    const dongFacts = factsOf({ title: '대원동 토요 과학교실' })
+    expect(checkHeading({ ...HEADING.zh, title: '대원동周六科学班' }, dongFacts, 'zh')).toEqual([])
+    hasIssue(checkHeading({ ...HEADING.zh, title: '大院洞周六科学班' }, dongFacts, 'zh'), '동 이름을 한자로 옮김')
+    hasIssue(checkHeading({ ...HEADING.vi, title: 'Lớp khoa học thứ Bảy 대원동' }, dongFacts, 'vi'), '한국어를 번역하지 않고 씀: 대원동')
+  })
+
+  it('중국어 번체자와 글자로 쓴 숫자는 문제', () => {
+    hasIssue(issuesOf('zh', { title: '多元文化家庭子女週六科學班' }), '번체자를 씀')
+    hasIssue(issuesOf('zh', { target: '多元文化家庭小学一至四年级子女' }), '숫자를 글자로 씀')
+  })
+
+  it('대상 원문이 비어 있으면 학년·나이로 숫자를 대조한다', () => {
+    const blank = factsOf({ target_raw: '', target_type: 'all', eligibility_requirements: [] })
+    expect(checkHeading({ ...HEADING.vi, target: 'Học sinh lớp 1–4 tiểu học' }, blank, 'vi')).toEqual([])
+    hasIssue(checkHeading({ ...HEADING.vi, target: 'Học sinh lớp 1–5 tiểu học' }, blank, 'vi'), '숫자가 원문 대상과 다름')
   })
 })

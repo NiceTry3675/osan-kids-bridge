@@ -201,7 +201,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "Trải nghiệm làm đồ thủ công thứ Bảy",
+        "institution": "Thư viện Jungang-dong · Trung tâm Daewon-dong (중앙동 도서관 · 대원동 센터)",
+        "target": "Mọi học sinh lớp 1–3 tiểu học"
+      }
     },
     "zh": {
       "lines": [
@@ -211,7 +216,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "周六手工制作体验",
+        "institution": "중앙동图书馆·대원동中心（중앙동 도서관 · 대원동 센터）",
+        "target": "小学1～3年级均可"
+      }
     }
   },
   "source": {
@@ -220,7 +230,8 @@
     "files": [
       "poster.png"
     ],
-    "content_hash": "b71e897430003739f5cf8f2b2c41493a57774263fd47c827a84617557ea4845f"
+    "content_hash": "b71e897430003739f5cf8f2b2c41493a57774263fd47c827a84617557ea4845f",
+    "demo": true
   },
   "extracted_at": "2026-10-15T01:00:00.000Z",
   "model": "gemini-3.8-flash",

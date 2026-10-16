@@ -1,7 +1,6 @@
 import type { ApplicationStatus, ProgramRecord, ProgramResponse, SearchFilters, SearchResponse } from '../types'
 import { applicationStatus } from './application'
 import { evaluateProgram } from './evaluate'
-import type { EvaluateOptions } from './evaluate'
 import { clockOf, hasOperationEnded, hasStarted } from './sessions'
 import type { Clock } from './sessions'
 
@@ -59,7 +58,7 @@ function compareKeys(a: SortKey, b: SortKey): number {
  * 학년·나이, 시간, 무료 조건과 확인된 불일치는 제외. 시간을 입력했고 시간 미상이면 needs_confirmation.
  * 관심 분야·사는 동은 순서만 바꾼다.
  */
-export function searchPrograms(records: ProgramRecord[], filters: SearchFilters, now: Date, options: EvaluateOptions = {}): SearchResponse {
+export function searchPrograms(records: ProgramRecord[], filters: SearchFilters, now: Date): SearchResponse {
   const clock = clockOf(now)
   const timeApplied = filters.available_windows.length > 0
   const results: { program: ProgramResponse; key: SortKey }[] = []
@@ -68,7 +67,7 @@ export function searchPrograms(records: ProgramRecord[], filters: SearchFilters,
   for (const record of records) {
     if (!isListable(record, now)) continue
     if (filters.free_only && record.cost_krw !== 0) continue
-    const program = evaluateProgram(record, filters, now, options)
+    const program = evaluateProgram(record, filters, now)
     const statuses = [program.age_grade_match_status, program.time_match_status, program.eligibility_status]
     if (statuses.includes('not_matched')) continue
     const entry = { program, key: sortKey(record, program, filters, clock) }

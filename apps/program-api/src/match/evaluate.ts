@@ -90,17 +90,12 @@ export const supportInterpretation = (record: ProgramRecord) =>
 
 const companion = (rule: CompanionRule): GuardianCompanionRule => (rule === 'unknown' ? null : rule)
 
-export interface EvaluateOptions {
-  /** 시연 데이터로 띄운 서버 (is_demo) */
-  demo?: boolean
-}
-
 /**
  * 저장된 공고 한 건을 요청 시점의 판정과 함께 응답 형식으로 바꾼다.
  * filters가 null이면 공유 링크 단독 진입: 입력이 필요한 판정은 not_applied, 일치 근거는 없다.
  * 운영이 끝난 공고는 신청 기간이 남아 있어도 closed다 (공유 링크 상세에 신청 행동을 내지 않게, 명세 5.1·5.2).
  */
-export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | null, now: Date, options: EvaluateOptions = {}): ProgramResponse {
+export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | null, now: Date): ProgramResponse {
   const clock = clockOf(now)
   const ageGrade = judgeAgeGrade(record, filters)
   const eligibility = eligibilityStatus(record)
@@ -144,7 +139,7 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
     source_url: record.source.url,
     verified_at: verifiedAt,
     review_state: 'current',
-    is_demo: options.demo ?? false,
+    is_demo: record.source.demo === true,
     application_start_at: record.application_start,
     application_end_at: record.application_end,
     target_type: record.target_type,

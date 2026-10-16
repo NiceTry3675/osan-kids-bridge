@@ -9,8 +9,10 @@
     "demo": "tsx src/cli/demo.ts serve",
     "demo:approve": "tsx src/cli/demo.ts approve",
     "demo:ingest": "tsx src/cli/demo.ts ingest",
+    "demo:headings": "tsx src/cli/demo.ts headings",
     "ingest": "tsx src/cli/ingest.ts",
     "review": "tsx src/cli/review.ts",
+    "headings": "tsx src/cli/headings.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

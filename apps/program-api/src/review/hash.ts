@@ -9,13 +9,13 @@ export type EffectiveReviewStatus = ReviewStatus | 'stale'
 // 해시는 환경과 무관해야 하므로 로캘 비교 대신 코드 단위로 정렬한다
 const compareText = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
-/** 해시에 넣는 사실: 검수 기록·언어별 요약·추출 시각·모델·경고·근거 확인 표시를 뺀 전부 */
+/** 해시에 넣는 사실: 검수 기록·언어별 요약·추출 시각·모델·경고·근거 확인 표시·시연 표시를 뺀 전부 */
 export function factFields(record: ProgramRecord): Record<string, unknown> {
-  const { review, summaries_by_language, extracted_at, model, warnings, evidence, ...facts } = record
+  const { review, summaries_by_language, extracted_at, model, warnings, evidence, source: { demo, ...source }, ...facts } = record
   const quotes = evidence
     .map(({ field, quote }) => ({ field, quote }))
     .sort((a, b) => compareText(a.field, b.field) || compareText(a.quote, b.quote))
-  return { ...facts, evidence: quotes }
+  return { ...facts, source, evidence: quotes }
 }
 
 /** 키 순서와 undefined 필드에 흔들리지 않는 JSON */
@@ -34,14 +34,17 @@ export function factsHash(record: ProgramRecord): string {
   return sha256(canonicalJson(factFields(record)))
 }
 
-/** 언어별 요약 승인의 해시: 지금 사실 + 언어 + 문구. 사실을 고치거나 문구를 손대면 달라진다 */
-export function summaryApprovalHash(record: ProgramRecord, language: DisplayLanguage, lines: string[]): string {
-  return sha256(canonicalJson({ facts: factsHash(record), language, lines }))
+/**
+ * 언어별 요약 승인의 해시: 지금 사실 + 언어 + 문구(3줄과 머리글). 사실을 고치거나 문구를 손대면 달라진다.
+ * 머리글이 없는 요약은 머리글이 생기기 전과 같은 해시다
+ */
+export function summaryApprovalHash(record: ProgramRecord, language: DisplayLanguage, summary: Pick<LanguageSummary, 'lines' | 'heading'>): string {
+  return sha256(canonicalJson({ facts: factsHash(record), language, lines: summary.lines, heading: summary.heading }))
 }
 
 /** 사람이 승인했고, 승인 뒤 공고 사실과 요약 문구가 바뀌지 않은 요약 */
 export function isApprovedSummary(record: ProgramRecord, language: DisplayLanguage, summary: LanguageSummary | undefined): boolean {
-  return summary?.status === 'approved' && summary.approved_hash === summaryApprovalHash(record, language, summary.lines)
+  return summary?.status === 'approved' && summary.approved_hash === summaryApprovalHash(record, language, summary)
 }
 
 /**

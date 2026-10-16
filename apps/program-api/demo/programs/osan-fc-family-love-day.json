@@ -139,7 +139,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "Ngày yêu thương gia đình",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Mọi gia đình cư trú tại thành phố Osan"
+      }
     },
     "zh": {
       "lines": [
@@ -149,7 +154,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "家庭关爱之日",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "居住在乌山市的所有家庭"
+      }
     }
   },
   "source": {

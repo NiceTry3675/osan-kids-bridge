@@ -1,9 +1,10 @@
 import { DISPLAY_LANGUAGES } from '../types'
-import type { DisplayLanguage, LanguageSummary, ProgramRecord, SummariesByLanguage } from '../types'
+import type { DisplayLanguage, LanguageSummary, ProgramRecord, SummariesByLanguage, SummaryHeading } from '../types'
 import { generateJson } from '../llm/gemini'
 import { checkSummary, verifyWithModel } from './check'
 import { summaryFacts } from './facts'
 import type { SummaryFacts } from './facts'
+import { generateHeading, needsHeading } from './heading'
 import { buildSummaryPrompt, SUMMARY_SCHEMA, summarySystemPrompt } from './prompt'
 import type { PreviousAttempt } from './prompt'
 
@@ -62,12 +63,19 @@ async function summarizeLanguage(facts: SummaryFacts, language: DisplayLanguage,
     if (!issues.length) break
     previous = { lines, issues }
   }
+  // 베트남어·중국어는 보호자 웹 머리에 쓸 제목·기관·대상도 만든다 (첫 줄의 제목 번역에 맞춘다)
+  let heading: SummaryHeading | undefined
+  if (needsHeading(language)) {
+    const result = await generateHeading(facts, language, lines[0] ?? null)
+    heading = result.heading
+    issues = [...issues, ...result.issues]
+  }
   // approved는 사람 검수자만 기록한다
-  return { lines, status: issues.length ? 'machine_draft' : 'machine_checked', generated_at: now.toISOString(), issues }
+  return { lines, ...(heading ? { heading } : {}), status: issues.length ? 'machine_draft' : 'machine_checked', generated_at: now.toISOString(), issues }
 }
 
 /**
- * 구조화된 사실에서 언어별 3줄 안내를 만든다 (원문은 쓰지 않는다).
+ * 구조화된 사실에서 언어별 3줄 안내(베트남어·중국어는 머리글까지)를 만든다 (원문은 쓰지 않는다).
  * 검사를 모두 통과하면 machine_checked, 아니면 machine_draft와 문제 목록. 생성 호출이 실패하면 예외를 던진다.
  */
 export async function summarizeRecord(

@@ -101,20 +101,30 @@
     },
     "vi": {
       "lines": [
-        "세마동 행정복지센터 (Trung tâm Hành chính phường Sema-dong) tổ chức chương trình “초등 고학년 진로 탐색 '나는 커서 무엇이 될까'” (Khám phá định hướng nghề nghiệp cho học sinh tiểu học lớp lớn 'Lớn lên em sẽ làm gì'). Đối tượng là học sinh tiểu học lớp 3–6.",
-        "Chương trình dự kiến diễn ra trong tháng 11 tại 세마동 행정복지센터 (Trung tâm Hành chính phường Sema-dong). Hãy hỏi đơn vị tổ chức về ngày và giờ cụ thể.",
-        "Miễn phí. Thông tin đăng ký và cách đăng ký sẽ được thông báo riêng sau khi lịch trình được xác định."
+        "세마동 행정복지센터 (Trung tâm Hành chính phường Sema-dong) mở chương trình “초등 고학년 진로 탐색 '나는 커서 무엇이 될까'” (Khám phá định hướng nghề nghiệp cho học sinh tiểu học lớn: 'Lớn lên em sẽ làm gì'). Đối tượng là học sinh tiểu học lớp 3–6.",
+        "Chương trình dự kiến mở trong tháng 11 tại 세마동 행정복지센터 (Trung tâm Hành chính phường Sema-dong). Hãy hỏi đơn vị tổ chức về ngày giờ cụ thể.",
+        "Miễn phí. Việc đăng ký sẽ được thông báo riêng sau khi chốt lịch trình. Hãy hỏi đơn vị tổ chức về phương thức đăng ký."
       ],
+      "heading": {
+        "title": "Khám phá định hướng nghề nghiệp cho học sinh tiểu học lớn: 'Lớn lên em sẽ làm gì'",
+        "institution": "Trung tâm Hành chính phường Sema-dong (세마동 행정복지센터)",
+        "target": "Lớp 3–6 tiểu học"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []
     },
     "zh": {
       "lines": [
-        "“초등 고학년 진로 탐색 '나는 커서 무엇이 될까'”（小学高年级职业探索“我长大后会成为什么”）由세마동 행정복지센터（세마동行政福利中心）举办，对象为小学3至6年级。",
-        "预计11月内运营，准确日期和时间请向机构确认。地点在세마동 행정복지센터（세마동行政福利中心）。",
+        "세마동 행정복지센터（세마동行政福利中心）举办“초등 고학년 진로 탐색 '나는 커서 무엇이 될까'”（小学高年级生涯探索：“我长大后会成为什么呢”），对象为小学3至6年级学生。",
+        "预计11月期间运营，具体日期与时间请向机构确认，地点为세마동 행정복지센터（세마동行政福利中心）。",
         "免费。报名将在日程确定后另行通知，报名方式请向机构确认。"
       ],
+      "heading": {
+        "title": "小学高年级生涯探索：“我长大后会成为什么呢”",
+        "institution": "세마동行政福利中心（세마동 행정복지센터）",
+        "target": "小学3～6年级"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []
@@ -126,7 +136,8 @@
     "files": [
       "page.txt"
     ],
-    "content_hash": "4deb898079c679da7c28c00c1ac9ab021fb86da61439343ac994e90597b75809"
+    "content_hash": "4deb898079c679da7c28c00c1ac9ab021fb86da61439343ac994e90597b75809",
+    "demo": true
   },
   "extracted_at": "2026-10-15T01:00:00.000Z",
   "model": "gemini-3.8-flash",

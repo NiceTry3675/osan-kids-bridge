@@ -118,7 +118,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "Hỗ trợ định cư ban đầu cho gia đình đa văn hóa",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Người nhập cư kết hôn mới nhập cảnh"
+      }
     },
     "zh": {
       "lines": [
@@ -128,7 +133,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "多元文化家庭初期定居支援",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "入境初期婚姻移民者"
+      }
     }
   },
   "source": {

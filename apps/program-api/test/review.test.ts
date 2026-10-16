@@ -31,8 +31,15 @@ const LINES: Record<DisplayLanguage, string[]> = {
   ],
 }
 
+/** 베트남어·중국어 머리글 (자동 대조 checkHeading을 통과한다) */
+const HEADINGS: Partial<Record<DisplayLanguage, LanguageSummary['heading']>> = {
+  vi: { title: 'Trải nghiệm cuối tuần', institution: 'Trung tâm Gia đình thành phố Osan (오산시가족센터)', target: 'Học sinh lớp 1–3 tiểu học' },
+  zh: { title: '周末体验', institution: '乌山市家庭中心（오산시가족센터）', target: '小学1～3年级学生' },
+}
+
 function summary(status: LanguageSummary['status'], language: DisplayLanguage = 'ko-easy'): LanguageSummary {
-  return { lines: LINES[language], status, generated_at: '2026-10-15T00:00:00.000Z', issues: status === 'machine_draft' ? ['문제'] : [] }
+  const heading = HEADINGS[language]
+  return { lines: LINES[language], ...(heading ? { heading } : {}), status, generated_at: '2026-10-15T00:00:00.000Z', issues: status === 'machine_draft' ? ['문제'] : [] }
 }
 
 function record(overrides: Partial<ProgramRecord> = {}): ProgramRecord {
@@ -211,9 +218,23 @@ describe('요약 승인과 사실·문구의 연결 (SEC-1)', () => {
     const edited = { ...published, summaries_by_language: { ...published.summaries_by_language, vi: { ...vi, lines: ['EDITED AFTER APPROVAL: miễn phí cho mọi người', ...vi.lines.slice(1)] } } }
     expect(isApprovedSummary(edited, 'vi', edited.summaries_by_language.vi)).toBe(false)
     expect(Object.keys(publicSummaries(edited))).toEqual(['ko-easy'])
+    // 머리글(제목·기관·대상)을 고쳐도 마찬가지
+    const retitled = { ...published, summaries_by_language: { ...published.summaries_by_language, vi: { ...vi, heading: { ...vi.heading!, target: 'Mọi người' } } } }
+    expect(isApprovedSummary(retitled, 'vi', retitled.summaries_by_language.vi)).toBe(false)
     // 승인 기록 없이 status만 approved로 바꾼 요약도 내보내지 않는다
     const forged = { ...record(), summaries_by_language: { 'ko-easy': summary('approved') } }
     expect(publicSummaries(forged)).toEqual({})
+  })
+
+  it('베트남어·중국어는 머리글이 없거나 원문과 맞지 않으면 승인하지 않는다', () => {
+    const { heading: _heading, ...bare } = summary('machine_checked', 'vi')
+    const noHeading = approveRecord({ ...record(), summaries_by_language: { vi: bare } }, { reviewer: '검수자', now: NOW, summaries: ['vi'], languageReviewer: '베트남어 검수자' })
+    expect(noHeading.summaries_by_language.vi?.status).toBe('machine_draft')
+    expect(noHeading.summaries_by_language.vi?.issues.join(' ')).toContain('머리글: 제목·기관·대상 번역이 없음')
+    const wrong = { ...summary('machine_checked', 'vi'), heading: { ...HEADINGS.vi!, target: 'Học sinh lớp 1–6 tiểu học' } }
+    const mismatched = approveRecord({ ...record(), summaries_by_language: { vi: wrong } }, { reviewer: '검수자', now: NOW, summaries: ['vi'], languageReviewer: '베트남어 검수자' })
+    expect(mismatched.summaries_by_language.vi?.status).toBe('machine_draft')
+    expect(mismatched.summaries_by_language.vi?.issues.join(' ')).toContain('머리글 대상: 숫자가 원문 대상과 다름')
   })
 
   it('사실을 고친 뒤 요약 없이 다시 승인하면 이전 요약 승인을 거둔다', () => {

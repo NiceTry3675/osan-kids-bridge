@@ -182,7 +182,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "Dự án hỗ trợ hộ gia đình 1 người (Giỏ mẹo vặt đời sống) - Mẹo dùng thực phẩm bổ sung",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Hộ gia đình 1 người sinh sống tại thành phố Osan"
+      }
     },
     "zh": {
       "lines": [
@@ -192,7 +197,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "1人家庭支援项目(生活窍门篮子)-营养剂小窍门",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "居住在乌山市的1人家庭"
+      }
     }
   },
   "source": {

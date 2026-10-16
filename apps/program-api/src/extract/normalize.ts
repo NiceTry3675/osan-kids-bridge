@@ -18,7 +18,7 @@ import type { RawExtraction } from './schema'
 
 export interface NormalizeContext {
   programId: string
-  source: { url: string | null; retrieved_at: string | null; institution_hint?: string | null }
+  source: { url: string | null; retrieved_at: string | null; institution_hint?: string | null; demo?: boolean }
   /** inbox 안의 원문 파일 이름 (텍스트·이미지) */
   files: string[]
   /** 원문 텍스트 + 포스터 판독문 (모델에게 보여준 그대로) */
@@ -721,6 +721,7 @@ export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): 
       retrieved_at: context.source.retrieved_at,
       files: context.files,
       content_hash: contentHash(sourceText),
+      ...(context.source.demo ? { demo: true as const } : {}),
     },
     extracted_at: context.now.toISOString(),
     model: context.model,

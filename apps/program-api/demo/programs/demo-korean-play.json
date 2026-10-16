@@ -176,10 +176,15 @@
     },
     "vi": {
       "lines": [
-        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) mở lớp “주말 한국어 놀이교실” (Lớp chơi tiếng Hàn cuối tuần). Đối tượng là học sinh tiểu học lớp 1–4 thuộc gia đình đa văn hóa.",
-        "Buổi học diễn ra vào 14/11 (Thứ Bảy) 10:30–12:00 tại 오산시가족센터 3층 교육실 (phòng học tầng 3 Trung tâm Gia đình thành phố Osan).",
-        "Miễn phí. Đăng ký từ 15/10 (Thứ Năm) 09:00 đến 10/11 (Thứ Ba) 18:00 qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – trang web Trung tâm Gia đình thành phố Osan). Có thông dịch tiếng Việt và tiếng Trung. Phụ huynh có thể đợi ở khu nghỉ ngơi gia đình tầng 2 trong giờ học."
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) mở chương trình “주말 한국어 놀이교실” (Lớp chơi tiếng Hàn cuối tuần). Đối tượng là học sinh tiểu học lớp 1–4 thuộc gia đình đa văn hóa.",
+        "Chương trình diễn ra vào 14/11 (Thứ Bảy) 10:30–12:00 tại 오산시가족센터 3층 교육실 (phòng học tầng 3 Trung tâm Gia đình thành phố Osan).",
+        "Miễn phí. Đăng ký từ 15/10 (Thứ Năm) 09:00 đến 10/11 (Thứ Ba) 18:00 qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – đăng ký trên trang web Trung tâm Gia đình thành phố Osan). Có thông dịch tiếng Việt và tiếng Trung, phụ huynh có thể đợi tại khu nghỉ ngơi gia đình tầng 2 trong giờ học."
       ],
+      "heading": {
+        "title": "Lớp chơi tiếng Hàn cuối tuần",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Con em lớp 1–4 tiểu học thuộc gia đình đa văn hóa"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []
@@ -192,7 +197,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "周末韩语游乐课堂",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "多元文化家庭小学1～4年级子女"
+      }
     }
   },
   "source": {
@@ -201,7 +211,8 @@
     "files": [
       "poster.png"
     ],
-    "content_hash": "47a46ccaaaf0154a553527681ff72659bec1b7bba3126936ca2629a8c692f1cd"
+    "content_hash": "47a46ccaaaf0154a553527681ff72659bec1b7bba3126936ca2629a8c692f1cd",
+    "demo": true
   },
   "extracted_at": "2026-10-15T01:00:00.000Z",
   "model": "gemini-3.8-flash",

@@ -195,6 +195,7 @@ function show(id: string | null): void {
         ? ` · 최종 검수자 ${summary.reviewer ?? '미기재'} · 승인 ${summary.approved_at ?? '?'}`
         : ' · 승인 뒤 사실이나 문구가 바뀌어 내보내지 않음 (다시 승인 필요)'
     console.log(`${language}: ${summary.status} · ${summary.generated_at}${approval}`)
+    if (summary.heading) console.log(`  제목 ${summary.heading.title}\n  기관 ${summary.heading.institution}\n  대상 ${summary.heading.target}`)
     summary.lines.forEach((line, index) => console.log(`  ${index + 1}. ${line}`))
     for (const issue of summary.issues) console.log(`  ! ${issue}`)
   }

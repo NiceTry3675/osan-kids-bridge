@@ -117,10 +117,15 @@
     },
     "vi": {
       "lines": [
-        "Chương trình “다문화가족초기정착지원 된장체험” (Trải nghiệm làm tương Doenjang hỗ trợ định cư ban đầu cho gia đình đa văn hóa) do 오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức. Đối tượng là người lớn, người nhập cư kết hôn nhập cảnh từ 5 năm trở xuống.",
-        "Chương trình diễn ra trong giai đoạn từ 8/6 (Thứ Hai) đến 1/12 (Thứ Ba) với tổng cộng 3 buổi tại 경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터 (tầng 2 Trung tâm Gia đình thành phố Osan, 80 Cheonghak-ro, Gwol-dong, thành phố Osan, tỉnh Gyeonggi). Hãy hỏi đơn vị tổ chức về thứ trong tuần và thời gian cụ thể.",
-        "Miễn phí. Thời gian đăng ký từ 8/5 (Thứ Sáu) 09:00 đến 16/10 (Thứ Sáu) 18:00. Hãy hỏi đơn vị tổ chức về cách thức đăng ký."
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) mở chương trình “다문화가족초기정착지원 된장체험” (Trải nghiệm làm tương doenjang hỗ trợ định cư ban đầu cho gia đình đa văn hóa). Đối tượng là người lớn, người nhập cư kết hôn nhập cảnh từ 5 năm trở xuống.",
+        "Chương trình diễn ra từ 8/6 (Thứ Hai) đến 1/12 (Thứ Ba) với tổng cộng 3 buổi, hãy hỏi đơn vị tổ chức về thứ và thời gian cụ thể. Địa điểm tại 경기도 오산시 청학로 80 (궐동) 2층 오산시가족센터 (tầng 2 Trung tâm Gia đình thành phố Osan, Gwol-dong).",
+        "Miễn phí. Đăng ký từ 8/5 (Thứ Sáu) 09:00 đến 16/10 (Thứ Sáu) 18:00. Hãy hỏi đơn vị tổ chức về cách đăng ký và việc có thể vào học giữa chừng hay không."
       ],
+      "heading": {
+        "title": "Trải nghiệm làm tương doenjang hỗ trợ định cư ban đầu cho gia đình đa văn hóa",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Người nhập cư kết hôn nhập cảnh từ 5 năm trở xuống"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []
@@ -133,7 +138,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "多元文化家庭初期定居支援大酱体验",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "入境5年以下的婚姻移民者"
+      }
     }
   },
   "source": {

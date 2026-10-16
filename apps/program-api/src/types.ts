@@ -121,6 +121,8 @@ export interface SourceInfo {
   files: string[]
   /** 원문 텍스트 + 포스터 판독문의 SHA-256. 원문이 바뀌었는지 판단 */
   content_hash: string
+  /** 시연용으로 만든 가상 공고 (inbox source.json의 demo: true). 보호자 웹이 실제 기관 링크로 보내지 않는다 */
+  demo?: true
 }
 
 /**

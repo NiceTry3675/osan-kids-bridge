@@ -5,7 +5,7 @@ import { DEMO_NOW } from '../src/config'
 import { guardianMethods, guardianSummaries, guardianUncertainItems, uncertainTopic } from '../src/match/contract'
 import { evaluateProgram } from '../src/match/evaluate'
 import { searchPrograms } from '../src/match/search'
-import { isPublished, publicSummaries } from '../src/review/hash'
+import { factsHash, isPublished, publicSummaries } from '../src/review/hash'
 import { loadRecords } from '../src/store'
 import type { LanguageSummary, ProgramRecord, ProgramResponse, SearchResponse } from '../src/types'
 
@@ -156,12 +156,17 @@ describe('신청·문의 방법', () => {
     const program = evaluateProgram(record({
       review: { ...record().review, status: 'pending', reviewed_at: null },
       application_methods: [{ type: 'phone', label: '문의', phone: '031-222-2222' }],
-    }), null, NOW, { demo: true })
+    }), null, NOW)
     expect([program.guardian_companion, program.sibling_companion]).toEqual(['required', null])
     expect(program.inquiry_methods[0].verified_at).toBe('2026-10-14')
     expect(program.review_state).toBe('current')
-    expect(program.is_demo).toBe(true)
+  })
+
+  it('시연용 가상 공고만 is_demo. 이 표시는 검수할 사실이 아니라 승인을 풀지 않는다', () => {
+    const invented = record({ source: { ...record().source, demo: true } })
+    expect(evaluateProgram(invented, null, NOW).is_demo).toBe(true)
     expect(evaluateProgram(record(), null, NOW).is_demo).toBe(false)
+    expect(factsHash(invented)).toBe(factsHash(record()))
   })
 })
 
@@ -196,8 +201,8 @@ describe('시연 데이터 (npm run demo)', () => {
   it('모든 시연 공고가 보호자 웹이 읽는 값으로 나온다', () => {
     expect(published.length).toBeGreaterThan(0)
     for (const source of published) {
-      const program = evaluateProgram(source, null, now, { demo: true })
-      expect(program.is_demo).toBe(true)
+      const program = evaluateProgram(source, null, now)
+      expect(program.is_demo).toBe(source.source.demo === true)
       for (const item of program.uncertain_items) expect(topics.has(item.topic)).toBe(true)
       for (const rule of [program.guardian_companion, program.sibling_companion]) expect([null, 'required', 'allowed', 'not_allowed']).toContain(rule)
       for (const method of program.inquiry_methods) expect(method.verified_at).toMatch(/^\d{4}-\d{2}-\d{2}$/)
@@ -210,10 +215,17 @@ describe('시연 데이터 (npm run demo)', () => {
     }
   })
 
+  it('만든 공고(demo-)만 시연용 표시가 있고, 실제 기관 공고는 원문으로 연결한다', () => {
+    const marked = published.filter((source) => source.source.demo).map((source) => source.program_id)
+    expect(marked.length).toBeGreaterThan(0)
+    expect(marked).toEqual(published.map((source) => source.program_id).filter((id) => id.startsWith('demo-')))
+    for (const source of published.filter((record) => !record.source.demo)) expect(source.source.url).toMatch(/^https:\/\//)
+  })
+
   it('초등 2학년·토요일 오전 시나리오: 결과 2건, 시간 확인 필요 1건', () => {
     const response = searchPrograms(published, {
       child_grade: 2, available_windows: [{ day_of_week: 'sat', start_time: '10:05', end_time: '12:10' }], interests: [], free_only: false,
-    }, now, { demo: true })
+    }, now)
     expect(response.results.map((program) => program.program_id)).toEqual(['demo-saturday-craft', 'demo-korean-play'])
     expect(response.needs_confirmation.map((program) => program.program_id)).toEqual(['demo-weekend-art'])
   })

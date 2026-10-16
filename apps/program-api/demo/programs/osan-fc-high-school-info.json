@@ -173,10 +173,15 @@
     },
     "vi": {
       "lines": [
-        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) mở chương trình “고등학교 진학설명회” (Buổi hướng dẫn vào trường trung học phổ thông). Đối tượng là gia đình đa văn hóa gồm học sinh trung học cơ sở năm 1–3 và phụ huynh cùng tham gia, phụ huynh phải đi cùng.",
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức chương trình “고등학교 진학설명회” (Buổi hướng dẫn vào trường trung học phổ thông). Đối tượng là phụ huynh và con em học sinh trung học cơ sở năm 1–3 thuộc gia đình đa văn hóa, phụ huynh và con cùng tham gia. Phụ huynh phải cùng đến.",
         "Chương trình diễn ra vào 7/11 (Thứ Bảy) 10:00–12:00 tại 2층 오산시가족센터 (tầng 2 Trung tâm Gia đình thành phố Osan).",
-        "Miễn phí. Đăng ký từ 12/10 (Thứ Hai) 09:00 đến 5/11 (Thứ Năm) 18:00 qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – trang web Trung tâm Gia đình thành phố Osan). Có thông dịch tiếng Việt, tiếng Trung và hãy hỏi đơn vị tổ chức về việc anh chị em có thể đi cùng hay không."
+        "Chi phí miễn phí. Đăng ký từ 12/10 (Thứ Hai) 09:00 đến 5/11 (Thứ Năm) 18:00 bằng hình thức đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – trang web Trung tâm Gia đình thành phố Osan). Có thông dịch tiếng Việt và tiếng Trung. Hãy hỏi đơn vị tổ chức về việc anh chị em có thể đi cùng hay không."
       ],
+      "heading": {
+        "title": "Buổi hướng dẫn vào trường trung học phổ thông",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Học sinh trung học cơ sở thuộc gia đình đa văn hóa và phụ huynh"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []
@@ -189,7 +194,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "高中升学说明会",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "多元文化家庭初中生子女及家长"
+      }
     }
   },
   "source": {

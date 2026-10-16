@@ -146,7 +146,7 @@ const RULES: Record<DisplayLanguage, LanguageRules> = {
     free: /免费/,
     unknown: /待确认|需确认|需要确认|请向|请咨询|需咨询|未注明|未公布|不详|未确定|尚未|不明/,
     later: /另行通知|稍后通知|后续通知|另行告知/,
-    multicultural: /多元文化|多文化|移民/,
+    multicultural: /多元文化|多文化|移民|中途入[国境]/,
     schools: [/小学/, /初中|初级中学/, /高中/],
     judgement: /正在报名|报名中|已截止|报名已结束|已结束报名|可以参加|可参加|能参加/,
     anyone: /任何人|所有人都|人人都/,
@@ -161,6 +161,23 @@ const RULES: Record<DisplayLanguage, LanguageRules> = {
 }
 
 const TRADITIONAL = /[費時間學報電話請確認對參與動體驗課號週場機構線網給會為這個們來點歲級開設區樓層館辦關於選擇]/gu
+/** 동 이름을 한자로 옮긴 말 ('大院洞'). 동 이름은 한자 표기가 여러 가지라 한국어 그대로 둔다 */
+const HAN_DONG = /\p{Script=Han}{1,3}洞/gu
+
+/** 머리글(제목·기관·대상 번역) 검사가 같이 쓰는 그 언어의 규칙 */
+export function languageRules(language: DisplayLanguage): Pick<LanguageRules, 'script' | 'multicultural' | 'schools' | 'anyone' | 'judgement' | 'wordNumber'> {
+  return RULES[language]
+}
+
+/** 중국어 글의 번체자와 한자로 옮긴 동 이름 */
+export function chineseScriptIssues(text: string): string[] {
+  const issues: string[] = []
+  const traditional = [...new Set(text.match(TRADITIONAL) ?? [])]
+  if (traditional.length) issues.push(`번체자를 씀: ${traditional.join('')}`)
+  const hanDong = [...new Set(text.match(HAN_DONG) ?? [])]
+  if (hanDong.length) issues.push(`동 이름을 한자로 옮김: ${hanDong.join(', ')}`)
+  return issues
+}
 const QUOTED = /'[^'\n]*'|"[^"\n]*"|“[^”\n]*”|‘[^’\n]*’|「[^」\n]*」|『[^』\n]*』/g
 const QUOTE_OPENERS = new Set(['\'', '"', '“', '‘', '「', '『'])
 const URL_PATTERN = /(?:https?:\/\/|www\.)\S+/gi
@@ -453,13 +470,8 @@ function claimIssues(lines: string[], facts: SummaryFacts, language: DisplayLang
     const unknownKorean = [...new Set(all.match(/\p{Script=Hangul}+/gu) ?? [])].filter((word) => !korean.includes(word))
     if (unknownKorean.length) issues.push(`사실에 없는 한국어 문구: ${unknownKorean.slice(0, 5).join(', ')}`)
   }
-  if (language === 'zh') {
-    const traditional = [...new Set(outside.match(TRADITIONAL) ?? [])]
-    if (traditional.length) issues.push(`번체자를 씀: ${traditional.join('')}`)
-    // 동 이름은 한자 표기가 여러 가지라 한국어 그대로 둔다 (제목 번역 괄호 안도 마찬가지)
-    const hanDong = [...new Set(outside.match(/\p{Script=Han}{1,3}洞/gu) ?? [])]
-    if (hanDong.length) issues.push(`동 이름을 한자로 옮김: ${hanDong.join(', ')}`)
-  }
+  // 동 이름은 한국어 그대로 둔다 (제목 번역 괄호 안도 마찬가지)
+  if (language === 'zh') issues.push(...chineseScriptIssues(outside))
   return issues
 }
 

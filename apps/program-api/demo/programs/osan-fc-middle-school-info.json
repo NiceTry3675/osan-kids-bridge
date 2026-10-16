@@ -179,7 +179,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "Buổi hướng dẫn vào trường trung học cơ sở",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Con em lớp 5–6 tiểu học và phụ huynh gia đình đa văn hóa"
+      }
     },
     "zh": {
       "lines": [
@@ -189,7 +194,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "初中升学说明会",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "多元文化家庭小学5～6年级子女与家长"
+      }
     }
   },
   "source": {

@@ -1,7 +1,6 @@
 export { applicationStatus } from './application'
 export { isValidDate, isValidTime, seoulNowMinutes, seoulNowTime, seoulToday, weekdayOf } from './dates'
 export { eligibilityStatus, evaluateProgram, judgeAgeGrade } from './evaluate'
-export type { EvaluateOptions } from './evaluate'
 export { emptyFilters, parseSearchFilters } from './filters'
 export type { ParsedFilters } from './filters'
 export { isListable, searchPrograms } from './search'

@@ -11,6 +11,8 @@ export interface InboxSource {
   retrieved_at: string | null
   institution_hint: string | null
   note: string | null
+  /** 시연용으로 만든 가상 공고 */
+  demo: boolean
 }
 
 export interface InboxText {
@@ -87,7 +89,8 @@ function parseSource(json: string, programId: string): InboxSource {
   if (retrieved_at && !/^\d{4}-\d{2}-\d{2}$/.test(retrieved_at)) {
     throw new Error(`${programId}: source.json의 retrieved_at은 YYYY-MM-DD여야 합니다.`)
   }
-  return { url, retrieved_at, institution_hint: optionalString('institution_hint'), note: optionalString('note') }
+  if (data.demo !== undefined && typeof data.demo !== 'boolean') throw new Error(`${programId}: source.json의 demo는 true 또는 false여야 합니다.`)
+  return { url, retrieved_at, institution_hint: optionalString('institution_hint'), note: optionalString('note'), demo: data.demo === true }
 }
 
 const ENTITIES: Record<string, string> = { nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", middot: '·', hellip: '…', ndash: '–', mdash: '—', tilde: '~' }

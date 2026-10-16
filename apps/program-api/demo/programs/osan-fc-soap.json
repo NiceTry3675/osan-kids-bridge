@@ -160,7 +160,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "Tự làm xà phòng thiên nhiên của riêng mình",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Con em học sinh tiểu học và phụ huynh (tham gia theo đơn vị gia đình)"
+      }
     },
     "zh": {
       "lines": [
@@ -170,7 +175,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "制作属于自己的天然肥皂",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "小学生子女与家长（以家庭为单位参与）"
+      }
     }
   },
   "source": {

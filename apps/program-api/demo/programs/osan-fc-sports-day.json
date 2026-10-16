@@ -185,20 +185,30 @@
     },
     "vi": {
       "lines": [
-        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) mở chương trình “2026년 가족친화문화 프로그램- 우리 zip. 운동회” (Chương trình văn hóa thân thiện với gia đình năm 2026 - Ngày hội thể thao zip của chúng ta). Đối tượng là học sinh tiểu học lớp 1–6 cư trú tại 오산시 (thành phố Osan), phụ huynh và con cùng tham gia. Phụ huynh phải đi cùng và anh chị em có thể đi cùng.",
-        "Chương trình diễn ra vào 31/10 (Thứ Bảy) 10:00–12:00 tại 오산오색문화체육센터 대체육관 (nhà thi đấu lớn Trung tâm Thể thao Văn hóa Osaek Osan).",
-        "Chi phí là miễn phí. Đăng ký từ 2/10 (Thứ Sáu) 09:00 đến 22/10 (Thứ Năm) qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – trang web Trung tâm Gia đình thành phố Osan). Hãy mặc trang phục thoải mái để vận động."
+        "“2026년 가족친화문화 프로그램- 우리 zip. 운동회” (Chương trình văn hóa thân thiện với gia đình năm 2026: Ngày hội thể thao gia đình chúng mình) do 오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức. Chương trình dành cho phụ huynh và con đang học học sinh tiểu học lớp 1–6 cư trú tại 오산시 (thành phố Osan). Phụ huynh phải đi cùng và anh chị em có thể đi cùng.",
+        "Chương trình diễn ra vào 31/10 (Thứ Bảy) 10:00–12:00 tại 오산오색문화체육센터 대체육관 (nhà thi đấu lớn Trung tâm Văn hóa Thể thao Osaek Osan).",
+        "Chi phí là miễn phí. Đăng ký từ 2/10 (Thứ Sáu) 09:00 đến 22/10 (Thứ Năm) qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – đăng ký chương trình trên trang web Trung tâm Gia đình thành phố Osan). Hãy mặc trang phục thoải mái để vận động."
       ],
+      "heading": {
+        "title": "Chương trình văn hóa thân thiện với gia đình năm 2026: Ngày hội thể thao gia đình chúng mình",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Mọi gia đình cư trú tại thành phố Osan có con là học sinh tiểu học"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []
     },
     "zh": {
       "lines": [
-        "“2026년 가족친화문화 프로그램- 우리 zip. 운동회”（2026年家庭友好文化项目-我们家运动会）由오산시가족센터（乌山市家庭中心）举办，对象为居住在乌山市的小学1至6年级子女与家长共同参与的家庭，家长需一同前往，兄弟姐妹可以同行。",
-        "活动时间为10月31日（周六） 10:00–12:00，地点在오산오색문화체육센터 대체육관（乌山五色文化体育中心大体育馆）。",
-        "费用免费。报名时间为10月2日（周五） 09:00至10月22日（周四），报名方式为网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网项目申请）。请穿着便于运动的服装参加。"
+        "“2026년 가족친화문화 프로그램- 우리 zip. 운동회”（2026年家庭友好文化项目：我们家运动会）由오산시가족센터（乌山市家庭中心）举办。对象为居住在乌山市且有小学1至6年级子女的家庭，家长与子女需共同参加，兄弟姐妹可以同行。",
+        "时间为10月31日（周六） 10:00–12:00，地点在오산오색문화체육센터 대체육관（乌山五色文化体育中心大体育馆）。",
+        "费用免费。报名时间为10月2日（周五） 09:00至10月22日（周四），通过网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网报名）。请穿着便于运动的服装参加。"
       ],
+      "heading": {
+        "title": "2026年家庭友好文化项目：我们家运动会",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "居住在乌山市且育有小学生子女的所有家庭"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []

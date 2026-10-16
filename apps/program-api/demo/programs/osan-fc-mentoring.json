@@ -118,10 +118,15 @@
     },
     "vi": {
       "lines": [
-        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức chương trình “결혼이민자 멘토·멘티 운영” (Vận hành cố vấn - người được cố vấn dành cho người nhập cư kết hôn). Đối tượng là người lớn, 결혼이민자 (멘토·멘티) (người nhập cư kết hôn (người cố vấn, người được cố vấn)).",
-        "Chương trình diễn ra từ 2/3 (Thứ Hai) đến 29/10 (Thứ Năm) với tổng cộng 150 buổi tại 경기도 오산시 청학로 80 (궐동) 오산시가족센터 (Trung tâm Gia đình thành phố Osan, Gwol-dong, 80 Cheonghak-ro, Osan-si, Gyeonggi-do) và các địa điểm khác. Hãy hỏi đơn vị tổ chức về thứ trong tuần và thời gian cụ thể.",
-        "Chi phí là miễn phí. Thời gian đăng ký từ 2/4 (Thứ Năm) 09:00 đến 30/11 (Thứ Hai) 18:00. Hãy hỏi đơn vị tổ chức về cách thức đăng ký và khả năng tham gia giữa chừng."
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) mở chương trình “결혼이민자 멘토·멘티 운영” (Chương trình cố vấn mentor – mentee cho người nhập cư kết hôn). Đối tượng là người lớn thuộc diện người nhập cư kết hôn (mentor – mentee).",
+        "Chương trình diễn ra từ 2/3 (Thứ Hai) đến 29/10 (Thứ Năm) với tổng cộng 150 buổi tại 오산시가족센터 (Trung tâm Gia đình thành phố Osan, Gwol-dong) và các địa điểm khác. Hãy hỏi đơn vị tổ chức về thứ trong tuần và thời gian cụ thể.",
+        "Miễn phí. Thời gian đăng ký từ 2/4 (Thứ Năm) 09:00 đến 30/11 (Thứ Hai) 18:00. Hãy hỏi đơn vị tổ chức về cách đăng ký."
       ],
+      "heading": {
+        "title": "Chương trình cố vấn mentor – mentee cho người nhập cư kết hôn",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Người nhập cư kết hôn (mentor – mentee)"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []
@@ -134,7 +139,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "婚姻移民者导师·学员项目",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "婚姻移民者（导师·学员）"
+      }
     }
   },
   "source": {

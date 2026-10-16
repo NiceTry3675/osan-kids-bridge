@@ -2,6 +2,7 @@ import { DISPLAY_LANGUAGES } from '../types'
 import type { DisplayLanguage, LanguageSummary, ProgramRecord, ReviewState, SummariesByLanguage } from '../types'
 import { checkSummary } from '../summarize/check'
 import { summaryFacts } from '../summarize/facts'
+import { checkHeading, HEADING_ISSUE_PREFIX, needsHeading } from '../summarize/heading'
 import { factsHash, isApprovedSummary, summaryApprovalHash } from './hash'
 
 // 검수 상태 변경. 모두 새 객체를 돌려주는 순수 함수다 (저장은 CLI가 한다).
@@ -76,6 +77,10 @@ export function approveRecord(record: ProgramRecord, options: ApproveOptions): P
     if (summary.status === 'machine_draft') return withdrawn(summary)
     facts ??= summaryFacts(record, options.now)
     const issues = checkSummary(summary.lines, facts, language)
+    // 베트남어·중국어는 보호자 웹 머리에 쓸 머리글까지 있어야 내보낼 수 있다
+    if (needsHeading(language)) {
+      issues.push(...(summary.heading ? checkHeading(summary.heading, facts, language) : [`${HEADING_ISSUE_PREFIX}: 제목·기관·대상 번역이 없음 (npm run headings로 만든 뒤 승인)`]))
+    }
     if (issues.length) return { ...withdrawn(summary), status: 'machine_draft', issues }
     return {
       ...summary,
@@ -83,7 +88,7 @@ export function approveRecord(record: ProgramRecord, options: ApproveOptions): P
       issues: [],
       reviewer: languageReviewer ?? reviewer,
       approved_at: approvedAt,
-      approved_hash: summaryApprovalHash(record, language, summary.lines),
+      approved_hash: summaryApprovalHash(record, language, summary),
     }
   })
   return {

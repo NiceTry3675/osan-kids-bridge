@@ -114,10 +114,15 @@
     },
     "vi": {
       "lines": [
-        "“다문화가족 관계향상지원” (Hỗ trợ cải thiện mối quan hệ gia đình đa văn hóa) do 오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức. Đối tượng là người lớn thuộc gia đình đa văn hóa và là vợ chồng.",
-        "Chương trình đã diễn ra từ 9/6 (Thứ Ba) đến 13/10 (Thứ Ba) với tổng cộng 23 buổi tại 경기도 오산시 청학로 80 (궐동) 복합청사 2층 오산시가족센터 (tầng 2 Tòa nhà phức hợp Trung tâm Gia đình thành phố Osan, 80 Cheonghak-ro, Gwol-dong, thành phố Osan, tỉnh Gyeonggi).",
-        "Chi phí là miễn phí. Thời gian đăng ký đã là từ 21/5 (Thứ Năm) 09:00 đến 30/10 (Thứ Sáu) 18:00."
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) tổ chức chương trình “다문화가족 관계향상지원” (Hỗ trợ cải thiện mối quan hệ gia đình đa văn hóa). Đối tượng là các cặp vợ chồng người lớn thuộc gia đình đa văn hóa.",
+        "Chương trình gồm tổng cộng 23 buổi, đã diễn ra từ 9/6 (Thứ Ba) đến 13/10 (Thứ Ba). Địa điểm tại 경기도 오산시 청학로 80 (궐동) 복합청사 2층 오산시가족센터 (tầng 2 Tòa nhà liên hợp Trung tâm Gia đình thành phố Osan, 80 Cheonghak-ro, Gwol-dong, Osan).",
+        "Chi phí là miễn phí. Thời gian đăng ký là từ 21/5 (Thứ Năm) 09:00 đến 30/10 (Thứ Sáu) 18:00."
       ],
+      "heading": {
+        "title": "Hỗ trợ cải thiện mối quan hệ gia đình đa văn hóa",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Vợ chồng thuộc gia đình đa văn hóa"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
       "issues": []
@@ -130,7 +135,12 @@
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": []
+      "issues": [],
+      "heading": {
+        "title": "多元文化家庭关系提升支援",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "多元文化家庭夫妇"
+      }
     }
   },
   "source": {
