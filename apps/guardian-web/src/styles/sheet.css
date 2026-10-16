@@ -1,0 +1,28 @@
+.actions { display: grid; gap: 8px; }
+.action-visit { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 12px; background: var(--sunken); font-size: var(--text-sm); }
+.action-visit .icon { margin-top: 2px; color: var(--action); flex: none; }
+.action-visit strong { display: block; }
+.step-card { display: grid; gap: 6px; padding: 14px; border-radius: 16px; background: var(--sunken); }
+.step-title { display: flex; align-items: center; gap: 8px; font-weight: 800; }
+.step-no { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: var(--paper); font-size: 12px; flex: none; }
+.contacts { display: grid; gap: 12px; }
+.contact { display: grid; gap: 6px; }
+.contact-meta { display: grid; gap: 1px; font-size: var(--text-xs); color: var(--ink-2); }
+.empty-contact { display: grid; gap: 4px; }
+.empty-contact-title { font-weight: 750; }
+
+/* 03 조건 시트 안 */
+.grades { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.time-row { display: grid; grid-template-columns: 1fr auto 1fr auto; gap: 6px; align-items: center; margin-top: 8px; }
+.time-row .btn { min-height: 48px; padding: 0 14px; }
+.select-dong { margin-top: 10px; }
+
+@media (max-width: 359px) {
+  .page { padding-inline: 14px; }
+  .action-bar { margin-inline: -14px; padding-inline: 14px; }
+  .tile-art { width: 50px; height: 50px; }
+  .item-art { width: 52px; height: 52px; font-size: 26px; }
+  .time-row { grid-template-columns: 1fr auto 1fr; }
+  .time-row .btn { grid-column: 1 / -1; }
+}
