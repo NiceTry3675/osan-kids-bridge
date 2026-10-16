@@ -26,3 +26,10 @@ dist-preview/
 
 # Vite 캐시
 .vite/
+
+# 발표 자료: 실제 기관 포스터와 그 번역본·화면 캡처가 들어가므로 공개 저장소에 올리지 않는다
+presentation/assets/
+presentation/*.pptx
+presentation/*.pdf
+presentation/build/node_modules/
+presentation/build/render/
