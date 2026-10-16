@@ -7,7 +7,9 @@ const pptxgen = require('pptxgenjs')
 const JSZip = require(require.resolve('jszip', { paths: [require.resolve('pptxgenjs')] }))
 
 const ASSETS = path.resolve(__dirname, '../assets')
-const OUT = path.resolve(__dirname, '../osan-kids-bridge-deck.pptx')
+// DECK_QA=1: 맥에서 Quick Look으로 미리 보기 위한 사본(글꼴만 맥에 있는 애플 SD 산돌고딕 Neo로 바꿈)
+const QA = process.env.DECK_QA === '1'
+const OUT = QA ? path.resolve(__dirname, 'render/deck-qa.pptx') : path.resolve(__dirname, '../osan-kids-bridge-deck.pptx')
 const img = (name) => path.join(ASSETS, name)
 
 // 보호자 웹·대시보드와 같은 색: 짙은 숲색(바탕), 행동 초록(강조), 형광펜 노랑은 '확인 필요'에만
@@ -37,9 +39,9 @@ pres.defineSlideMaster({
   title: 'COVER',
   background: { color: HEX.dk2 },
   objects: [
-    { placeholder: { options: { name: 'kicker', type: 'body', x: 0.7, y: 0.75, w: 7.2, h: 0.45, fontSize: 14, bold: true, color: C.accent4, margin: 0 }, text: '' } },
-    { placeholder: { options: { name: 'title', type: 'title', x: 0.7, y: 1.4, w: 7.2, h: 2.6, fontSize: 38, bold: true, color: C.background1, valign: 'top', margin: 0, lineSpacingMultiple: 1.1 }, text: '' } },
-    { placeholder: { options: { name: 'body', type: 'body', x: 0.7, y: 4.25, w: 7.0, h: 1.3, fontSize: 18, color: C.accent5, valign: 'top', margin: 0 }, text: '' } },
+    { placeholder: { options: { name: 'kicker', type: 'body', x: 0.7, y: 0.75, w: 7.2, h: 0.45, fontSize: 14, bold: true, color: C.accent4, margin: 0, align: 'left' }, text: '' } },
+    { placeholder: { options: { name: 'title', type: 'title', x: 0.7, y: 1.4, w: 7.2, h: 2.6, fontSize: 38, bold: true, color: C.background1, valign: 'top', margin: 0, lineSpacingMultiple: 1.1, align: 'left' }, text: '' } },
+    { placeholder: { options: { name: 'body', type: 'body', x: 0.7, y: 4.25, w: 7.0, h: 1.3, fontSize: 18, color: C.accent5, valign: 'top', margin: 0, align: 'left' }, text: '' } },
   ],
 })
 pres.defineSlideMaster({
@@ -47,9 +49,9 @@ pres.defineSlideMaster({
   background: { color: 'FFFFFF' },
   margin: [0.5, 0.6, 0.6, 0.6],
   objects: [
-    { placeholder: { options: { name: 'kicker', type: 'body', x: 0.6, y: 0.32, w: 9.5, h: 0.36, fontSize: 13, bold: true, color: C.accent1, margin: 0 }, text: '' } },
-    { placeholder: { options: { name: 'title', type: 'title', x: 0.6, y: 0.68, w: 12.1, h: 0.75, fontSize: 28, bold: true, color: C.text1, valign: 'top', margin: 0 }, text: '' } },
-    { placeholder: { options: { name: 'source', type: 'body', x: 0.6, y: 6.98, w: 11.2, h: 0.32, fontSize: 10, color: MUTED, margin: 0, valign: 'middle' }, text: '' } },
+    { placeholder: { options: { name: 'kicker', type: 'body', x: 0.6, y: 0.32, w: 9.5, h: 0.36, fontSize: 13, bold: true, color: C.accent1, margin: 0, align: 'left' }, text: '' } },
+    { placeholder: { options: { name: 'title', type: 'title', x: 0.6, y: 0.68, w: 12.1, h: 0.75, fontSize: 28, bold: true, color: C.text1, valign: 'top', margin: 0, align: 'left' }, text: '' } },
+    { placeholder: { options: { name: 'source', type: 'body', x: 0.6, y: 6.98, w: 11.2, h: 0.32, fontSize: 10, color: MUTED, margin: 0, valign: 'middle', align: 'left' }, text: '' } },
   ],
   slideNumber: { x: 12.25, y: 6.98, w: 0.5, h: 0.32, fontSize: 10, color: MUTED, align: 'right' },
 })
@@ -186,9 +188,10 @@ pres.addSection({ title: '문제' })
   card(slide, { x: 8.0, y: 3.95, w: 4.73, h: 2.85, fill: C.text2 })
   text(slide, '프로그램은 있는데,\n정보가 닿지 않는다', { x: 8.35, y: 4.2, w: 4.1, h: 1.0, fontSize: 22, bold: true, color: C.background1 })
   text(slide, [
-    { text: '이주배경학생(구 다문화학생) 21만 838명, 전체 학생의 4.3% (초등학생은 5.3%)', options: { breakLine: true } },
-    { text: '진학·진로 정보가 필요한 시기의 아이가 계속 늘고 있다', options: {} },
-  ], { x: 8.35, y: 5.25, w: 4.1, h: 1.45, fontSize: 14, color: C.accent5, paraSpaceAfter: 6 })
+    { text: '이주배경학생(구 다문화학생) 21만 838명', options: { breakLine: true } },
+    { text: '전체 학생의 4.3%, 초등학생은 5.3%', options: { breakLine: true } },
+    { text: '진학·진로 정보가 필요한 아이가 늘고 있다', options: {} },
+  ], { x: 8.35, y: 5.25, w: 4.2, h: 1.45, fontSize: 14, color: C.accent5, paraSpaceAfter: 6 })
 }
 {
   const slide = content('문제 ③ 현장 관찰', '사이트는 번역돼도, 정보가 담긴 포스터는 한국어 이미지 그대로다',
@@ -199,12 +202,12 @@ pres.addSection({ title: '문제' })
   text(slide, '화면을 영어로 바꿔도\n포스터는 한국어 그대로', { x: 7.75, y: 6.32, w: 2.9, h: 0.6, fontSize: 13, color: MUTED })
   card(slide, { x: 10.95, y: 1.65, w: 1.8, h: 2.2, fill: C.accent5 })
   text(slide, '1명', { x: 11.1, y: 1.8, w: 1.5, h: 0.65, fontSize: 32, bold: true, color: C.accent1 })
-  text(slide, '오산시가족센터 통번역지원사 (베트남어 1개 언어)', { x: 11.1, y: 2.5, w: 1.55, h: 1.25, fontSize: 12 })
+  text(slide, [{ text: '오산시가족센터', options: { breakLine: true } }, { text: '통번역지원사', options: { breakLine: true } }, { text: '베트남어만 지원', options: {} }], { x: 11.1, y: 2.5, w: 1.6, h: 1.25, fontSize: 12 })
   card(slide, { x: 10.95, y: 4.05, w: 1.8, h: 2.2, fill: C.background2 })
   text(slide, '129곳', { x: 11.1, y: 4.2, w: 1.55, h: 0.65, fontSize: 30, bold: true, color: C.accent1 })
-  text(slide, '전국 가족센터 221곳 중 1개 언어만 통번역하는 곳', { x: 11.1, y: 4.9, w: 1.55, h: 1.25, fontSize: 12 })
+  text(slide, [{ text: '전국 가족센터', options: { breakLine: true } }, { text: '221곳 중', options: { breakLine: true } }, { text: '1개 언어만', options: { breakLine: true } }, { text: '통번역하는 곳', options: {} }], { x: 11.1, y: 4.9, w: 1.6, h: 1.25, fontSize: 12 })
   card(slide, { x: 0.65, y: 5.75, w: 6.6, h: 1.0, fill: C.accent2 })
-  text(slide, '보호자는 공고마다 이미지를 열어 일정·대상·신청 방법을 한국어로 읽어야 한다', { x: 0.9, y: 5.85, w: 6.2, h: 0.8, fontSize: 15, bold: true, valign: 'middle' })
+  text(slide, '보호자는 공고마다 포스터 속 한국어를 직접 읽어야 한다', { x: 0.9, y: 5.85, w: 6.2, h: 0.8, fontSize: 16, bold: true, valign: 'middle' })
 }
 {
   const slide = content('문제 ④ 양쪽의 단절', '보호자는 못 읽고, 기관은 보호자가 무엇을 모르는지 모른다',
@@ -217,14 +220,14 @@ pres.addSection({ title: '문제' })
     const x = 0.6 + index * 4.1
     card(slide, { x, y: 1.6, w: 3.85, h: 3.55, fill: index === 0 ? C.accent5 : C.background2 })
     text(slide, title, { x: x + 0.3, y: 1.8, w: 3.3, h: 0.5, fontSize: 20, bold: true, color: C.accent1 })
-    text(slide, lines.map((line, i) => ({ text: line, options: { bullet: true, breakLine: i < lines.length - 1 } })), { x: x + 0.3, y: 2.4, w: 3.35, h: 2.6, fontSize: 15, paraSpaceAfter: 8 })
+    text(slide, lines.map((line, i) => ({ text: line, options: { bullet: { indent: 14 }, breakLine: i < lines.length - 1 } })), { x: x + 0.3, y: 2.4, w: 3.35, h: 2.6, fontSize: 15, paraSpaceAfter: 8 })
   })
   arrow(slide, { x: 4.47, y: 3.35, w: 0.22, h: 0, color: C.text2 })
   card(slide, { x: 0.6, y: 5.35, w: 7.95, h: 1.45, fill: C.text2 })
   text(slide, '38%', { x: 0.9, y: 5.45, w: 1.9, h: 1.2, fontSize: 40, bold: true, color: C.accent2, valign: 'middle' })
   text(slide, '공공 AI 상담이 스스로 끝낸 비율(대구 120 AI 상담, 2025). 나머지는 상담원 연결(13%)이나 중도 포기(49%)로 끝났다', { x: 2.85, y: 5.5, w: 5.45, h: 1.15, fontSize: 14, color: C.background1, valign: 'middle' })
-  picture(slide, img('problem-chatbot.png'), { x: 9.35, y: 1.6, w: 2.95, h: 5.05 })
-  text(slide, '기존 공공 AI 챗봇 (팀이 직접 사용)', { x: 8.85, y: 6.68, w: 3.95, h: 0.28, fontSize: 11, color: MUTED, align: 'center' })
+  picture(slide, img('problem-chatbot.png'), { x: 9.4, y: 1.6, w: 2.86, h: 4.9 })
+  text(slide, '기존 공공 AI 챗봇 (팀이 직접 사용)', { x: 8.85, y: 6.6, w: 3.95, h: 0.3, fontSize: 11, color: MUTED, align: 'center' })
 }
 
 // =========================================================
@@ -305,10 +308,10 @@ pres.addSection({ title: '해결' })
   text(slide, '6 / 6', { x: 8.45, y: 1.8, w: 4.0, h: 0.85, fontSize: 48, bold: true, color: C.accent1 })
   text(slide, '실제 포스터 3장 × 2개 언어, 모두 검증 통과', { x: 8.45, y: 2.7, w: 4.0, h: 0.4, fontSize: 14, bold: true })
   text(slide, [
-    { text: '5건은 1회차에 통과 (한 번에 약 1분)', options: { bullet: true, breakLine: true } },
-    { text: '1건은 3회차 통과: 검증 AI가 그대로 둔 로고 글자(성평등가족부)를 옛 이름으로 잘못 읽어 다시 만들었다. 로고 오독은 막지 않도록 규칙을 고쳤다', options: { bullet: true, breakLine: true } },
-    { text: 'QR이 있는 포스터 2장: 원본 QR을 옮겨 붙이고 다시 스캔해 주소가 같은지 확인', options: { bullet: true, breakLine: true } },
-    { text: '자동 검증만 통과한 결과는 화면에 \'담당자 확인 전\'으로 표시한다', options: { bullet: true } },
+    { text: '5건은 1회차에 통과 (한 번에 약 1분)', options: { bullet: { indent: 14 }, breakLine: true } },
+    { text: '1건은 3회차 통과: 검증 AI가 그대로 둔 로고 글자(성평등가족부)를 옛 이름으로 잘못 읽어 다시 만들었다. 로고 오독은 막지 않도록 규칙을 고쳤다', options: { bullet: { indent: 14 }, breakLine: true } },
+    { text: 'QR이 있는 포스터 2장: 원본 QR을 옮겨 붙이고 다시 스캔해 주소가 같은지 확인', options: { bullet: { indent: 14 }, breakLine: true } },
+    { text: '자동 검증만 통과한 결과는 화면에 \'담당자 확인 전\'으로 표시한다', options: { bullet: { indent: 14 } } },
   ], { x: 8.45, y: 3.25, w: 4.05, h: 3.4, fontSize: 13, paraSpaceAfter: 7 })
 }
 {
@@ -387,21 +390,21 @@ pres.addSection({ title: '라이프케어와 실행' })
     ['초등', '자녀성장 프로그램', 'poster-kpop-vi.jpg', 'K-pop 방송댄스'],
     ['중·고등', '진학설명회·진로 프로그램', 'poster-hs-vi.jpg', '고등학교 진학설명회'],
   ]
-  slide.addShape(pres.shapes.LINE, { x: 0.9, y: 2.05, w: 11.6, h: 0, line: { color: C.accent4, width: 3 }, objectName: name('timeline') })
+  slide.addShape(pres.shapes.LINE, { x: 0.9, y: 1.85, w: 11.6, h: 0, line: { color: C.accent4, width: 3 }, objectName: name('timeline') })
   stages.forEach(([age, need, file, caption], index) => {
     const x = 0.6 + index * 3.07
-    badge(slide, '', { x: x + 0.2, y: 1.85, size: 0.4, fill: file ? C.accent1 : C.accent4 })
-    text(slide, age, { x: x + 0.75, y: 1.75, w: 2.0, h: 0.55, fontSize: 18, bold: true, color: C.accent1, valign: 'middle' })
-    text(slide, need, { x: x + 0.2, y: 2.4, w: 2.7, h: 0.45, fontSize: 13 })
+    badge(slide, '', { x: x + 0.2, y: 1.65, size: 0.4, fill: file ? C.accent1 : C.accent4 })
+    text(slide, age, { x: x + 0.2, y: 2.15, w: 2.65, h: 0.45, fontSize: 18, bold: true, color: C.accent1, valign: 'middle' })
+    text(slide, need, { x: x + 0.2, y: 2.6, w: 2.7, h: 0.4, fontSize: 13 })
     if (file) {
       const ratio = file.includes('kpop') ? 900 / 1350 : 1
-      const h = 2.65
+      const h = 2.55
       const w = h * ratio
-      picture(slide, img(file), { x: x + 0.2 + (2.65 - w) / 2, y: 3.0, w, h })
-      text(slide, caption, { x: x + 0.2, y: 5.72, w: 2.65, h: 0.3, fontSize: 12, color: MUTED, align: 'center' })
+      picture(slide, img(file), { x: x + 0.2 + (2.65 - w) / 2, y: 3.15, w, h })
+      text(slide, caption, { x: x + 0.2, y: 5.76, w: 2.65, h: 0.3, fontSize: 12, color: MUTED, align: 'center' })
     } else {
-      card(slide, { x: x + 0.2, y: 3.0, w: 2.65, h: 2.65, fill: C.background2, line: 'CDD3CC' })
-      text(slide, '같은 방식으로\n확장할 안내', { x: x + 0.3, y: 3.95, w: 2.45, h: 0.8, fontSize: 14, color: MUTED, align: 'center', valign: 'middle' })
+      card(slide, { x: x + 0.2, y: 3.15, w: 2.65, h: 2.55, fill: C.background2, line: 'CDD3CC' })
+      text(slide, '같은 방식으로\n확장할 안내', { x: x + 0.3, y: 4.05, w: 2.45, h: 0.8, fontSize: 14, color: MUTED, align: 'center', valign: 'middle' })
     }
   })
   card(slide, { x: 0.6, y: 6.1, w: 12.13, h: 0.7, fill: C.accent5 })
@@ -496,6 +499,7 @@ async function applyTheme(file) {
     xml = xml.replace(new RegExp(`<a:${slot}>[\\s\\S]*?</a:${slot}>`), `<a:${slot}><a:srgbClr val="${hex}"/></a:${slot}>`)
   }
   xml = xml.replace(/<a:clrScheme name="[^"]*">/, `<a:clrScheme name="${THEME.name}">`).replace(/<a:theme ([^>]*?)name="[^"]*"/, `<a:theme $1name="${THEME.name}"`)
+  if (QA) xml = xml.replace(/typeface="(?:Malgun Gothic|맑은 고딕)"/g, 'typeface="Apple SD Gothic Neo"').replace(/<a:ea typeface=""\/>/g, '<a:ea typeface="Apple SD Gothic Neo"/>')
   zip.file(part, xml)
   fs.writeFileSync(file, await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }))
 }
