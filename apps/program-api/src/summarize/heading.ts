@@ -114,21 +114,21 @@ const uniqueSorted = (values: number[]) => [...new Set(values)].sort((a, b) => a
 const KO_SCHOOLS = [/초등/, /중학|중등/, /고등학|고교/]
 /** 학교급 사이의 묶음표 ('초·중·고', '중/고', '중, 고'). 빈칸만으로는 묶지 않는다 ('다문화가족 중 고등학생', '육아 중 고생') */
 const JOIN = String.raw`\s*[·・/,]\s*`
-/** 학교급 '고': 뒤에 등·교·생·학생·학교가 오거나 한글이 끝난다. '고급', '고령', '(초등 중·)고학년', '중고생활용품'은 아니다 */
-const HIGH = String.raw`고(?:등학?|교|(?=생(?!활)|학생|학교)|(?![가-힣]))`
+/** 학교급 '고': 뒤에 등·교·생·학생·학교나 조사('초·중·고에 재학 중인')가 오거나 한글이 끝난다. '고급', '고령', '(초등 중·)고학년', '중고생활용품'은 아니다 */
+const HIGH = String.raw`고(?:등학?|교|(?=생(?!활)|학생|학교|(?:에서|에게|에|를|의|와|과|까지|부터|로|및)(?![가-힣]))|(?![가-힣]))`
 const SCHOOL_RULES: [RegExp, string][] = [
   // 초등 '중학년'은 중학교가 아니다
   [/중학년/g, '학년'],
   // '초중고', '초·중·고교생', '유초중고', '관내초중고'. 빈칸으로 띄운 '초 중 고등학생'은 셋이 다 있을 때만
   [new RegExp(String.raw`초(?:${JOIN})?중(?:${JOIN})?${HIGH}`, 'g'), '초등 중학 고등학'],
   [new RegExp(String.raw`(?<![가-힣])초\s+중\s+${HIGH}`, 'g'), '초등 중학 고등학'],
-  // '중·고등', '중, 고등학생', '중/고교생'
-  [new RegExp(String.raw`(?<![가-힣])중${JOIN}${HIGH}`, 'g'), '중학 고등학'],
+  // '중·고등', '다문화중·고생', '중/고교생', '중, 고등학생' (쉼표는 앞말에 붙은 '…하는 중, 고'와 헷갈리므로 낱말 첫머리에서만)
+  [new RegExp(String.raw`(?:중\s*[·・/]\s*|(?<![가-힣])중\s*,\s*)${HIGH}`, 'g'), '중학 고등학'],
   // 묶음표 없는 '중고'는 뒤에 등·교·생이 붙어야 학교급이다 ('중고등', '중고교', '다문화중고생'. '중고 물품'은 아니다)
   [/중고(?:등학?|교|(?=생(?!활)))/g, '중학 고등학'],
-  // '초중학생', '초·중등', '초·중 자녀' ('기초중등'의 초, 한국어 '초·중·고급'은 아니다)
-  [new RegExp(String.raw`(?<=^|[^가-힣]|유)초(?:${JOIN})?중(?=학|등)`, 'g'), '초등 중'],
-  [new RegExp(String.raw`(?<=^|[^가-힣]|유)초${JOIN}중(?![가-힣]|${JOIN}고)`, 'g'), '초등 중학'],
+  // '초중학생', '관내초·중학생', '초·중등', '초·중 자녀' ('기초중등', '최초'의 초, 한국어 '초·중·고급'은 아니다)
+  [new RegExp(String.raw`(?<![기최])초(?:${JOIN})?중(?=학|등)`, 'g'), '초등 중'],
+  [new RegExp(String.raw`(?<![기최])초${JOIN}중(?![가-힣]|${JOIN}고)`, 'g'), '초등 중학'],
 ]
 /** 학교급을 묶어 쓴 말을 학교급마다 풀어 쓴다 */
 const koSchoolText = (text: string) => SCHOOL_RULES.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), text)
@@ -141,25 +141,45 @@ const MAX_LENGTH: Record<HeadingLanguage, Record<keyof SummaryHeading, number>> 
 // ---- 숫자 ----
 // 원문에 아라비아 숫자로 적힌 수는 모두 아라비아 숫자로 옮기고, 원문에 없는 수는 쓰지 않는다.
 // 원문이 한글로 적은 수('세 자녀', '하루 캠프', '두세 번')는 아라비아 숫자로도, 중국어 글자 숫자('一日营')로도 옮길 수 있다.
+// 다만 학년·나이는 원문이 학년·나이로 적은 수('여섯 살', '돌')만 쓸 수 있다 ('세 자녀'를 '三岁'로 옮기면 안 된다).
 
-/** 한글로 적은 수 낱말과 그 값. 다른 낱말 안에 들어 있어도 센다 (값을 더 허락할 뿐이라 틀려도 검사가 느슨해지는 정도다) */
-const KO_NUMBER_WORDS: [string, number[]][] = [
-  ['하루', [1]], ['일일', [1]], ['당일', [1]], ['일주일', [1]], ['이틀', [2]], ['사흘', [3]], ['나흘', [4]], ['닷새', [5]], ['엿새', [6]],
-  ['이레', [7]], ['여드레', [8]], ['아흐레', [9]], ['열흘', [10]], ['보름', [15]], ['삼일절', [3, 1]], ['돌', [1]],
-  ['한두', [1, 2]], ['두세', [2, 3]], ['두어', [2]], ['서너', [3, 4]], ['너덧', [4, 5]], ['네댓', [4, 5]], ['대여섯', [5, 6]], ['예닐곱', [6, 7]],
-  ['하나', [1]], ['둘', [2]], ['셋', [3]], ['넷', [4]],
-  ['첫', [1]], ['둘째', [2]], ['셋째', [3]], ['넷째', [4]], ['다섯째', [5]],
-]
+const HANGUL_BEFORE = String.raw`(?<!\p{Script=Hangul})`
+/** 한글로 적은 수 낱말과 그 값. 다른 낱말 안('인터넷', '돌봄', '둘러보기')에서는 세지 않는다 */
+const KO_NUMBER_WORDS: [RegExp, number[]][] = ([
+  [String.raw`${HANGUL_BEFORE}(?:하루|일일|당일|일주일)`, [1]], [`${HANGUL_BEFORE}이틀`, [2]], [`${HANGUL_BEFORE}사흘`, [3]], [`${HANGUL_BEFORE}나흘`, [4]],
+  [`${HANGUL_BEFORE}닷새`, [5]], [`${HANGUL_BEFORE}엿새`, [6]], [`${HANGUL_BEFORE}이레`, [7]], [`${HANGUL_BEFORE}여드레`, [8]], [`${HANGUL_BEFORE}아흐레`, [9]],
+  [`${HANGUL_BEFORE}열흘`, [10]], ['보름', [15]], ['삼일절', [3, 1]],
+  [`${HANGUL_BEFORE}한두`, [1, 2]], [`${HANGUL_BEFORE}두세`, [2, 3]], [`${HANGUL_BEFORE}두어`, [2]], [`${HANGUL_BEFORE}서너`, [3, 4]], [`${HANGUL_BEFORE}(?:너덧|네댓)`, [4, 5]],
+  [`${HANGUL_BEFORE}대여섯`, [5, 6]], [`${HANGUL_BEFORE}예닐곱`, [6, 7]],
+  [`${HANGUL_BEFORE}하나(?=[^가-힣]|$|씩|만|도|는|와|에|의)`, [1]], [`${HANGUL_BEFORE}둘(?=[^가-힣]|$|이|째|씩|만|도|은|과|에|의)`, [2]],
+  [`${HANGUL_BEFORE}셋(?=[^가-힣]|$|이|째|씩|만|도|은|과|에|의)`, [3]], [`${HANGUL_BEFORE}넷(?=[^가-힣]|$|이|째|씩|만|도|은|과|에|의)`, [4]],
+  [`${HANGUL_BEFORE}첫`, [1]], [`${HANGUL_BEFORE}다섯째`, [5]],
+] as [string, number[]][]).map(([pattern, values]) => [new RegExp(pattern, 'u'), values])
+/** 첫 돌 (나이 1). '돌봄', '돌고래'의 돌은 아니다 */
+const KO_FIRST_BIRTHDAY = /(?<!\p{Script=Hangul})(?:첫\s*)?돌(?![가-힣])|(?<!\p{Script=Hangul})돌(?=쟁이|잔치|배기)/u
 /** 셈하는 말 앞의 고유어 수 ('한 학기', '세 자녀', '두명', '열두 살', '석 달'). 한 글자 수는 다른 낱말('한국', '세계') 안에서는 세지 않는다 */
 const KO_COUNTS: Record<string, number> = { 한: 1, 두: 2, 세: 3, 서: 3, 석: 3, 네: 4, 너: 4, 넉: 4, 다섯: 5, 여섯: 6, 일곱: 7, 여덟: 8, 아홉: 9, 열: 10, 스무: 20 }
 const KO_COUNTERS = '번|회|명|사람|살|가족|가정|시간|가지|개|날|주|달|권|장|곳|팀|쌍|분|마리|차례|자녀|아이|학기|반|끼|해|조|그룹|과목|단계|세대|말'
-const KO_COUNT = new RegExp(String.raw`(?<![\p{Script=Hangul}\d])(열\s?)?(${Object.keys(KO_COUNTS).join('|')})(?=\s|${KO_COUNTERS})`, 'gu')
+const KO_COUNT = new RegExp(String.raw`(?<![\p{Script=Hangul}\d])(열\s?)?(${Object.keys(KO_COUNTS).join('|')})(?=(\s*)(살|${KO_COUNTERS})|\s)`, 'gu')
 
-function koWrittenNumbers(text: string): Set<number> {
-  const values = new Set<number>()
-  for (const [word, numbers] of KO_NUMBER_WORDS) if (text.includes(word)) numbers.forEach((value) => values.add(value))
-  for (const [, ten, word] of text.matchAll(KO_COUNT)) values.add((ten ? 10 : 0) + KO_COUNTS[word])
-  return values
+interface WrittenNumbers {
+  /** 한글로 적은 모든 수 */
+  all: Set<number>
+  /** 그중 나이로 적은 수 ('여섯 살', '돌') */
+  ages: Set<number>
+}
+
+function koWrittenNumbers(text: string): WrittenNumbers {
+  const all = new Set<number>()
+  const ages = new Set<number>()
+  for (const [pattern, numbers] of KO_NUMBER_WORDS) if (pattern.test(text)) numbers.forEach((value) => all.add(value))
+  if (KO_FIRST_BIRTHDAY.test(text)) { all.add(1); ages.add(1) }
+  for (const [, ten, word, , counter] of text.matchAll(KO_COUNT)) {
+    const value = (ten ? 10 : 0) + KO_COUNTS[word]
+    all.add(value)
+    if (counter === '살') ages.add(value)
+  }
+  return { all, ages }
 }
 
 const ZH_DIGITS: Record<string, number> = { 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 }
@@ -171,8 +191,16 @@ function chineseNumbers(text: string): number[] {
 }
 /** 차례를 나타내는 '第一、三周'의 숫자는 수가 아니다 */
 const ZH_ORDINALS = /第[一二三四五六七八九十两]+(?:\s*[、，,和及与至到~～-]\s*[一二三四五六七八九十两]+)*/g
-/** 학년·나이는 원문에 없는 수를 지어내면 보호자를 잘못 안내한다. 그 밖의 '一'은 '一个', '一点', '一次性'처럼 수가 아닌 말에도 쓴다 */
-const ZH_STRICT_COUNTER = /^(?:年级|岁|周岁)/
+/** 학년·나이를 세는 말. 이 앞의 수는 원문이 아라비아 숫자나 학년·나이로 적은 수여야 한다 */
+const ZH_AGE_GRADE_COUNTER = /^(?:年级|岁|周岁)/
+/** 번역에서 학년·나이로 쓴 아라비아 숫자 ('7岁', '1～4年级', 'lớp 1–4', '8 tuổi') */
+function ageGradeDigits(text: string): number[] {
+  const values: number[] = []
+  const add = (...numbers: (string | undefined)[]) => numbers.forEach((number) => { if (number) values.push(Number(number)) })
+  for (const [, from, to] of text.matchAll(/(\d+)\s*(?:[～~\-–—至到]\s*(\d+)\s*)?(?:岁|周岁|年级|tuổi)/g)) add(from, to)
+  for (const [, from, to] of text.matchAll(/lớp\s*(\d+)(?:\s*[～~\-–—]\s*(\d+))?/gi)) add(from, to)
+  return values
+}
 
 /** 머리글 한 칸의 숫자 문제 */
 function numberIssues(translated: string, source: string, sourceLabel: string, wordNumber: RegExp | null): string[] {
@@ -180,16 +208,20 @@ function numberIssues(translated: string, source: string, sourceLabel: string, w
   const written = koWrittenNumbers(source)
   const numbers = numberTokens(translated)
   const issues: string[] = []
-  const matches = sourceNumbers.every((value) => numbers.includes(value)) && numbers.every((value) => sourceNumbers.includes(value) || written.has(value))
+  const allowed = (value: number) => sourceNumbers.includes(value) || written.all.has(value)
+  const matches = sourceNumbers.every((value) => numbers.includes(value)) && numbers.every(allowed)
+    && ageGradeDigits(translated).every((value) => sourceNumbers.includes(value) || written.ages.has(value))
   if (!matches) issues.push(`숫자가 원문 ${sourceLabel}과 다름 (원문 ${uniqueSorted(sourceNumbers).join(', ') || '없음'})`)
   if (!wordNumber) return issues
   const text = translated.replace(ZH_ORDINALS, ' ')
   for (const match of text.matchAll(new RegExp(wordNumber.source, `${wordNumber.flags.replace('g', '')}g`))) {
     const values = chineseNumbers(match[0])
-    if (values.some((value) => sourceNumbers.includes(value))) return [...issues, `숫자를 글자로 씀: "${match[0]}"`]
-    const unknown = values.filter((value) => !written.has(value))
-    const counter = text.slice((match.index ?? 0) + match[0].length)
-    if (unknown.length && (ZH_STRICT_COUNTER.test(counter) || unknown.some((value) => value !== 1))) return [...issues, `원문에 없는 수를 씀: "${match[0]}"`]
+    const ageGrade = ZH_AGE_GRADE_COUNTER.test(text.slice((match.index ?? 0) + match[0].length))
+    // 원문 숫자를 글자로 바꿨다 (같은 수를 원문이 한글로도 적었고 번역에 아라비아 숫자로도 있으면 그 한글 수의 번역이다)
+    if (values.some((value) => sourceNumbers.includes(value) && !(written.all.has(value) && numbers.includes(value)))) return [...issues, `숫자를 글자로 씀: "${match[0]}"`]
+    const unknown = values.filter((value) => !(ageGrade ? written.ages : written.all).has(value) && !sourceNumbers.includes(value))
+    // 학년·나이 말고는 '一个', '一点', '一次性'처럼 수가 아닌 '一'이 흔하다
+    if (unknown.length && (ageGrade || unknown.some((value) => value !== 1))) return [...issues, `원문에 없는 수를 씀: "${match[0]}"`]
   }
   return issues
 }
