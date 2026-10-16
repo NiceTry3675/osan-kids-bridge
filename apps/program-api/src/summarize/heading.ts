@@ -1,9 +1,10 @@
-import type { DisplayLanguage, SummaryHeading } from '../types'
+import type { DisplayLanguage, LanguageSummary, SummaryHeading } from '../types'
 import { generateJson } from '../llm/gemini'
-import { ageRangeLabel, gradeRangeLabel } from '../match/labels'
+import { isOsanDongName } from '../geo/dong'
+import { gradeRangeLabel } from '../match/labels'
 import { chineseScriptIssues, languageRules, numberTokens } from './check'
 import type { SummaryFacts } from './facts'
-import { LANGUAGE_LABELS } from './format'
+import { ageLabel, LANGUAGE_LABELS, schoolGrade } from './format'
 import { TITLE_GLOSSARY, TITLE_TRANSLATION_RULES } from './prompt'
 
 // 보호자 웹의 목록·상세 머리에 쓰는 그 언어의 제목·운영 기관·대상 (guardian-web ReviewedSummary의 title·institution·target).
@@ -60,7 +61,7 @@ ${TITLE_GLOSSARY.vi}
   zh: `# 언어: 중국어 간체
 - 简体中文으로 쓰고 번체자를 쓰지 않는다.
 - 흔한 이름: 오산시 = 乌山市, 가족센터 = 家庭中心, 다문화가족지원센터 = 多元文化家庭支援中心, 청소년수련관 = 青少年活动中心, 청소년문화의집 = 青少年文化之家, 도서관 = 图书馆, 복지관 = 福利馆, 행정복지센터 = 行政福利中心.
-- 다문화가족 = 多元文化家庭, 결혼이민자 = 婚姻移民者, 보호자 = 家长('保护者'라고 쓰지 않는다), 자녀 = 子女, 방송댄스 = K-POP舞蹈, 육아나눔터 = 共享育儿空间, 온가족 = 全家, 아나바다 장터 = 二手交换市集, 바구니 = 篮子, 1인가구 = 一人家庭, 설명회 = 说明会.
+- 다문화가족 = 多元文化家庭, 결혼이민자 = 婚姻移民者, 보호자 = 家长('保护者'라고 쓰지 않는다), 자녀 = 子女, 방송댄스 = K-POP舞蹈, 육아나눔터 = 共享育儿空间, 온가족 = 全家, 아나바다 장터 = 二手交换市集, 바구니 = 篮子, 1인가구 = 1人家庭, 설명회 = 说明会.
 - 초등 N학년 = 小学N年级, 초등 1~4학년 = 小学1～4年级, 중학생 = 初中生, 고등학생 = 高中生, N세 = N岁.
 - 동 이름(중앙동, 대원동 등)은 한자로 옮기지 않고 한국어 그대로 쓴다. 한자 표기가 여러 가지라 다른 곳처럼 보일 수 있다. 예: '대원동 행정복지센터' → '대원동行政福利中心'. 동 이름 말고는 title과 target에 한국어를 쓰지 않는다.
 ${TITLE_GLOSSARY.zh}
@@ -76,15 +77,15 @@ export function headingFacts(facts: SummaryFacts): Record<string, unknown> {
     target_type: facts.target_type,
     audience: facts.audience,
     grade: facts.grade_range ? gradeRangeLabel(facts.grade_range) : null,
-    age: facts.age_range ? `${facts.age_completed ? '만 ' : ''}${ageRangeLabel(facts.age_range)}` : null,
+    age: facts.age_range ? ageLabel(facts.age_range, 'ko-easy', facts.age_completed) : null,
     eligibility: facts.eligibility_requirements,
   }
 }
 
-/** 대상 번역이 옮겨야 하는 한국어: 대상 원문, 없으면 학년·나이 */
+/** 대상 번역이 옮겨야 하는 한국어: 대상 원문, 없으면 학년·나이 ('8세 이상'처럼 열린 범위는 0·99를 쓰지 않는다) */
 function sourceTarget(facts: SummaryFacts): string {
   if (facts.target_raw.trim()) return facts.target_raw
-  return [facts.grade_range ? gradeRangeLabel(facts.grade_range) : '', facts.age_range ? ageRangeLabel(facts.age_range) : ''].join(' ').trim()
+  return [facts.grade_range ? gradeRangeLabel(facts.grade_range) : '', facts.age_range ? ageLabel(facts.age_range, 'ko-easy', facts.age_completed) : ''].join(' ').trim()
 }
 
 const block = (value: unknown) => JSON.stringify(value, null, 2).replace(/</g, '\\u003c')
@@ -112,11 +113,22 @@ const compact = (text: string) => text.normalize('NFKC').replace(/\s+/g, '')
 const uniqueSorted = (values: number[]) => [...new Set(values)].sort((a, b) => a - b)
 const sameNumbers = (a: number[], b: number[]) => uniqueSorted(a).join(',') === uniqueSorted(b).join(',')
 const KO_SCHOOLS = [/초등/, /중학|중등/, /고등학|고교/]
+/** 학교급을 묶어 쓴 말('중고등학생', '초·중학생', '중고생', '초중고')을 풀고, 초등 '중학년'은 중학교가 아니므로 뺀다 */
+const koSchoolText = (text: string) => text
+  .replace(/중학년/g, '학년')
+  .replace(/초\s*[·・,]?\s*중\s*[·・,]?\s*고(?![가-힣])/g, '초등 중학 고등학')
+  .replace(/중\s*[·・,]?\s*고생/g, '중학생 고등학생')
+  .replace(/중\s*[·・,]?\s*고(?=등)/g, '중학 고')
+  .replace(/초\s*[·・,]?\s*중(?=학|등)/g, '초등 중')
 const KO_MULTICULTURAL = /다문화|결혼\s*이민|이주\s*배경|중도\s*입국/
 const MAX_LENGTH: Record<HeadingLanguage, Record<keyof SummaryHeading, number>> = {
   vi: { title: 200, institution: 160, target: 220 },
   zh: { title: 90, institution: 80, target: 100 },
 }
+
+/** 머리글 칸마다 대조할 한국어 원문 */
+const sourceField = (facts: SummaryFacts, field: keyof SummaryHeading) =>
+  (field === 'title' ? facts.title : field === 'institution' ? facts.institution : sourceTarget(facts))
 
 /**
  * 결정적 검사. 빈 배열이면 통과.
@@ -135,7 +147,8 @@ export function checkHeading(heading: SummaryHeading, facts: SummaryFacts, langu
     if (value.length > MAX_LENGTH[language][field]) issue(field, `너무 김 (${value.length}자)`)
     if (/\n/.test(value)) issue(field, '줄바꿈이 있음')
     if (!rules.script.test(value.replace(/\p{Script=Hangul}+/gu, ''))) issue(field, `${LANGUAGE_LABELS[language]} 글자가 없음`)
-    const wordNumber = rules.wordNumber ? value.match(rules.wordNumber) : null
+    // 원문이 숫자로 쓴 수만 숫자로 옮기게 한다 ('하루 캠프' → '一日营'은 그대로 둔다)
+    const wordNumber = rules.wordNumber && /\d/.test(sourceField(facts, field)) ? value.match(rules.wordNumber) : null
     if (wordNumber) issue(field, `숫자를 글자로 씀: "${wordNumber[0]}"`)
     if (language === 'zh') for (const problem of chineseScriptIssues(value.replace(/[（(][^）)]*\p{Script=Hangul}[^）)]*[）)]/gu, ''))) issue(field, problem)
   }
@@ -153,22 +166,25 @@ export function checkHeading(heading: SummaryHeading, facts: SummaryFacts, langu
   if (values.institution && !compact(values.institution).includes(institutionKorean)) issue('institution', `한국어 원문 이름(${facts.institution})을 괄호 안에 그대로 붙이지 않음`)
   const sourceKorean = compact(`${facts.title} ${facts.institution} ${facts.target_raw}`)
   for (const field of FIELDS) {
-    const words = [...new Set(values[field].match(/\p{Script=Hangul}+/gu) ?? [])]
+    const words = [...new Set(values[field].match(/\p{Script=Hangul}+(?:\d+\p{Script=Hangul}+)*/gu) ?? [])]
     const unknown = words.filter((word) => !sourceKorean.includes(word))
     if (unknown.length) issue(field, `원문에 없는 한국어: ${unknown.join(', ')}`)
     if (field === 'institution') continue
-    const allowed = language === 'zh' ? words.filter((word) => /동$/.test(word)) : []
+    const allowed = language === 'zh' ? words.filter(isOsanDongName) : []
     const korean = words.filter((word) => !allowed.includes(word) && sourceKorean.includes(word))
     if (korean.length) issue(field, `한국어를 번역하지 않고 씀: ${korean.join(', ')}`)
   }
 
   // 대상의 조건을 넓히거나 좁히지 않는다
   if (values.target) {
-    const source = `${target} ${(facts.eligibility_requirements ?? []).join(' ')}`
+    const source = koSchoolText(`${target} ${(facts.eligibility_requirements ?? []).join(' ')}`)
+    const range = facts.grade_range?.map((grade) => schoolGrade(grade).school)
     KO_SCHOOLS.forEach((pattern, school) => {
       const name = ['초등', '중학교', '고등학교'][school]
-      if (pattern.test(target) && !rules.schools[school].test(values.target)) issue('target', `원문의 학교급(${name})이 빠짐`)
-      if (!pattern.test(source) && rules.schools[school].test(values.target)) issue('target', `원문에 없는 학교급(${name})을 씀`)
+      // 원문 대상에 적힌 학교급은 빠지면 안 되고, 원문 대상·자격·학년 범위 어디에도 없는 학교급은 더하면 안 된다
+      const inRange = range ? school >= range[0] && school <= range[1] : false
+      if (pattern.test(koSchoolText(target)) && !rules.schools[school].test(values.target)) issue('target', `원문의 학교급(${name})이 빠짐`)
+      if (!pattern.test(source) && !inRange && rules.schools[school].test(values.target)) issue('target', `원문에 없는 학교급(${name})을 씀`)
     })
     if (KO_MULTICULTURAL.test(target) && !rules.multicultural.test(values.target)) issue('target', '원문의 다문화가족 조건이 빠짐')
     if (!/누구나/.test(source) && rules.anyone.test(values.target)) issue('target', '원문에 없는 누구나를 씀')
@@ -281,4 +297,20 @@ export async function generateHeading(facts: SummaryFacts, language: HeadingLang
     previous = { heading, issues }
   }
   return { heading, issues }
+}
+
+// ---- 이미 만든 요약에 머리글 채우기 (npm run headings) ----
+
+/** 머리글을 (다시) 만들 요약: 머리글이 없거나 머리글 검사에 걸린 검수 전 요약. force면 승인된 요약까지 */
+export function wantsHeading(summary: LanguageSummary, force: boolean): boolean {
+  if (force) return true
+  if (summary.status === 'approved') return false
+  return !summary.heading || summary.issues.some(isHeadingIssue)
+}
+
+/** 머리글을 새로 단 요약: 이전 머리글 문제는 지우고 새 문제를 더한다. 승인은 거두고 사람이 다시 한다 */
+export function withHeading(summary: LanguageSummary, heading: SummaryHeading, headingIssues: string[]): LanguageSummary {
+  const issues = [...summary.issues.filter((issue) => !isHeadingIssue(issue)), ...headingIssues]
+  const { reviewer: _reviewer, approved_at: _at, approved_hash: _hash, ...rest } = summary
+  return { ...rest, heading, issues, status: issues.length ? 'machine_draft' : 'machine_checked' }
 }

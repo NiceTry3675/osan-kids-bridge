@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path'
 import { dataDir } from '../config'
 import { extractWithTranscripts } from '../extract/extract'
 import { readInboxItem } from '../extract/inbox'
-import { contentHash } from '../extract/normalize'
+import { contentHash, withDemoFlag } from '../extract/normalize'
 import { combineSourceText, sourceBlocks } from '../extract/prompt'
 import { transcribePoster } from '../extract/transcribe'
 import { nowSource } from '../review/clock'
@@ -104,8 +104,14 @@ async function ingestOne(id: string, args: IngestArgs, now: Date): Promise<Outco
   const sourceHash = contentHash(combineSourceText(sourceBlocks(item.texts, transcripts)))
   if (previous?.source.content_hash === sourceHash && !args.force) {
     if (fresh) saveTranscripts(id, transcripts)
+    // 원문은 그대로여도 source.json의 시연 표시는 바뀔 수 있다 (승인에는 영향이 없다)
+    const synced = withDemoFlag(previous, item.source.demo)
+    if (synced !== previous) {
+      saveRecord(synced)
+      step(`시연 표시를 source.json에 맞췄습니다 (demo: ${item.source.demo})`)
+    }
     console.log('  = 원문이 바뀌지 않아 건너뜁니다 (다시 처리하려면 --force)')
-    return { id, status: 'skipped', record: previous, errors: [] }
+    return { id, status: 'skipped', record: synced, errors: [] }
   }
 
   let started = Date.now()

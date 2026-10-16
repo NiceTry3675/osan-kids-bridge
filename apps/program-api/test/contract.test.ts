@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { Program as GuardianProgram, SearchResponse as GuardianSearchResponse } from '../../guardian-web/src/data/types'
@@ -81,6 +82,10 @@ describe('기관에 확인할 점 (보호자 웹 UncertainItem)', () => {
       ['자녀가 참여하는 프로그램인지 확인 필요', 'age_grade'],
       ['참여 대상·자격', 'family_eligibility'],
       ['참여 자격 확인 필요: 다문화가족, 오산시 거주', 'family_eligibility'],
+      ['중도입국 자녀 참여 가능 여부', 'family_eligibility'],
+      ['오산시에 살지 않는 가족 참여 가능 여부', 'family_eligibility'],
+      ['7살 이하 동생 참여', 'companion'],
+      ['만 7살 참여 가능 여부', 'age_grade'],
       ['보호자·형제자매 동반 가능 여부', 'companion'],
       ['보호자 동반 가능 여부', 'companion'],
       ['형제자매 동반 가능 여부', 'companion'],
@@ -219,6 +224,11 @@ describe('시연 데이터 (npm run demo)', () => {
     const marked = published.filter((source) => source.source.demo).map((source) => source.program_id)
     expect(marked.length).toBeGreaterThan(0)
     expect(marked).toEqual(published.map((source) => source.program_id).filter((id) => id.startsWith('demo-')))
+    // 저장된 공고의 표시는 inbox source.json과 같다
+    for (const source of published) {
+      const inbox = JSON.parse(readFileSync(resolve(demoDir, 'inbox', source.program_id, 'source.json'), 'utf8')) as { demo?: boolean }
+      expect([source.program_id, source.source.demo === true]).toEqual([source.program_id, inbox.demo === true])
+    }
     for (const source of published.filter((record) => !record.source.demo)) expect(source.source.url).toMatch(/^https:\/\//)
   })
 

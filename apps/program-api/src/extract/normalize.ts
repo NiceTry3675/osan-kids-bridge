@@ -137,6 +137,16 @@ interface SessionDraft {
   evidence: { suffix: string; entries: Evidence[] }[]
 }
 
+/**
+ * source.json의 시연 표시(demo)를 저장된 공고에 맞춘다. 원문 사실이 아니라 승인 해시에 들어가지 않으므로
+ * 원문이 그대로면 다시 추출하지 않고 이 표시만 바꾼다. 같으면 같은 객체를 돌려준다.
+ */
+export function withDemoFlag(record: ProgramRecord, demo: boolean): ProgramRecord {
+  if ((record.source.demo === true) === demo) return record
+  const { demo: _demo, ...source } = record.source
+  return { ...record, source: demo ? { ...source, demo: true } : source }
+}
+
 export function toProgramRecord(raw: RawExtraction, context: NormalizeContext): ProgramRecord {
   const r: Partial<RawExtraction> = raw ?? {}
   const { sourceText, programId } = context

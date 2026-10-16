@@ -115,6 +115,9 @@ function firstCity(text: string): string | null {
 }
 
 /** 주소 문자열에서 오산시 행정동을 찾는다. 근거가 서로 다르거나 걸친 법정동이면 null */
+/** 오산시 행정동·법정동 이름인지 ('대원동', '신장1동', '궐동'). 중국어 머리글이 동 이름을 한국어로 둘 때 쓴다 */
+export const isOsanDongName = (word: string): boolean => word in ADMIN_DONGS || word in LEGAL_DONGS
+
 export function dongFromAddress(address: string | null | undefined): DongLookup {
   const text = (address ?? '').replace(/\s+/g, ' ').trim()
   if (!text) return empty()

@@ -191,9 +191,10 @@ function show(id: string | null): void {
       continue
     }
     const approval = summary.status !== 'approved' ? ''
-      : isApprovedSummary(record, language, summary)
-        ? ` · 최종 검수자 ${summary.reviewer ?? '미기재'} · 승인 ${summary.approved_at ?? '?'}`
-        : ' · 승인 뒤 사실이나 문구가 바뀌어 내보내지 않음 (다시 승인 필요)'
+      : !isApprovedSummary(record, language, summary) ? ' · 승인 뒤 사실이나 문구가 바뀌어 내보내지 않음 (다시 승인 필요)'
+        : language !== 'ko-easy' && !summary.heading
+          ? ` · 머리글(제목·기관·대상)이 없어 내보내지 않음 (npm run headings -- ${record.program_id} --language ${language} --force 뒤 다시 승인)`
+          : ` · 최종 검수자 ${summary.reviewer ?? '미기재'} · 승인 ${summary.approved_at ?? '?'}`
     console.log(`${language}: ${summary.status} · ${summary.generated_at}${approval}`)
     if (summary.heading) console.log(`  제목 ${summary.heading.title}\n  기관 ${summary.heading.institution}\n  대상 ${summary.heading.target}`)
     summary.lines.forEach((line, index) => console.log(`  ${index + 1}. ${line}`))

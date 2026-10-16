@@ -79,6 +79,9 @@ describe('공고 글의 언어', () => {
     expect(programText(korean, 'zh')).toMatchObject({ reviewed: true, missingTranslation: false, title: '周末韩语游戏班' })
     expect(programText(art, 'vi')).toMatchObject({ reviewed: false, missingTranslation: true, title: art.title })
     expect(programText(art, 'ko-easy').missingTranslation).toBe(false)
+    // 자동 대조만 통과한 번역은 그 언어로 보여 주되 검수본이라고 하지 않습니다.
+    const machine = { ...korean, summaries_by_language: { zh: { ...korean.summaries_by_language.zh!, status: 'machine_checked' as const } } }
+    expect(programText(machine, 'zh')).toMatchObject({ reviewed: false, missingTranslation: false, title: '周末韩语游戏班' })
   })
 })
 

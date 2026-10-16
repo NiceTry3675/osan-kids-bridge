@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { unverifiedFacts } from '../src/review/critical'
 import { effectiveReviewStatus, factsHash, isApprovedSummary, isPublished, publicSummaries } from '../src/review/hash'
 import { approveRecord, carriedReview, rejectRecord, resetReview, reusableSummaries } from '../src/review/lifecycle'
+import { summaryStatusText } from '../src/review/format'
+import { summaryApprovalHash } from '../src/review/hash'
 import {
   loadRecord, loadRecords, loadTranscripts, recordProblems, recordWatcher, saveRecord, saveTranscripts,
 } from '../src/store'
@@ -235,6 +237,16 @@ describe('요약 승인과 사실·문구의 연결 (SEC-1)', () => {
     const mismatched = approveRecord({ ...record(), summaries_by_language: { vi: wrong } }, { reviewer: '검수자', now: NOW, summaries: ['vi'], languageReviewer: '베트남어 검수자' })
     expect(mismatched.summaries_by_language.vi?.status).toBe('machine_draft')
     expect(mismatched.summaries_by_language.vi?.issues.join(' ')).toContain('머리글 대상: 숫자가 원문 대상과 다름')
+  })
+
+  it('머리글이 생기기 전에 승인된 베트남어 요약은 검수 목록에 머리글 없음으로 보인다 (내보내지 않으므로)', () => {
+    const base = approved()
+    const { heading: _heading, ...bare } = summary('machine_checked', 'vi')
+    const old: LanguageSummary = { ...bare, status: 'approved', reviewer: '베트남어 검수자', approved_at: NOW.toISOString(), approved_hash: summaryApprovalHash(base, 'vi', bare) }
+    const legacy = { ...base, summaries_by_language: { vi: old } }
+    expect(isApprovedSummary(legacy, 'vi', old)).toBe(true)
+    expect(summaryStatusText(legacy)).toBe('vi 머리글 없음')
+    expect(summaryStatusText(both())).toMatch(/^ko 승인 vi 승인/)
   })
 
   it('사실을 고친 뒤 요약 없이 다시 승인하면 이전 요약 승인을 거둔다', () => {

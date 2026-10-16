@@ -3,10 +3,10 @@ import { generateJson } from '../src/llm/gemini'
 import { checkSummary, numberTokens } from '../src/summarize/check'
 import { skippedDates, summaryFacts } from '../src/summarize/facts'
 import { ageLabel, costLabel, dateLabel, gradeLabel, localizeFacts } from '../src/summarize/format'
-import { checkHeading, HEADING_SCHEMA } from '../src/summarize/heading'
+import { checkHeading, HEADING_SCHEMA, wantsHeading, withHeading } from '../src/summarize/heading'
 import { buildVerifyPrompt, SUMMARY_SCHEMA, summarySystemPrompt } from '../src/summarize/prompt'
 import { capitalizeSentences, summarizeRecord } from '../src/summarize/summarize'
-import type { DisplayLanguage, ProgramRecord, ProgramSession } from '../src/types'
+import type { DisplayLanguage, LanguageSummary, ProgramRecord, ProgramSession } from '../src/types'
 
 // 모델 호출은 가짜로 바꾼다. 결정적 검사는 네트워크 없이 돈다.
 vi.mock('../src/llm/gemini', () => ({ generateJson: vi.fn(), generateText: vi.fn() }))
@@ -674,6 +674,48 @@ describe('머리글 검사 (보호자 웹의 제목·기관·대상)', () => {
     hasIssue(issuesOf('vi', { target: 'Bất kỳ ai, con em gia đình đa văn hóa lớp 1–4 tiểu học' }), '원문에 없는 누구나')
   })
 
+  it('학교급을 묶어 쓴 대상(중고등학생·초·중학생·중고생)과 초등 중학년을 바르게 읽는다', () => {
+    const teens = factsOf({ title: '다문화가족 진로 캠프', target_raw: '다문화가족 중고등학생', grade_range: [7, 12] })
+    expect(checkHeading({ ...HEADING.vi, title: 'Trại hướng nghiệp gia đình đa văn hóa', target: 'Học sinh trung học cơ sở và trung học phổ thông thuộc gia đình đa văn hóa' }, teens, 'vi')).toEqual([])
+    expect(checkHeading({ ...HEADING.zh, title: '多元文化家庭职业营', target: '多元文化家庭初中生和高中生' }, teens, 'zh')).toEqual([])
+    hasIssue(checkHeading({ ...HEADING.zh, title: '多元文化家庭职业营', target: '多元文化家庭高中生' }, teens, 'zh'), '원문의 학교급(중학교)이 빠짐')
+    const short = factsOf({ title: '다문화가족 진로 캠프', target_raw: '다문화가족 중고생', grade_range: [7, 12] })
+    expect(checkHeading({ ...HEADING.zh, title: '多元文化家庭职业营', target: '多元文化家庭初高中生' }, short, 'zh')).toEqual([])
+    const mixed = factsOf({ target_raw: '다문화가족 초·중학생', grade_range: [1, 9] })
+    expect(checkHeading({ ...HEADING.vi, target: 'Học sinh tiểu học và trung học cơ sở thuộc gia đình đa văn hóa' }, mixed, 'vi')).toEqual([])
+    const middleGrades = factsOf({ target_raw: '다문화가족 초등 중학년(3~4학년)', grade_range: [3, 4] })
+    expect(checkHeading({ ...HEADING.zh, target: '多元文化家庭小学中年级（3～4年级）' }, middleGrades, 'zh')).toEqual([])
+    hasIssue(checkHeading({ ...HEADING.zh, target: '多元文化家庭初中3～4年级' }, middleGrades, 'zh'), '원문에 없는 학교급(중학교)을 씀')
+  })
+
+  it('대상 원문이 비고 나이만 열린 범위면 0·99를 요구하지 않는다', () => {
+    const over8 = factsOf({ target_raw: '', target_type: 'all', eligibility_requirements: [], grade_range: null, age_range: [8, 99] })
+    expect(checkHeading({ ...HEADING.vi, target: 'Trẻ từ 8 tuổi trở lên' }, over8, 'vi')).toEqual([])
+    hasIssue(checkHeading({ ...HEADING.vi, target: 'Trẻ 8–99 tuổi' }, over8, 'vi'), '숫자가 원문 대상과 다름 (원문 8)')
+    const under7 = factsOf({ target_raw: '', target_type: 'all', eligibility_requirements: [], grade_range: null, age_range: [0, 7] })
+    expect(checkHeading({ ...HEADING.zh, target: '7岁以下儿童' }, under7, 'zh')).toEqual([])
+  })
+
+  it('원문이 숫자로 쓰지 않은 수는 중국어 글자 숫자로 옮겨도 된다', () => {
+    const oneDay = factsOf({ title: '엄마와 함께하는 하루 캠프' })
+    expect(checkHeading({ ...HEADING.zh, title: '妈妈陪伴的一日营' }, oneDay, 'zh')).toEqual([])
+    const single = factsOf({ title: '1인가구 반찬 만들기' })
+    expect(checkHeading({ ...HEADING.zh, title: '1人家庭小菜制作' }, single, 'zh')).toEqual([])
+    hasIssue(checkHeading({ ...HEADING.zh, title: '一人家庭小菜制作' }, single, 'zh'), '숫자를 글자로 씀')
+  })
+
+  it('중국어에서 한국어로 둘 수 있는 말은 오산의 동 이름뿐이다', () => {
+    const child = factsOf({ title: '다문화가족 아동 체험활동' })
+    hasIssue(checkHeading({ ...HEADING.zh, title: '多元文化家庭아동체험활동' }, child, 'zh'), '한국어를 번역하지 않고 씀: 아동체험활동')
+    const dong = factsOf({ title: '신장1동 토요 과학교실' })
+    expect(checkHeading({ ...HEADING.zh, title: '신장1동周六科学班' }, dong, 'zh')).toEqual([])
+  })
+
+  it('베트남어의 중도입국 표현도 이주 배경 조건으로 본다', () => {
+    const midEntry = factsOf({ target_raw: '중도입국 청소년', grade_range: null, age_range: null, eligibility_requirements: ['중도입국'] })
+    expect(checkHeading({ ...HEADING.vi, target: 'Thanh thiếu niên nhập cảnh giữa chừng' }, midEntry, 'vi')).toEqual([])
+  })
+
   it('중도입국만 대상인 공고는 중국어 대상에 多元文化家庭을 붙이지 않아도 된다', () => {
     const midEntry = factsOf({ target_raw: '중도입국 중학생 (중학교 1~3학년)', grade_range: [7, 9], eligibility_requirements: ['중도입국'] })
     expect(checkHeading({ ...HEADING.zh, target: '中途入国初中生（初中1～3年级）' }, midEntry, 'zh')).toEqual([])
@@ -698,5 +740,29 @@ describe('머리글 검사 (보호자 웹의 제목·기관·대상)', () => {
     const blank = factsOf({ target_raw: '', target_type: 'all', eligibility_requirements: [] })
     expect(checkHeading({ ...HEADING.vi, target: 'Học sinh lớp 1–4 tiểu học' }, blank, 'vi')).toEqual([])
     hasIssue(checkHeading({ ...HEADING.vi, target: 'Học sinh lớp 1–5 tiểu học' }, blank, 'vi'), '숫자가 원문 대상과 다름')
+  })
+})
+
+describe('이미 만든 요약에 머리글 채우기 (npm run headings)', () => {
+  const base: LanguageSummary = { lines: GOOD.vi, status: 'machine_checked', generated_at: NOW.toISOString(), issues: [] }
+  const headingIssue = '머리글 대상: 숫자가 원문 대상과 다름 (원문 1, 4)'
+
+  it('머리글이 없거나 머리글 검사에 걸린 검수 전 요약만 다시 만들고, 승인된 요약은 force일 때만', () => {
+    expect(wantsHeading(base, false)).toBe(true)
+    expect(wantsHeading({ ...base, heading: HEADING.vi }, false)).toBe(false)
+    expect(wantsHeading({ ...base, heading: HEADING.vi, status: 'machine_draft', issues: [headingIssue] }, false)).toBe(true)
+    expect(wantsHeading({ ...base, heading: HEADING.vi, status: 'machine_draft', issues: ['모델 대조 실패: 503'] }, false)).toBe(false)
+    const approved: LanguageSummary = { ...base, heading: HEADING.vi, status: 'approved', reviewer: '검수자', approved_at: NOW.toISOString(), approved_hash: 'x' }
+    expect(wantsHeading(approved, false)).toBe(false)
+    expect(wantsHeading(approved, true)).toBe(true)
+  })
+
+  it('새 머리글은 이전 머리글 문제만 바꾸고 다른 문제는 남기며, 승인을 거둔다', () => {
+    const approved: LanguageSummary = { ...base, heading: HEADING.vi, status: 'approved', reviewer: '검수자', approved_at: NOW.toISOString(), approved_hash: 'x' }
+    const clean = withHeading(approved, HEADING.vi, [])
+    expect(clean).toEqual({ ...base, heading: HEADING.vi, status: 'machine_checked' })
+    const draft = withHeading({ ...base, status: 'machine_draft', issues: ['1줄에 제목 원문이 없음', headingIssue] }, HEADING.vi, ['머리글 제목: 비어 있음'])
+    expect(draft.status).toBe('machine_draft')
+    expect(draft.issues).toEqual(['1줄에 제목 원문이 없음', '머리글 제목: 비어 있음'])
   })
 })

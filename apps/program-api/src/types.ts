@@ -261,7 +261,7 @@ export interface ProgramResponse {
   verified_at: string | null
   /** 게시된 공고만 내보내므로 늘 current (승인 뒤 사실이 바뀐 공고는 410) */
   review_state: 'current' | 'recheck'
-  /** 시연 데이터로 띄운 서버의 공고 (보호자 웹이 실제 기관 링크로 보내지 않는다) */
+  /** 시연용으로 만든 가상 공고 (record.source.demo, inbox source.json의 "demo": true). 보호자 웹이 실제 기관 링크·전화로 보내지 않는다 */
   is_demo: boolean
   // 명세 v2.2 6장 추가 필드
   /** 원문에 시각까지 있으면 YYYY-MM-DDTHH:MM, 아니면 YYYY-MM-DD */

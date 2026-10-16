@@ -30,13 +30,15 @@ export const TARGET_LABELS: Record<TargetType, string> = {
 const SUMMARY_LABELS: Record<SummaryStatus, string> = { machine_draft: '초안', machine_checked: '대조', approved: '승인' }
 const LANGUAGE_SHORT: Record<DisplayLanguage, string> = { 'ko-easy': 'ko', vi: 'vi', zh: 'zh' }
 
-/** 언어별 요약 상태. 승인 뒤 사실이나 문구가 바뀐 요약은 '승인 풀림' */
+/** 언어별 요약 상태. 승인 뒤 사실이나 문구가 바뀐 요약은 '승인 풀림', 머리글 없이 승인된 베트남어·중국어는 '머리글 없음'(내보내지 않음) */
 export function summaryStatusText(record: ProgramRecord): string {
   const parts = DISPLAY_LANGUAGES
     .filter((language) => record.summaries_by_language[language])
     .map((language) => {
       const summary = record.summaries_by_language[language]!
-      const label = summary.status === 'approved' && !isApprovedSummary(record, language, summary) ? '승인 풀림' : SUMMARY_LABELS[summary.status] ?? '?'
+      const label = summary.status !== 'approved' ? SUMMARY_LABELS[summary.status] ?? '?'
+        : !isApprovedSummary(record, language, summary) ? '승인 풀림'
+          : language !== 'ko-easy' && !summary.heading ? '머리글 없음' : SUMMARY_LABELS.approved
       return `${LANGUAGE_SHORT[language]} ${label}`
     })
   return parts.length ? parts.join(' ') : '없음'

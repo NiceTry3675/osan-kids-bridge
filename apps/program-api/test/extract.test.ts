@@ -8,9 +8,10 @@ import {
   supportsCost, supportsDate, supportsEligibility, supportsGradeRange, supportsLanguage, supportsPhone, supportsTime, verifyEvidence, weekdaysIn,
 } from '../src/extract/evidence'
 import { unverifiedFacts } from '../src/review/critical'
+import { factsHash } from '../src/review/hash'
 import { extractInboxItem } from '../src/extract/extract'
 import { htmlToText, readInboxItem } from '../src/extract/inbox'
-import { statedWeekdayFor, toProgramRecord, weekdayOf } from '../src/extract/normalize'
+import { statedWeekdayFor, toProgramRecord, weekdayOf, withDemoFlag } from '../src/extract/normalize'
 import type { NormalizeContext } from '../src/extract/normalize'
 import { buildExtractionPrompt, combineSourceText, sourceBlocks } from '../src/extract/prompt'
 import { EXTRACTION_SCHEMA } from '../src/extract/schema'
@@ -341,6 +342,16 @@ describe('normalize: 목록 한 줄 (기간만 있는 공고)', () => {
     })
     expect(record.model).toBe('test-model')
     expect(record.extracted_at).toBe('2026-10-15T03:00:00.000Z')
+  })
+
+  it('source.json의 시연 표시를 옮기고, 원문이 그대로일 때도 표시만 맞출 수 있다 (승인 해시는 그대로)', () => {
+    const invented = toProgramRecord(kpopRaw, context(LIST_ROW, { source: { ...context(LIST_ROW).source, demo: true } }))
+    expect(invented.source.demo).toBe(true)
+    expect(record.source).not.toHaveProperty('demo')
+    expect(withDemoFlag(record, false)).toBe(record)
+    expect(withDemoFlag(record, true).source.demo).toBe(true)
+    expect(withDemoFlag(invented, false).source).not.toHaveProperty('demo')
+    expect(factsHash(withDemoFlag(record, true))).toBe(factsHash(record))
   })
 
   it('회차가 없어도 원문의 공통 장소를 행정동과 함께 남긴다', () => {
