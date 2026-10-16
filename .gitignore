@@ -33,3 +33,4 @@ presentation/*.pptx
 presentation/*.pdf
 presentation/build/node_modules/
 presentation/build/render/
+presentation/*.mp4

@@ -4,6 +4,8 @@
 - 자막: 한국어 자막(심사위원용). 보호자 화면은 베트남어
 - 장면마다 '무엇이 AI이고 무엇이 검증인지'가 보이게 한다
 
+> 자동 녹화본: `presentation/build/record-demo.js`가 아래 콘티대로 1분 41초짜리 초안(`presentation/osan-kids-bridge-demo.mp4`)을 만든다. 직접 찍을 때는 아래 준비와 장면을 따른다.
+
 ## 준비 (녹화 전)
 
 ```bash
