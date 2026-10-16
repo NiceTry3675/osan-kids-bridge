@@ -1,480 +1,60 @@
-import { useEffect, useState } from 'react'
-import { getProgram, searchPrograms, usingDemoData } from './api'
-import { cityOutsideOsan, filterChips, formatDate, formatSession, formatWindow, interestLabel, languageName, validateWindow, weekdayLabel, weekdays } from './format'
-import { LanguageSwitcher, useLanguage, translate } from './language'
-import type { Locale, MessageKey } from './language'
-import { clearSearchSession, readSearchSession, saveSearchSession } from './searchSession'
-import { emptyFilters } from './types'
-import type { AvailableWindow, CompanionRule, Interest, Program, ProgramSession, ProgramVenue, SearchFilters, SearchResponse, Weekday } from './types'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { LanguagePicker } from '@osan-kids-bridge/ui'
+import type { LanguagePickerHandle } from '@osan-kids-bridge/ui'
+import { useI18n } from './i18n'
+import { languageOptions, localeState } from './i18n/policy'
+import { usingDemoData } from './data/api'
+import type { SearchFilters } from './data/types'
+import { hasAnyCondition } from './lib/filters'
+import { readFilters, writeFilters } from './lib/session'
+import { useRoute } from './lib/router'
+import { DetailScreen } from './screens/detail/DetailScreen'
+import { HomeScreen } from './screens/home/HomeScreen'
+import { IntroScreen } from './screens/intro/IntroScreen'
 
-type View = 'browse' | 'filter' | 'results' | 'detail'
-type WindowMode = 'weekday' | 'date'
+const INTRO_KEY = 'osan-guardian-intro-seen'
+const introSeen = () => { try { return localStorage.getItem(INTRO_KEY) === '1' } catch { return true } }
 
-const interests: Interest[] = ['experience_culture', 'korean_study', 'sports_arts', 'career']
-const dongOptions = ['중앙동', '대원동', '신장동', '세마동', '초평동', '남촌동']
+/**
+ * 보호자 웹(유저플로우 v5). 페이지는 홈(/)과 상세(/programs/{id}) 두 개이고,
+ * 조건 넣기·신청·물어보기는 그 위에 여는 시트입니다. 언어 고르기는 늘 맨 위에 있습니다.
+ */
+export default function App() {
+  const { locale, setLocale, t } = useI18n()
+  const [route, history] = useRoute()
+  const [filters, setFilters] = useState<SearchFilters>(readFilters)
+  // 기본 주소로 처음 왔을 때만 첫 화면을 보입니다. 공유 링크로 오면 바로 상세입니다.
+  const [showIntro, setShowIntro] = useState(() => route.name === 'browse' && !introSeen())
+  const picker = useRef<LanguagePickerHandle>(null)
+  const options = useMemo(() => languageOptions(), [])
 
-function routeProgramId(): string | null {
-  const match = window.location.pathname.match(/^\/programs\/([^/]+)\/?$/)
-  return match ? decodeURIComponent(match[1]) : null
-}
+  useEffect(() => { writeFilters(hasAnyCondition(filters) ? filters : null) }, [filters])
+  useEffect(() => { document.title = t('brand') }, [t])
 
-function statusLabel(program: Program, locale: Locale): string {
-  switch (program.application_status) {
-    case 'open': return translate(locale, 'open')
-    case 'upcoming': return program.application_start ? translate(locale, 'upcomingFrom', { date: formatDate(program.application_start, locale) }) : translate(locale, 'upcoming')
-    case 'closed': return translate(locale, 'closed')
-    case 'unknown': return translate(locale, 'applicationUnknown')
-  }
-}
-
-/** 장소 이름. 오산시 밖이면 시·군 이름을 붙인다 */
-function placeName(place: ProgramSession | ProgramVenue, locale: Locale): string {
-  if (place.online) return translate(locale, 'online')
-  const name = place.place_name ?? place.address
-  if (!name) return translate(locale, 'placeUnknown')
-  const city = cityOutsideOsan(place.address)
-  return city ? `${name} (${city})` : name
-}
-
-/** 다음 회차의 장소. 회차가 모두 지났으면 마지막 회차, 회차가 없으면 공고에 적힌 공통 장소 */
-function placeLabel(program: Program, locale: Locale): string {
-  const place = program.next_session ?? program.sessions[program.sessions.length - 1] ?? program.venue
-  return place ? placeName(place, locale) : translate(locale, 'placeUnknown')
-}
-
-/** 운영 기간과 총 회차 ('6월 8일(월) ~ 12월 1일(화) · 총 3회') */
-function periodLabel(program: Program, locale: Locale): string | null {
-  const { period_start: start, period_end: end, session_count: count } = program
-  if (!start && !end) return null
-  const period = start === end ? formatDate(start ?? null, locale) : `${start ? formatDate(start, locale) : ''} ~ ${end ? formatDate(end, locale) : ''}`.trim()
-  return count ? `${period} · ${translate(locale, 'periodCount', { count })}` : period
-}
-
-/** 다음 회차. 없으면 지난 마지막 회차, 운영 기간, 원문이 밝힌 대략의 일정 ('11월 중 운영 예정') 순 */
-function scheduleLabel(program: Program, locale: Locale): string {
-  if (program.next_session) return formatSession(program.next_session, locale)
-  const last = program.sessions.filter((session) => session.date).at(-1)
-  if (last) return formatSession(last, locale)
-  return periodLabel(program, locale) ?? program.schedule_note ?? translate(locale, 'scheduleUnknown')
-}
-
-const COST_BASES: [RegExp, MessageKey][] = [[/가족\s*당|가정\s*당|가구\s*당/, 'perFamily'], [/(?:1\s*)?인\s*당|1\s*명\s*당/, 'perPerson'], [/(?:1\s*)?회\s*당|매\s*회/, 'perSession']]
-const COST_WORDS = /가족\s*당|가정\s*당|가구\s*당|(?:1\s*)?인\s*당|1\s*명\s*당|(?:1\s*)?회\s*당|매\s*회|재료비|참가비|비용|무료|[\d,.]+\s*원|[\s:·]/g
-
-/** 금액에 원문의 가족당·재료비 같은 기준을 붙인다 (금액만 보이면 한 사람 값으로 읽힌다) */
-function costLabel(program: Program, locale: Locale): string {
-  if (program.cost_krw === null) return translate(locale, 'costUnknown')
-  if (program.cost_krw === 0) return translate(locale, 'free')
-  const amount = translate(locale, 'won', { amount: program.cost_krw.toLocaleString(locale === 'vi' ? 'vi-VN' : locale === 'zh' ? 'zh-CN' : 'ko-KR') })
-  const raw = program.cost_raw ?? ''
-  const basis = COST_BASES.find(([pattern]) => pattern.test(raw))?.[1]
-  const qualifiers = [basis && translate(locale, basis), /재료비/.test(raw) && translate(locale, 'materialFee')].filter(Boolean) as string[]
-  if (!qualifiers.length) return amount
-  if (locale === 'vi') return `${amount} (${qualifiers.join(', ')})`
-  return locale === 'zh' ? `${qualifiers.join('')}${amount}` : `${qualifiers.join(' ')} ${amount}`
-}
-
-/** 정원. 원문 인용이 가족 단위·회차별·선착순이면 그대로 밝힌다 ('25가족', '회차별 12명', '15명 · 선착순') */
-function capacityLabel(program: Program, locale: Locale): string | null {
-  if (program.capacity === null || program.capacity === undefined) return null
-  const quote = program.source_evidence?.find((entry) => entry.field === 'capacity')?.quote ?? ''
-  const unit = translate(locale, /가족|가정|가구/.test(quote) ? 'capacityFamilies' : 'capacityPeople', { count: program.capacity })
-  const count = /회차\s*별|회차\s*마다|각\s*회차|매\s*회|회\s*당/.test(quote) ? translate(locale, 'capacityPerSession', { count: unit }) : unit
-  return /선착순/.test(quote) ? `${count} · ${translate(locale, 'firstCome')}` : count
-}
-
-/** 원문 비용 표현에 금액·기준 말고 더 적힌 것이 있는가 ('10,000원 (악보·간식 포함)', '무료 (재료 제공)') */
-function costHasMore(raw: string | null): boolean {
-  return !!raw && raw.replace(COST_WORDS, '').length > 0
-}
-
-/** 상세의 비용: 원문에 더 적힌 것이 있으면 원문 표현도 보인다 (쉬운 한국어는 원문 표현만) */
-function costDetail(program: Program, locale: Locale): string {
-  const raw = program.cost_raw
-  if (!raw || (program.cost_krw !== null && !costHasMore(raw))) return costLabel(program, locale)
-  return locale === 'ko-easy' && program.cost_krw !== null ? raw : `${costLabel(program, locale)} · ${raw}`
-}
-
-const companionUnknown = (rule: CompanionRule | undefined) => !rule || rule === 'unknown'
-
-function isSafeUrl(value: string | null | undefined): value is string {
-  if (!value) return false
-  try { return ['http:', 'https:'].includes(new URL(value).protocol) } catch { return false }
-}
-
-function formatTimeInput(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 4)
-  if (value.includes(':') && value.indexOf(':') === 1 && digits.length <= 3) {
-    return `0${digits.slice(0, 1)}:${digits.slice(1)}`
-  }
-  return digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits
-}
-
-function ProgramCard({ program, onOpen }: { program: Program; onOpen: (id: string) => void }) {
-  const { locale, t } = useLanguage()
-  const checks = [
-    program.time_match_status === 'unknown' && t('askSchedule'),
-    program.age_grade_match_status === 'unknown' && t('askAge'),
-    program.eligibility_status === 'unknown' && t('askEligibility'),
-  ].filter(Boolean) as string[]
-  return (
-    <button className="program-card" type="button" onClick={() => onOpen(program.program_id)} aria-label={t('openDetail', { title: program.title })}>
-      <span className="card-body">
-        <span className="card-topline"><span className="card-category">{interestLabel(locale, program.category)}</span><span className={`status-text status-${program.application_status}`}>{statusLabel(program, locale)}</span></span>
-        <strong className="card-title">{program.title}</strong>
-        <span className="card-institution">{program.institution}</span>
-        <span className="card-info"><span className="meta-label">{program.time_match_status === 'matched' ? t('matchedSession') : t('schedule')}</span><span>{scheduleLabel(program, locale)}</span></span>
-        <span className="card-info"><span className="meta-label">{t('place')}</span><span>{placeLabel(program, locale)}</span></span>
-        <span className="card-info"><span className="meta-label">{t('targetOriginal')}</span><span>{program.target_raw}</span></span>
-        <span className="card-info"><span className="meta-label">{t('cost')}</span><span>{costLabel(program, locale)}</span></span>
-        {program.age_grade_match_status === 'matched' && <span className="card-match">{t('ageMatched')}</span>}
-        {checks.length > 0 && <span className="card-check">{t('checks', { items: checks.join(' · ') })}</span>}
-      </span>
-      <span className="card-chevron" aria-hidden="true">›</span>
-    </button>
-  )
-}
-
-function Loading({ label }: { label?: string }) {
-  const { t } = useLanguage()
-  return <div className="state-panel" role="status"><span className="spinner" aria-hidden="true" /><p>{label ?? t('loadingPrograms')}</p></div>
-}
-
-function ErrorPanel({ onRetry, title }: { onRetry: () => void; title?: string }) {
-  const { t } = useLanguage()
-  return <div className="state-panel"><div className="state-icon">!</div><h2>{title ?? t('errorList')}</h2><p>{t('retryHint')}</p><button className="button secondary" type="button" onClick={onRetry}>{t('retry')}</button></div>
-}
-
-interface FilterWizardProps {
-  draft: SearchFilters
-  setDraft: (filters: SearchFilters) => void
-  onClose: () => void
-  onApply: () => void
-}
-
-function FilterWizard({ draft, setDraft, onClose, onApply }: FilterWizardProps) {
-  const { locale, t } = useLanguage()
-  const [step, setStep] = useState(1)
-  const [windowMode, setWindowMode] = useState<WindowMode>('weekday')
-  const [weekday, setWeekday] = useState<Weekday>('sat')
-  const [date, setDate] = useState('')
-  const [start, setStart] = useState('')
-  const [end, setEnd] = useState('')
-  const [windowError, setWindowError] = useState('')
-  const [editingWindowIndex, setEditingWindowIndex] = useState<number | null>(null)
-  const [childMode, setChildMode] = useState<'grade' | 'age'>(draft.child_age ? 'age' : 'grade')
-  const [childAgeText, setChildAgeText] = useState(draft.child_age ? String(draft.child_age) : '')
-  const [childError, setChildError] = useState('')
-
-  const updateChildAge = (value: string) => {
-    setChildAgeText(value)
-    const age = Number(value)
-    setChildError(value && (!Number.isInteger(age) || age < 1 || age > 18) ? t('ageError') : '')
-    setDraft({ ...draft, child_age: value && Number.isInteger(age) && age >= 1 && age <= 18 ? age : undefined, child_grade: undefined })
-  }
-
-  const addWindow = () => {
-    const window: AvailableWindow = windowMode === 'weekday'
-      ? { day_of_week: weekday, start_time: start, end_time: end }
-      : { date, start_time: start, end_time: end }
-    const error = validateWindow(window, locale)
-    if (error) { setWindowError(error); return false }
-    if (draft.available_windows.some((existing, index) => index !== editingWindowIndex && JSON.stringify(existing) === JSON.stringify(window))) {
-      setWindowError(t('duplicateTime')); return false
-    }
-    const windows = [...draft.available_windows]
-    if (editingWindowIndex === null) windows.push(window)
-    else windows[editingWindowIndex] = window
-    setDraft({ ...draft, available_windows: windows })
-    setEditingWindowIndex(null)
-    setWindowError('')
-    setStart('')
-    setEnd('')
-    return true
-  }
-
-  const editWindow = (window: AvailableWindow, index: number) => {
-    setEditingWindowIndex(index)
-    if ('date' in window) { setWindowMode('date'); setDate(window.date) }
-    else { setWindowMode('weekday'); setWeekday(window.day_of_week) }
-    setStart(window.start_time)
-    setEnd(window.end_time)
-    setWindowError('')
-  }
-
-  const deleteWindow = (index: number) => {
-    setDraft({ ...draft, available_windows: draft.available_windows.filter((_, itemIndex) => itemIndex !== index) })
-    if (editingWindowIndex === index) { setEditingWindowIndex(null); setStart(''); setEnd('') }
-    else if (editingWindowIndex !== null && editingWindowIndex > index) setEditingWindowIndex(editingWindowIndex - 1)
-  }
-
-  const goNext = () => {
-    if (step === 1 && childError) return
-    if (step === 2 && (start || end || (windowMode === 'date' && date)) && !addWindow()) return
-    if (step === 3) onApply()
-    else setStep(step + 1)
-  }
-
-  const skipStep = () => {
-    if (step === 1) {
-      setDraft({ ...draft, child_age: undefined, child_grade: undefined })
-      setChildAgeText('')
-      setChildError('')
-    } else if (step === 2) {
-      setDraft({ ...draft, available_windows: [] })
-      setEditingWindowIndex(null)
-      setStart('')
-      setEnd('')
-      setWindowError('')
-    }
-    setStep(step + 1)
+  const finishIntro = () => {
+    try { localStorage.setItem(INTRO_KEY, '1') } catch { /* 이번 방문에만 기억합니다. */ }
+    setShowIntro(false)
   }
 
   return (
-    <div className="app-shell wizard-shell">
-      <LanguageSwitcher />
-      <header className="topbar"><button className="icon-button" type="button" onClick={step === 1 ? onClose : () => setStep(step - 1)} aria-label={t('back')}>‹</button><div className="progress" aria-label={t('stepCount', { step })}><span className={step >= 1 ? 'active' : ''} /><span className={step >= 2 ? 'active' : ''} /><span className={step >= 3 ? 'active' : ''} /></div><span className="step-count">{step}/3</span></header>
-      <main className="wizard-content">
-        {step === 1 && <>
-          <div className="eyebrow">{t('childStepEyebrow')}</div>
-          <h1>{t('childStepTitle')}</h1>
-          <div className="segment" role="group" aria-label={t('childModeGroup')}><button type="button" className={childMode === 'grade' ? 'selected' : ''} onClick={() => { setChildMode('grade'); setChildAgeText(''); setChildError(''); setDraft({ ...draft, child_age: undefined }) }}>{t('grade')}</button><button type="button" className={childMode === 'age' ? 'selected' : ''} onClick={() => { setChildMode('age'); setChildError(''); setDraft({ ...draft, child_grade: undefined }) }}>{t('age')}</button></div>
-          {childMode === 'grade' ? <div className="choice-grid grade-grid">{[1, 2, 3, 4, 5, 6].map((grade) => <button className={draft.child_grade === grade ? 'choice selected' : 'choice'} type="button" key={grade} onClick={() => setDraft({ ...draft, child_grade: grade, child_age: undefined })}>{t('gradeOption', { grade })}</button>)}</div>
-            : <label className="field-label">{t('ageInput')} <span className="field-hint">{t('ageHint')}</span><input className="text-input" type="number" min="1" max="18" inputMode="numeric" value={childAgeText} placeholder={t('agePlaceholder')} aria-invalid={!!childError} aria-describedby={childError ? 'child-age-error' : undefined} onChange={(event) => updateChildAge(event.target.value)} /></label>}
-          {childError && <p id="child-age-error" className="field-error" role="alert">{childError}</p>}
-          {(draft.child_grade || draft.child_age || childAgeText) && <button className="text-button" type="button" onClick={() => { setChildAgeText(''); setChildError(''); setDraft({ ...draft, child_grade: undefined, child_age: undefined }) }}>{t('clearChild')}</button>}
-        </>}
-        {step === 2 && <>
-          <div className="eyebrow">{draft.child_grade ? t('gradeOption', { grade: draft.child_grade }) : draft.child_age ? t('ageOption', { age: draft.child_age }) : t('noChild')}</div>
-          <h1>{t('timeStepTitle')}</h1>
-          <div className="segment" role="group" aria-label={t('timeModeGroup')}><button type="button" className={windowMode === 'weekday' ? 'selected' : ''} onClick={() => { setWindowMode('weekday'); setWindowError('') }}>{t('weekdayMode')}</button><button type="button" className={windowMode === 'date' ? 'selected' : ''} onClick={() => { setWindowMode('date'); setWindowError('') }}>{t('dateMode')}</button></div>
-          {windowMode === 'weekday' ? <div className="weekday-grid" role="group" aria-label={t('weekdayGroup')}>{weekdays.map(({ value }) => <button className={weekday === value ? 'day selected' : 'day'} type="button" key={value} onClick={() => setWeekday(value)} aria-pressed={weekday === value}>{weekdayLabel(locale, value)}</button>)}</div> : <label className="field-label">{t('dateInput')}<input className="text-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} /></label>}
-          <div className="time-range"><label className="field-label">{t('start')}<input className="text-input" type="text" inputMode="numeric" maxLength={5} placeholder="10:05" value={start} aria-invalid={!!windowError} onChange={(event) => { setStart(formatTimeInput(event.target.value)); setWindowError('') }} /></label><span aria-hidden="true">~</span><label className="field-label">{t('end')}<input className="text-input" type="text" inputMode="numeric" maxLength={5} placeholder="12:10" value={end} aria-invalid={!!windowError} onChange={(event) => { setEnd(formatTimeInput(event.target.value)); setWindowError('') }} /></label></div>
-          {windowError && <p className="field-error" role="alert">{windowError}</p>}
-          <button className="add-window" type="button" onClick={addWindow}>{editingWindowIndex === null ? `+ ${t('addTime')}` : t('finishTimeEdit')}</button>
-          {draft.available_windows.length > 0 && <div className="added-windows"><h2>{t('addedTimes')}</h2>{draft.available_windows.map((window, index) => <div className={editingWindowIndex === index ? 'window-row editing' : 'window-row'} key={`${formatWindow(window, locale)}-${index}`}><span>{formatWindow(window, locale)}</span><button type="button" onClick={() => editWindow(window, index)} aria-label={t('editWindow', { window: formatWindow(window, locale) })}>{t('edit')}</button><button type="button" onClick={() => deleteWindow(index)} aria-label={t('deleteWindow', { window: formatWindow(window, locale) })}>{t('delete')}</button></div>)}</div>}
-        </>}
-        {step === 3 && <>
-          <div className="eyebrow">{t('preferenceEyebrow')}</div>
-          <h1>{t('preferenceTitle')}</h1>
-          <h2 className="section-label">{t('interests')} <span className="field-hint">{t('interestHint')}</span></h2>
-          <div className="choice-grid">{interests.map((value) => <button className={draft.interests.includes(value) ? 'choice selected' : 'choice'} type="button" key={value} aria-pressed={draft.interests.includes(value)} onClick={() => setDraft({ ...draft, interests: draft.interests.includes(value) ? draft.interests.filter((item) => item !== value) : [...draft.interests, value] })}>{interestLabel(locale, value)}</button>)}</div>
-          <label className="field-label spaced">{t('dong')} <span className="field-hint">{t('dongHint')}</span><select className="text-input" value={draft.dong ?? ''} onChange={(event) => setDraft({ ...draft, dong: event.target.value || undefined })}><option value="">{t('none')}</option>{dongOptions.map((dong) => <option key={dong} value={dong}>{dong}</option>)}</select></label>
-          <label className="toggle-row"><span><strong>{t('freeOnly')}</strong><small>{t('freeOnlyHint')}</small></span><input type="checkbox" checked={draft.free_only} onChange={(event) => setDraft({ ...draft, free_only: event.target.checked })} /></label>
-        </>}
-      </main>
-      <footer className="bottom-actions">{step < 3 && <button className="button ghost" type="button" onClick={skipStep}>{step === 1 ? t('noChildStep') : t('noTimeStep')}</button>}<button className="button primary" type="button" onClick={goNext}>{step === 3 ? t('showResults') : t('next')}</button></footer>
+    <div className={showIntro ? 'shell shell--intro' : 'shell'}>
+      <a className="skip" href="#main">{t('browseTitle')}</a>
+      <LanguagePicker
+        ref={picker}
+        value={locale}
+        options={options}
+        onChange={setLocale}
+        copy={{
+          label: t('languageLabel'), more: t('pickerMore'), title: t('pickerTitle'), search: t('pickerSearch'), close: t('close'),
+          current: t('pickerCurrent'), draft: t('pickerDraft'), inReview: t('pickerInReview'), notOffered: t('pickerNotOffered'), noMatch: t('pickerNoMatch'),
+        }}
+      />
+      {localeState(locale) === 'draft' && <p className="ribbon ribbon--draft" role="note">{t('draftNotice')}</p>}
+      {usingDemoData && !showIntro && <p className="ribbon ribbon--demo" role="note">{t('demoNotice')}</p>}
+
+      {showIntro ? <IntroScreen onStart={finishIntro} onMoreLanguages={() => picker.current?.openSearch()} />
+        : route.name === 'browse' ? <HomeScreen filters={filters} onFiltersChange={setFilters} restoreScrollY={history.scrollY} />
+          : <DetailScreen key={route.id} id={route.id} filters={history.fromList ? filters : null} />}
     </div>
   )
 }
-
-function InfoSheet({ title, children, onClose }: { title: string; children: React.ReactNode; onClose: () => void }) {
-  const { t } = useLanguage()
-  return <div className="sheet-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}><section className="sheet" role="dialog" aria-modal="true" aria-label={title}><div className="sheet-handle" /><h2>{title}</h2>{children}<button className="button secondary full" type="button" onClick={onClose}>{t('close')}</button></section></div>
-}
-
-function App() {
-  const { locale, t } = useLanguage()
-  const initialId = routeProgramId()
-  const arrivedFromList = Boolean(initialId && window.history.state?.fromList)
-  const [startedAtDetail] = useState(Boolean(initialId))
-  const [initialSession] = useState(() => initialId && !arrivedFromList ? { filters: emptyFilters(), hasApplied: false } : readSearchSession())
-  const [view, setView] = useState<View>(initialId ? 'detail' : initialSession.hasApplied ? 'results' : 'browse')
-  const [programId, setProgramId] = useState<string | null>(initialId)
-  const [filters, setFilters] = useState<SearchFilters>(initialSession.filters)
-  const [draft, setDraft] = useState<SearchFilters>(initialSession.filters)
-  const [hasApplied, setHasApplied] = useState(initialSession.hasApplied)
-  const [cameFromList, setCameFromList] = useState(arrivedFromList)
-  const [search, setSearch] = useState<SearchResponse | null>(null)
-  const [searchLoading, setSearchLoading] = useState(false)
-  const [searchError, setSearchError] = useState(false)
-  const [searchRevision, setSearchRevision] = useState(0)
-  const [detail, setDetail] = useState<Program | null>(null)
-  const [detailLoading, setDetailLoading] = useState(false)
-  const [detailError, setDetailError] = useState(false)
-  const [detailRevision, setDetailRevision] = useState(0)
-  const [helpOpen, setHelpOpen] = useState(false)
-  const [externalNoticeOpen, setExternalNoticeOpen] = useState(false)
-  const [toast, setToast] = useState('')
-
-  useEffect(() => {
-    if (!startedAtDetail || view !== 'detail') saveSearchSession({ filters, hasApplied })
-  }, [filters, hasApplied, startedAtDetail, view])
-
-  useEffect(() => {
-    const handlePop = () => {
-      const id = routeProgramId()
-      setProgramId(id)
-      setView(id ? 'detail' : hasApplied ? 'results' : 'browse')
-      setHelpOpen(false)
-      setExternalNoticeOpen(false)
-    }
-    window.addEventListener('popstate', handlePop)
-    return () => window.removeEventListener('popstate', handlePop)
-  }, [hasApplied])
-
-  useEffect(() => {
-    if (view !== 'browse' && view !== 'results') return
-    const controller = new AbortController()
-    setSearchLoading(true)
-    setSearchError(false)
-    searchPrograms(filters, controller.signal).then((data) => { if (!controller.signal.aborted) setSearch(data) }).catch(() => { if (!controller.signal.aborted) setSearchError(true) }).finally(() => { if (!controller.signal.aborted) setSearchLoading(false) })
-    return () => controller.abort()
-  }, [view, filters, searchRevision])
-
-  useEffect(() => {
-    if (view !== 'detail' || !programId) return
-    const controller = new AbortController()
-    setDetail(null)
-    setDetailLoading(true)
-    setDetailError(false)
-    getProgram(programId, filters, controller.signal).then((data) => { if (!controller.signal.aborted) setDetail(data) }).catch(() => { if (!controller.signal.aborted) setDetailError(true) }).finally(() => { if (!controller.signal.aborted) setDetailLoading(false) })
-    return () => controller.abort()
-  }, [view, programId, filters, detailRevision])
-
-  useEffect(() => {
-    if (!toast) return
-    const timeout = window.setTimeout(() => setToast(''), 3500)
-    return () => window.clearTimeout(timeout)
-  }, [toast])
-
-  const openFilters = () => { setDraft({ ...filters, available_windows: [...filters.available_windows], interests: [...filters.interests] }); setView('filter') }
-  const applyFilters = () => { setFilters({ ...draft, available_windows: [...draft.available_windows], interests: [...draft.interests] }); setHasApplied(true); setView('results') }
-  const openDetail = (id: string) => { setCameFromList(true); window.history.pushState({ fromList: true }, '', `/programs/${encodeURIComponent(id)}`); setProgramId(id); setView('detail'); window.scrollTo(0, 0) }
-  const goHome = () => { window.history.pushState({}, '', '/'); clearSearchSession(); setProgramId(null); setFilters(emptyFilters()); setDraft(emptyFilters()); setHasApplied(false); setView('browse'); setHelpOpen(false); setExternalNoticeOpen(false); window.scrollTo(0, 0) }
-  const backFromDetail = () => { if (cameFromList) window.history.back(); else goHome() }
-  const removeChip = (key: string) => {
-    const next = { ...filters, available_windows: [...filters.available_windows], interests: [...filters.interests] }
-    if (key === 'child') { next.child_grade = undefined; next.child_age = undefined }
-    if (key.startsWith('time-')) next.available_windows.splice(Number(key.slice(5)), 1)
-    if (key.startsWith('interest-')) next.interests = next.interests.filter((item) => item !== key.slice(9))
-    if (key === 'dong') next.dong = undefined
-    if (key === 'free') next.free_only = false
-    setFilters(next)
-  }
-  const shareDetail = async () => {
-    if (!detail) return
-    const url = `${window.location.origin}/programs/${encodeURIComponent(detail.program_id)}`
-    try {
-      if (navigator.share) await navigator.share({ title: detail.title, url })
-      else { await navigator.clipboard.writeText(url); setToast(t('copied')) }
-    } catch (error) { if ((error as DOMException).name !== 'AbortError') setToast(t('copyFailed')) }
-  }
-  const openExternal = (url: string) => {
-    if (!isSafeUrl(url)) return
-    if (usingDemoData) { setExternalNoticeOpen(true); return }
-    window.open(url, '_blank', 'noopener,noreferrer')
-    setExternalNoticeOpen(true)
-  }
-  const callPhone = (phone: string) => {
-    if (usingDemoData) { setToast(t('demoPhone')); return }
-    window.location.href = `tel:${phone.replace(/[^\d+]/g, '')}`
-  }
-
-  if (view === 'filter') return <FilterWizard draft={draft} setDraft={setDraft} onClose={() => setView(hasApplied ? 'results' : 'browse')} onApply={applyFilters} />
-
-  const chips = filterChips(filters, locale)
-  const firstMethod = detail?.application_methods.find((method) => method.type === 'online' && isSafeUrl(method.url))
-    ?? detail?.application_methods.find((method) => method.type === 'phone' && method.phone)
-    ?? detail?.application_methods.find((method) => method.type === 'visit' && method.address)
-  // 링크 없이 '홈페이지에서 신청'이라고만 적힌 온라인 신청
-  const onlineWithoutLink = detail?.application_methods.find((method) => method.type === 'online' && !method.url)
-  // 원문이 이미 밝힌 동반 규칙·한국어 수준은 다시 묻지 않는다
-  const askCompanion = !!detail && (companionUnknown(detail.guardian_companion) || companionUnknown(detail.sibling_companion))
-  const askKoreanLevel = !!detail && !detail.korean_level_required
-  const participationHint = askCompanion && askKoreanLevel ? t('askParticipationHint') : askCompanion ? t('askCompanionHint') : askKoreanLevel ? t('askKoreanLevelHint') : null
-  // 신청이 끝난 공고는 기관에 물을 것이 없다
-  const closed = detail?.application_status === 'closed'
-  const askItems = detail && !closed ? detail.uncertain_items : []
-  const phoneMethods = detail?.application_methods.filter((method) => method.type === 'phone' && method.phone) ?? []
-  const visitMethods = detail?.application_methods.filter((method) => method.type === 'visit' && method.address) ?? []
-  const hasFallback = !!detail && (isSafeUrl(detail.source_url) || phoneMethods.length > 0)
-  const capacity = detail ? capacityLabel(detail, locale) : null
-
-  return <div className="app-shell">
-    <LanguageSwitcher />
-    {usingDemoData && <div className="demo-banner">{t('demoBanner')}</div>}
-    {view === 'browse' && <>
-      <header className="site-header"><span className="brand">{t('brand')}</span><span className="location">{t('location')}</span></header>
-      <main className="page-content">
-        <section className="hero"><p className="eyebrow">{t('heroEyebrow')}</p><h1>{t('heroTitle')}</h1><button className="hero-cta" type="button" onClick={openFilters}><strong>{t('heroAction')}</strong><span aria-hidden="true">→</span></button></section>
-        {locale !== 'ko-easy' && <p className="content-language-note">{t('originalKoreanNotice')}</p>}
-        <section className="section-block"><div className="section-heading"><div><p className="eyebrow">{t('openEyebrow')}</p><h2>{t('openPrograms')}</h2></div><button type="button" className="text-button" onClick={() => setView('results')}>{t('viewAll')} →</button></div>
-          {searchLoading && <Loading />}{searchError && <ErrorPanel onRetry={() => setSearchRevision((value) => value + 1)} />}{!searchLoading && !searchError && search && <div className="program-list">{search.results.filter((item) => item.application_status === 'open').slice(0, 3).map((program) => <ProgramCard key={program.program_id} program={program} onOpen={openDetail} />)}{search.results.filter((item) => item.application_status === 'open').length === 0 && <p className="soft-empty">{t('noOpenPrograms')}</p>}</div>}
-        </section>
-      </main>
-    </>}
-
-    {view === 'results' && <>
-      <header className="site-header"><button className="icon-button" type="button" aria-label={t('home')} onClick={goHome}>‹</button><span className="brand">{t('resultsBrand')}</span><button className="header-action" type="button" onClick={openFilters}>{t('changeConditions')}</button></header>
-      <main className="page-content results-content">
-        {locale !== 'ko-easy' && <p className="content-language-note">{t('originalKoreanNotice')}</p>}
-        <div className="filter-summary"><div className="summary-title"><strong>{chips.length ? t('appliedConditions') : t('browseWithoutConditions')}</strong></div>{chips.length > 0 && <div className="chip-row" aria-label={t('appliedConditions')}>{chips.map((chip) => <button className="removable-chip" type="button" key={chip.key} onClick={() => removeChip(chip.key)} aria-label={t('removeCondition', { label: chip.label })}>{chip.label} <span aria-hidden="true">×</span></button>)}</div>}</div>
-        {searchLoading && <Loading />}{searchError && <ErrorPanel onRetry={() => setSearchRevision((value) => value + 1)} />}
-        {!searchLoading && !searchError && search && <>
-          {search.results.length + search.needs_confirmation.length === 0 ? <div className="empty-results"><div className="state-icon">⌕</div><h1>{t('noResults')}</h1><div className="chip-row">{chips.map((chip) => <button className="removable-chip" type="button" key={chip.key} onClick={() => removeChip(chip.key)} aria-label={t('removeCondition', { label: chip.label })}>{chip.label} <span aria-hidden="true">×</span></button>)}</div><button className="button secondary full" type="button" onClick={() => { setFilters(emptyFilters()); setHasApplied(false) }}>{t('allPrograms')}</button></div>
-            : <>
-              {search.results.length > 0 && <section className="section-block"><div className="section-heading"><div><p className="eyebrow">{t('resultEyebrow')}</p><h1>{t('programCount', { count: search.results.length })}</h1></div></div><div className="program-list">{search.results.map((program) => <ProgramCard key={program.program_id} program={program} onOpen={openDetail} />)}</div></section>}
-              {search.needs_confirmation.length > 0 && <section className="section-block needs-block"><div className="section-heading"><div><p className="eyebrow">{t('checkEyebrow')}</p><h2>{t('unknownTimeCount', { count: search.needs_confirmation.length })}</h2></div></div><div className="program-list">{search.needs_confirmation.map((program) => <ProgramCard key={program.program_id} program={program} onOpen={openDetail} />)}</div></section>}
-            </>}
-        </>}
-      </main>
-    </>}
-
-    {view === 'detail' && <>
-      <header className="site-header detail-header"><button className="icon-button" type="button" onClick={backFromDetail} aria-label={t('back')}>‹</button><span className="brand">{t('detailBrand')}</span><button className="header-action" type="button" onClick={shareDetail} disabled={!detail}>{t('share')}</button></header>
-      <main className="detail-main">
-        {detailLoading && <Loading label={t('loadingDetail')} />}
-        {detailError && <ErrorPanel title={t('errorDetail')} onRetry={() => setDetailRevision((value) => value + 1)} />}
-        {!detailLoading && !detailError && !detail && <div className="empty-results missing-detail"><div className="state-icon">⌁</div><h1>{t('missingProgram')}</h1><p>{t('missingHint')}</p><button className="button primary full" type="button" onClick={goHome}>{t('browseOthers')}</button></div>}
-        {!detailLoading && !detailError && detail && <>
-          <section className={`detail-hero category-bg-${detail.category}`}><span className="detail-category">{interestLabel(locale, detail.category)}</span><span className={`status-pill status-${detail.application_status}`}>{statusLabel(detail, locale)}</span><h1>{detail.title}</h1><p>{detail.institution}</p></section>
-          <div className="detail-sections">
-            {detail.summaries_by_language?.[locale] && <section className="detail-section summary-section"><h2>{t('summary')}</h2>{detail.summaries_by_language[locale].status !== 'approved' && <p className="section-note">{t('summaryUnreviewed')}</p>}{detail.summaries_by_language[locale].lines.map((line) => <p key={line}>{line}</p>)}</section>}
-            <section className="detail-section facts-section priority-facts"><h2>{t('quickFacts')}</h2><dl><div><dt>{detail.time_match_status === 'matched' ? t('matchedSession') : detail.next_session ? t('nextSchedule') : t('schedule')}</dt><dd>{scheduleLabel(detail, locale)}</dd></div><div><dt>{t('place')}</dt><dd>{placeLabel(detail, locale)}</dd></div><div><dt>{t('targetOriginal')}</dt><dd>{detail.target_raw}</dd></div><div><dt>{t('cost')}</dt><dd>{costDetail(detail, locale)}</dd></div>{capacity && <div><dt>{t('capacity')}</dt><dd>{capacity}</dd></div>}<div><dt>{t('application')}</dt><dd>{statusLabel(detail, locale)}{detail.application_end && detail.application_status === 'open' ? ` · ${t('until', { date: formatDate(detail.application_end, locale) })}` : ''}</dd></div><div><dt>{t('eligibility')}</dt><dd>{detail.eligibility_status === 'matched' ? t('eligibilityMatched') : detail.eligibility_status === 'unknown' ? t('eligibilityUnknown') : t('eligibilityNotApplied')}</dd></div></dl></section>
-            <section className="detail-section participation-section">
-              <h2>{t('checkBefore')}</h2>
-              {detail.matched_reasons.length > 0 && <div className="detail-reasons">
-                {locale === 'ko-easy'
-                  ? detail.matched_reasons.map((reason) => <p key={reason}>✓ {reason}</p>)
-                  : <>{detail.age_grade_match_status === 'matched' && <p>✓ {t('ageMatched')}</p>}{detail.time_match_status === 'matched' && <p>✓ {t('inputTimeMatch')}</p>}</>}
-              </div>}
-              {!closed && (detail.age_grade_match_status === 'unknown' || detail.time_match_status === 'unknown' || detail.eligibility_status === 'unknown' || askItems.length > 0) &&
-                <div className="notice-box">
-                  <strong>{t('askInstitution')}</strong>
-                  {detail.age_grade_match_status === 'unknown' && <p>· {t('askAge')}</p>}
-                  {detail.time_match_status === 'unknown' && <p>· {t('askSchedule')}</p>}
-                  {detail.eligibility_status === 'unknown' && askItems.length === 0 && <p>· {t('askEligibility')}</p>}
-                  {askItems.map((item) => <p key={item}>· {item}</p>)}
-                </div>}
-              <div className="language-check">
-                <strong>{t('askLanguage')}</strong>
-                <p>{detail.support_languages?.length ? t(detail.support_interpretation ? 'interpretationLanguages' : 'supportLanguages', { languages: detail.support_languages.map((code) => languageName(locale, code)).join(', ') }) : t('askLanguageHint')}</p>
-                {detail.application_methods.some((method) => method.type === 'online') && <><strong>{t('askApplicationLanguage')}</strong><p>{t('askApplicationHint')}</p></>}
-                {detail.korean_level_required && <p>{t('koreanLevelRequired', { level: detail.korean_level_required })}</p>}
-                {participationHint && <p>{participationHint}</p>}
-              </div>
-              {locale !== 'ko-easy' && <p className="original-language-note">{t('originalKoreanNotice')}</p>}
-            </section>
-            <section className="detail-section"><h2>{t('allSessions')}</h2><p className="attendance-rule">{detail.attendance_rule === 'all_sessions' ? (detail.mid_join_allowed ? t('attendRemaining') : t('attendAll')) : detail.attendance_rule === 'choose_one' ? t('chooseOne') : t('attendanceUnknown')}</p><div className="session-list">{detail.sessions.map((item) => <div className="session-row" key={item.id}><span><strong>{formatSession(item, locale)}</strong><small>{placeName(item, locale)}</small></span>{detail.matched_sessions.includes(item.id) && <span className="match-mark">{t('inputTimeMatch')}</span>}</div>)}</div></section>
-            <section className="detail-section"><h2>{t('programInfo')}</h2><p className="description">{detail.description}</p>{detail.notices?.map((notice) => <p className="description notice-line" key={notice}>※ {notice}</p>)}<h3 className="method-heading">{t('applicationMethods')}</h3>{detail.application_methods.length > 0 ? <div className="method-list">{detail.application_methods.filter((method) => method.type !== 'online' || !method.url || isSafeUrl(method.url)).map((method) => <div key={method.type} className="method-row"><span>{method.type === 'phone' ? t('phone') : method.type === 'visit' ? t('visit') : t('online')}</span><strong>{method.type === 'phone' ? method.phone : method.type === 'visit' ? method.address : method.label}</strong></div>)}</div> : <p className="description">{detail.application_note ? `※ ${detail.application_note}` : t('noMethod')}</p>}</section>
-            {!usingDemoData && <section className="detail-section source-section"><h2>{t('sourceInfo')}</h2>{detail.verified_at && <p>{t('verifiedAt', { date: formatDate(detail.verified_at, locale) })}</p>}{isSafeUrl(detail.source_url) && <button className="underlined-button" type="button" onClick={() => openExternal(detail.source_url!)}>{t('openSource')} ↗</button>}{hasFallback && <button className="underlined-button" type="button" onClick={() => setHelpOpen(true)}>{t('linkTrouble')}</button>}</section>}
-          </div>
-          <footer className="detail-actions">
-            {detail.application_status === 'open' && firstMethod && (firstMethod.type === 'online' ? <button className="button primary full" type="button" onClick={() => openExternal(firstMethod.url!)}>{usingDemoData ? t('applyDemo') : t('apply')}</button> : firstMethod.type === 'phone' ? <button className="button primary full" type="button" onClick={() => callPhone(firstMethod.phone!)}>{t('callInstitution')}</button> : <div className="action-note">{t('visitAddress', { address: firstMethod.address ?? '' })}</div>)}
-            {detail.application_status === 'open' && !firstMethod && (onlineWithoutLink ? <><p className="action-note">{t('onlineApplyLabel', { label: onlineWithoutLink.label })}</p>{!usingDemoData && isSafeUrl(detail.source_url) && <button className="button primary full" type="button" onClick={() => openExternal(detail.source_url!)}>{t('sourceApply')}</button>}</> : <p className="action-note">{t('noMethod')}</p>)}
-            {detail.application_status === 'upcoming' && <><p className="action-note">{detail.application_start ? t('applyFrom', { date: formatDate(detail.application_start, locale) }) : t('applyStartUnknown')}</p>{!usingDemoData && isSafeUrl(detail.source_url) && <button className="button primary full" type="button" onClick={() => openExternal(detail.source_url!)}>{t('sourceApply')}</button>}</>}
-            {detail.application_status === 'closed' && <><p className="action-note">{t('closedHint')}</p><button className="button primary full" type="button" onClick={goHome}>{t('browseOthers')}</button></>}
-            {detail.application_status === 'unknown' && <><p className="action-note">{t('unknownApplicationHint')}{detail.application_note ? ` (※ ${detail.application_note})` : ''}</p>{!usingDemoData && isSafeUrl(detail.source_url) && <button className="button primary full" type="button" onClick={() => openExternal(detail.source_url!)}>{t('sourceCheck')}</button>}</>}
-          </footer>
-        </>}
-      </main>
-    </>}
-
-    {helpOpen && detail && !usingDemoData && <InfoSheet title={t('linkTrouble')} onClose={() => setHelpOpen(false)}><p className="sheet-copy">{t('helpIntro')}</p><div className="sheet-options">{isSafeUrl(detail.source_url) && <button type="button" onClick={() => openExternal(detail.source_url!)}><small>1 · {t('original')}</small><strong>{t('openSource')}</strong><span>{t('originalHint')}</span></button>}{phoneMethods.map((method) => <button type="button" key={method.phone} onClick={() => callPhone(method.phone!)}><small>2 · {t('phone')}</small><strong>{t('callInstitution')}</strong><span>{method.phone}</span></button>)}{visitMethods.map((method) => <div className="sheet-option" key={method.address}><small>3 · {t('visit')}</small><strong>{method.address}</strong></div>)}{!hasFallback && !visitMethods.length && <p>{t('noFallback')}</p>}</div></InfoSheet>}
-    {externalNoticeOpen && <InfoSheet title={usingDemoData ? t('demoExternalTitle') : t('externalTitle')} onClose={() => setExternalNoticeOpen(false)}><p className="sheet-copy">{usingDemoData ? t('demoExternalCopy') : t('externalCopy')}</p></InfoSheet>}
-    {toast && <div className="toast" role="status">{toast}</div>}
-  </div>
-}
-
-export default App

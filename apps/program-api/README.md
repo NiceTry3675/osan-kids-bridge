@@ -15,8 +15,9 @@
 
 ## 준비
 
+의존성은 저장소 맨 위에서 `npm install`로 한 번에 설치합니다(npm workspaces). 그다음 이 폴더에서:
+
 ```bash
-npm ci
 cp .env.example .env.local
 ```
 

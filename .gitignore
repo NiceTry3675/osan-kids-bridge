@@ -1,5 +1,8 @@
 # 서비스 계정 키·비밀값 (절대 커밋하지 않음)
 /*.json
+!/package.json
+!/package-lock.json
+!/tsconfig*.json
 *service-account*.json
 *-sa-key*.json
 gemini*-*.json
@@ -13,6 +16,7 @@ gemini*-*.json
 # 빌드·의존성
 node_modules/
 dist/
+dist-preview/
 *.tsbuildinfo
 
 # OS·에디터

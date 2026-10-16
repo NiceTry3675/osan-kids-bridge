@@ -1,0 +1,73 @@
+/*
+  오산 아이 프로그램 — 공통 디자인 토큰
+  보호자 웹과 기관 대시보드가 함께 씁니다.
+
+  색의 규칙
+  - ink/paper/canvas: 글과 바탕. 본문은 언제나 ink 위에 paper.
+  - action: 누를 수 있는 것(주요 버튼, 링크, 선택됨).
+  - mark(형광펜 노랑): "아직 확인되지 않은 것". 장식으로 쓰지 않습니다.
+  - status-*: 신청 상태 네 가지. 색만으로 뜻을 전하지 않고 항상 글자와 함께 씁니다.
+
+  밝은 화면 하나만 씁니다. 기기가 다크 모드여도 같은 색으로 보입니다(형광펜·히트맵의 뜻을 지키기 위해).
+  다크 모드는 이용자 요구가 확인되면 형광펜·히트맵 색을 따로 정해 다시 넣습니다.
+*/
+:root {
+  color-scheme: light;
+  --ink: #1d2a24;
+  --ink-2: #4a554f;
+  --ink-3: #66716b;
+  --paper: #ffffff;
+  --canvas: #f3f4ef;
+  --sunken: #f4f5f1;
+  --line: #e3e6e1;
+  --line-strong: #cdd3cc;
+
+  --action: #1f7a5c;
+  --action-hover: #18654b;
+  --action-soft: #e4f2ec;
+  --action-ink: #ffffff;
+  --focus: #e8a400;
+
+  --mark: #ffe066;
+  --mark-soft: #fff6cc;
+  --mark-ink: #5a4500;
+
+  --status-open: #136b45;
+  --status-open-soft: #e2f3ea;
+  --status-upcoming: #24539c;
+  --status-upcoming-soft: #e3ecf8;
+  --status-unknown: #7a5200;
+  --status-unknown-soft: #fff1d6;
+  --status-closed: #5d6474;
+  --status-closed-soft: #eceef2;
+
+  --heat-0: #eef1ec;
+  --heat-1: #d3e9de;
+  --heat-2: #a6d3bd;
+  --heat-3: #5faf8a;
+  --heat-4: #2e8b63;
+  --heat-5: #1b5e44;
+
+  --tone-peach: #ffebdd;
+  --tone-sky: #e5eeff;
+  --tone-leaf: #e4f4e3;
+  --tone-lilac: #f1e8ff;
+  --tone-sand: #f4efe2;
+  --danger: #b42318;
+  --heat-ink-strong: #ffffff;
+
+  --font: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Noto Sans SC', 'PingFang SC', 'Malgun Gothic', system-ui, sans-serif;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.625rem;
+  --text-2xl: 2.125rem;
+
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 18px;
+  --tap: 48px;
+  --shadow-sheet: 0 -8px 40px rgb(29 42 36 / 18%);
+  --shadow-card: 0 1px 2px rgb(29 42 36 / 6%), 0 4px 14px rgb(29 42 36 / 5%);
+}
