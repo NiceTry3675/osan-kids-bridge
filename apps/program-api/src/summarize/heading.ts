@@ -111,52 +111,91 @@ ${block(headingFacts(facts))}
 
 const compact = (text: string) => text.normalize('NFKC').replace(/\s+/g, '')
 const uniqueSorted = (values: number[]) => [...new Set(values)].sort((a, b) => a - b)
-const sameNumbers = (a: number[], b: number[]) => uniqueSorted(a).join(',') === uniqueSorted(b).join(',')
 const KO_SCHOOLS = [/초등/, /중학|중등/, /고등학|고교/]
-/** 학교급 사이의 묶음표 ('초·중·고', '중/고', '초, 중'). 빈칸만 있으면 묶음이 아니다 ('다문화가족 중 고등학생', '육아 중 고생') */
+/** 학교급 사이의 묶음표 ('초·중·고', '중/고', '중, 고'). 빈칸만으로는 묶지 않는다 ('다문화가족 중 고등학생', '육아 중 고생') */
 const JOIN = String.raw`\s*[·・/,]\s*`
-const ELEMENTARY_MIDDLE_HIGH = new RegExp(String.raw`(?<![가-힣])초(?:${JOIN})?중(?:${JOIN})?고(?:등학?|교)?`, 'g')
-const MIDDLE_HIGH_JOINED = new RegExp(String.raw`(?<![가-힣])중\s*[·・/]\s*고(?:등학?|교)?`, 'g')
-const ELEMENTARY_MIDDLE = new RegExp(String.raw`(?<![가-힣])초(?:${JOIN})?중(?=학|등)`, 'g')
-const ELEMENTARY_MIDDLE_BARE = new RegExp(String.raw`(?<![가-힣])초${JOIN}중(?![가-힣])`, 'g')
-/**
- * 학교급을 묶어 쓴 말('초·중·고교생', '중·고등', '중고생', '초중학생')을 풀고, 초등 '중학년'은 중학교가 아니므로 뺀다.
- * 묶음표 없는 '중고'는 뒤에 등·교·생이 붙어야 학교급이다 ('중고 물품', '중고생활용품'은 아니다)
- */
-const koSchoolText = (text: string) => text
-  .replace(/중학년/g, '학년')
-  .replace(ELEMENTARY_MIDDLE_HIGH, '초등 중학 고등학')
-  .replace(MIDDLE_HIGH_JOINED, '중학 고등학')
-  .replace(/(?<![가-힣])중고(?:등학?|교|(?=생(?!활용)))/g, '중학 고등학')
-  .replace(ELEMENTARY_MIDDLE, '초등 중')
-  .replace(ELEMENTARY_MIDDLE_BARE, '초등 중학')
+/** 학교급 '고': 뒤에 등·교·생·학생·학교가 오거나 한글이 끝난다. '고급', '고령', '(초등 중·)고학년', '중고생활용품'은 아니다 */
+const HIGH = String.raw`고(?:등학?|교|(?=생(?!활)|학생|학교)|(?![가-힣]))`
+const SCHOOL_RULES: [RegExp, string][] = [
+  // 초등 '중학년'은 중학교가 아니다
+  [/중학년/g, '학년'],
+  // '초중고', '초·중·고교생', '유초중고', '관내초중고'. 빈칸으로 띄운 '초 중 고등학생'은 셋이 다 있을 때만
+  [new RegExp(String.raw`초(?:${JOIN})?중(?:${JOIN})?${HIGH}`, 'g'), '초등 중학 고등학'],
+  [new RegExp(String.raw`(?<![가-힣])초\s+중\s+${HIGH}`, 'g'), '초등 중학 고등학'],
+  // '중·고등', '중, 고등학생', '중/고교생'
+  [new RegExp(String.raw`(?<![가-힣])중${JOIN}${HIGH}`, 'g'), '중학 고등학'],
+  // 묶음표 없는 '중고'는 뒤에 등·교·생이 붙어야 학교급이다 ('중고등', '중고교', '다문화중고생'. '중고 물품'은 아니다)
+  [/중고(?:등학?|교|(?=생(?!활)))/g, '중학 고등학'],
+  // '초중학생', '초·중등', '초·중 자녀' ('기초중등'의 초, 한국어 '초·중·고급'은 아니다)
+  [new RegExp(String.raw`(?<=^|[^가-힣]|유)초(?:${JOIN})?중(?=학|등)`, 'g'), '초등 중'],
+  [new RegExp(String.raw`(?<=^|[^가-힣]|유)초${JOIN}중(?![가-힣]|${JOIN}고)`, 'g'), '초등 중학'],
+]
+/** 학교급을 묶어 쓴 말을 학교급마다 풀어 쓴다 */
+const koSchoolText = (text: string) => SCHOOL_RULES.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), text)
 const KO_MULTICULTURAL = /다문화|결혼\s*이민|이주\s*배경|중도\s*입국/
 const MAX_LENGTH: Record<HeadingLanguage, Record<keyof SummaryHeading, number>> = {
   vi: { title: 200, institution: 160, target: 220 },
   zh: { title: 90, institution: 80, target: 100 },
 }
 
-/** 한국어 고유어 수 ('하루 캠프', '두 가족', '일일 체험'). 중국어는 이런 수를 글자로 옮겨도 된다 ('一日营') */
-const KO_DAYS: Record<string, number> = { 하루: 1, 일일: 1, 이틀: 2, 사흘: 3, 나흘: 4, 닷새: 5, 엿새: 6, 이레: 7, 여드레: 8, 아흐레: 9, 열흘: 10 }
-const KO_COUNTS: Record<string, number> = { 한: 1, 두: 2, 세: 3, 네: 4, 다섯: 5, 여섯: 6, 일곱: 7, 여덟: 8, 아홉: 9, 열: 10 }
-const KO_DAY_WORD = new RegExp(`(?<!\\p{Script=Hangul})(${Object.keys(KO_DAYS).join('|')})`, 'gu')
-const KO_COUNT_WORD = new RegExp(`(?<![\\p{Script=Hangul}\\d])(열\\s?)?(${Object.keys(KO_COUNTS).join('|')})\\s?(?=번|회|명|사람|살|가족|가정|시간|가지|개|날|주|달|권|장|곳|팀|쌍|분|마리|차례)`, 'gu')
-function koNativeNumbers(text: string): Set<number> {
+// ---- 숫자 ----
+// 원문에 아라비아 숫자로 적힌 수는 모두 아라비아 숫자로 옮기고, 원문에 없는 수는 쓰지 않는다.
+// 원문이 한글로 적은 수('세 자녀', '하루 캠프', '두세 번')는 아라비아 숫자로도, 중국어 글자 숫자('一日营')로도 옮길 수 있다.
+
+/** 한글로 적은 수 낱말과 그 값. 다른 낱말 안에 들어 있어도 센다 (값을 더 허락할 뿐이라 틀려도 검사가 느슨해지는 정도다) */
+const KO_NUMBER_WORDS: [string, number[]][] = [
+  ['하루', [1]], ['일일', [1]], ['당일', [1]], ['일주일', [1]], ['이틀', [2]], ['사흘', [3]], ['나흘', [4]], ['닷새', [5]], ['엿새', [6]],
+  ['이레', [7]], ['여드레', [8]], ['아흐레', [9]], ['열흘', [10]], ['보름', [15]], ['삼일절', [3, 1]], ['돌', [1]],
+  ['한두', [1, 2]], ['두세', [2, 3]], ['두어', [2]], ['서너', [3, 4]], ['너덧', [4, 5]], ['네댓', [4, 5]], ['대여섯', [5, 6]], ['예닐곱', [6, 7]],
+  ['하나', [1]], ['둘', [2]], ['셋', [3]], ['넷', [4]],
+  ['첫', [1]], ['둘째', [2]], ['셋째', [3]], ['넷째', [4]], ['다섯째', [5]],
+]
+/** 셈하는 말 앞의 고유어 수 ('한 학기', '세 자녀', '두명', '열두 살', '석 달'). 한 글자 수는 다른 낱말('한국', '세계') 안에서는 세지 않는다 */
+const KO_COUNTS: Record<string, number> = { 한: 1, 두: 2, 세: 3, 서: 3, 석: 3, 네: 4, 너: 4, 넉: 4, 다섯: 5, 여섯: 6, 일곱: 7, 여덟: 8, 아홉: 9, 열: 10, 스무: 20 }
+const KO_COUNTERS = '번|회|명|사람|살|가족|가정|시간|가지|개|날|주|달|권|장|곳|팀|쌍|분|마리|차례|자녀|아이|학기|반|끼|해|조|그룹|과목|단계|세대|말'
+const KO_COUNT = new RegExp(String.raw`(?<![\p{Script=Hangul}\d])(열\s?)?(${Object.keys(KO_COUNTS).join('|')})(?=\s|${KO_COUNTERS})`, 'gu')
+
+function koWrittenNumbers(text: string): Set<number> {
   const values = new Set<number>()
-  for (const [, word] of text.matchAll(KO_DAY_WORD)) values.add(KO_DAYS[word])
-  for (const [, ten, word] of text.matchAll(KO_COUNT_WORD)) values.add((ten ? 10 : 0) + KO_COUNTS[word])
+  for (const [word, numbers] of KO_NUMBER_WORDS) if (text.includes(word)) numbers.forEach((value) => values.add(value))
+  for (const [, ten, word] of text.matchAll(KO_COUNT)) values.add((ten ? 10 : 0) + KO_COUNTS[word])
   return values
 }
 
 const ZH_DIGITS: Record<string, number> = { 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 }
-/** 중국어 글자 숫자의 값 ('一' 1, '十二' 12, '二十' 20) */
-function chineseNumber(text: string): number {
+/** 중국어 글자 숫자의 값. '十二' 12, '二十' 20이고, 十 없이 붙은 글자는 어림수·이름이라 따로 센다 ('两三' 2와 3, '三一节' 3과 1) */
+function chineseNumbers(text: string): number[] {
   const ten = text.indexOf('十')
-  if (ten < 0) return [...text].reduce((sum, char) => sum * 10 + (ZH_DIGITS[char] ?? 0), 0)
-  return (ten === 0 ? 1 : ZH_DIGITS[text[ten - 1]] ?? 1) * 10 + (ZH_DIGITS[text[ten + 1]] ?? 0)
+  if (ten < 0) return [...text].map((char) => ZH_DIGITS[char] ?? 0)
+  return [(ten === 0 ? 1 : ZH_DIGITS[text[ten - 1]] ?? 1) * 10 + (ZH_DIGITS[text[ten + 1]] ?? 0)]
+}
+/** 차례를 나타내는 '第一、三周'의 숫자는 수가 아니다 */
+const ZH_ORDINALS = /第[一二三四五六七八九十两]+(?:\s*[、，,和及与至到~～-]\s*[一二三四五六七八九十两]+)*/g
+/** 학년·나이는 원문에 없는 수를 지어내면 보호자를 잘못 안내한다. 그 밖의 '一'은 '一个', '一点', '一次性'처럼 수가 아닌 말에도 쓴다 */
+const ZH_STRICT_COUNTER = /^(?:年级|岁|周岁)/
+
+/** 머리글 한 칸의 숫자 문제 */
+function numberIssues(translated: string, source: string, sourceLabel: string, wordNumber: RegExp | null): string[] {
+  const sourceNumbers = numberTokens(source)
+  const written = koWrittenNumbers(source)
+  const numbers = numberTokens(translated)
+  const issues: string[] = []
+  const matches = sourceNumbers.every((value) => numbers.includes(value)) && numbers.every((value) => sourceNumbers.includes(value) || written.has(value))
+  if (!matches) issues.push(`숫자가 원문 ${sourceLabel}과 다름 (원문 ${uniqueSorted(sourceNumbers).join(', ') || '없음'})`)
+  if (!wordNumber) return issues
+  const text = translated.replace(ZH_ORDINALS, ' ')
+  for (const match of text.matchAll(new RegExp(wordNumber.source, `${wordNumber.flags.replace('g', '')}g`))) {
+    const values = chineseNumbers(match[0])
+    if (values.some((value) => sourceNumbers.includes(value))) return [...issues, `숫자를 글자로 씀: "${match[0]}"`]
+    const unknown = values.filter((value) => !written.has(value))
+    const counter = text.slice((match.index ?? 0) + match[0].length)
+    if (unknown.length && (ZH_STRICT_COUNTER.test(counter) || unknown.some((value) => value !== 1))) return [...issues, `원문에 없는 수를 씀: "${match[0]}"`]
+  }
+  return issues
 }
 
 /** 머리글 칸마다 대조할 한국어 원문 */
+const NUMBER_SOURCE_LABELS: Record<keyof SummaryHeading, string> = { title: '제목', institution: '기관 이름', target: '대상' }
 const sourceField = (facts: SummaryFacts, field: keyof SummaryHeading) =>
   (field === 'title' ? facts.title : field === 'institution' ? facts.institution : sourceTarget(facts))
 
@@ -170,6 +209,8 @@ export function checkHeading(heading: SummaryHeading, facts: SummaryFacts, langu
   const issue = (field: keyof SummaryHeading, text: string) => issues.push(`${HEADING_ISSUE_PREFIX} ${FIELD_LABELS[field]}: ${text}`)
   const text = (value: unknown) => String(value ?? '').normalize('NFKC').trim()
   const values: SummaryHeading = { title: text(heading.title), institution: text(heading.institution), target: text(heading.target) }
+  const institutionKorean = compact(facts.institution)
+  const withoutKoreanName = (value: string) => value.replace(/[（(]([^）)]*)[）)]/g, (match, inner: string) => (compact(inner) === institutionKorean ? ' ' : match))
 
   for (const field of FIELDS) {
     const value = values[field]
@@ -177,23 +218,13 @@ export function checkHeading(heading: SummaryHeading, facts: SummaryFacts, langu
     if (value.length > MAX_LENGTH[language][field]) issue(field, `너무 김 (${value.length}자)`)
     if (/\n/.test(value)) issue(field, '줄바꿈이 있음')
     if (!rules.script.test(value.replace(/\p{Script=Hangul}+/gu, ''))) issue(field, `${LANGUAGE_LABELS[language]} 글자가 없음`)
-    // 수는 아라비아 숫자로 쓴다. 원문이 고유어로 쓴 수만 같은 값의 글자로 둘 수 있다 ('하루 캠프' → '一日营')
-    if (rules.wordNumber) {
-      const native = koNativeNumbers(sourceField(facts, field))
-      const written = [...value.matchAll(new RegExp(rules.wordNumber.source, `${rules.wordNumber.flags}g`))].find((match) => !native.has(chineseNumber(match[0])))
-      if (written) issue(field, `숫자를 글자로 씀: "${written[0]}"`)
-    }
+    // 기관 뒤 괄호 안 한국어 원문 이름의 숫자는 원문 그대로이므로 뺀다
+    const translated = field === 'institution' ? withoutKoreanName(value) : value
+    for (const problem of numberIssues(translated, sourceField(facts, field), NUMBER_SOURCE_LABELS[field], rules.wordNumber)) issue(field, problem)
     if (language === 'zh') for (const problem of chineseScriptIssues(value.replace(/[（(][^）)]*\p{Script=Hangul}[^）)]*[）)]/gu, ''))) issue(field, problem)
   }
 
-  // 숫자는 원문과 같은 수만 (기관 뒤 괄호 안 한국어 이름의 숫자는 원문 그대로이므로 뺀다)
-  const institutionKorean = compact(facts.institution)
-  const withoutKoreanName = (text: string) => text.replace(/[（(]([^）)]*)[）)]/g, (match, inner: string) => (compact(inner) === institutionKorean ? ' ' : match))
-  if (values.title && !sameNumbers(numberTokens(values.title), numberTokens(facts.title))) issue('title', `숫자가 원문 제목과 다름 (원문 ${uniqueSorted(numberTokens(facts.title)).join(', ') || '없음'})`)
-  if (values.institution && !sameNumbers(numberTokens(withoutKoreanName(values.institution)), numberTokens(facts.institution))) issue('institution', '숫자가 원문 기관 이름과 다름')
   const target = sourceTarget(facts)
-  const targetNumbers = numberTokens(target)
-  if (values.target && !sameNumbers(numberTokens(values.target), targetNumbers)) issue('target', `숫자가 원문 대상과 다름 (원문 ${uniqueSorted(targetNumbers).join(', ') || '없음'})`)
 
   // 한국어: 기관은 원문 이름을 괄호 안에 그대로, 제목·대상은 중국어의 동 이름만
   if (values.institution && !compact(values.institution).includes(institutionKorean)) issue('institution', `한국어 원문 이름(${facts.institution})을 괄호 안에 그대로 붙이지 않음`)

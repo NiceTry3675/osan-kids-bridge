@@ -154,7 +154,7 @@ const RULES: Record<DisplayLanguage, LanguageRules> = {
     apply: /报名|申请/,
     inquiry: /咨询|询问|联系|问询/,
     languageNames: { vi: /越南语|越南文/, zh: /中文|汉语|普通话|华语/, en: /英语/ },
-    wordNumber: /(?<![星期周礼拜同统唯第每])[一二三四五六七八九十两]+(?=次|个|名|人|岁|年级|韩元|元|月|日|号|点|节|期|天|小时|分钟|层|楼|周)/u,
+    wordNumber: /(?<![星期周礼拜同统唯第每])[一二三四五六七八九十两]+(?=次|个|名|人|岁|年级|韩元|元(?!宵)|月|日|号|点|节|期|天|小时|分钟|层|楼|周)/u,
     weekdays: { pattern: /(?:星期|礼拜|周)([一二三四五六日天])(?!次)/g, read: (match) => ZH_WEEKDAYS[match[1]] ?? null },
     dates: (text) => sequentialDates(text, ZH_DATE, ZH_WEEKDAYS),
   },
