@@ -1,0 +1,8 @@
+/* 보호자 웹에만 있는 요소. 두 앱 공통 요소는 packages/ui/src/components.css */
+.page--detail { padding-bottom: 0; }
+
+.tag-original { display: inline-block; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--line-strong); border-radius: 999px; color: var(--ink-3); font-size: 11px; font-weight: 600; vertical-align: 0.15em; white-space: nowrap; }
+
+/* 상단 줄 */
+.bar-top { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 6px; }
+
