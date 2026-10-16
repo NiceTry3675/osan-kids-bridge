@@ -111,8 +111,12 @@ ${block(headingFacts(facts))}
 
 const compact = (text: string) => text.normalize('NFKC').replace(/\s+/g, '')
 const uniqueSorted = (values: number[]) => [...new Set(values)].sort((a, b) => a - b)
-/** 학교급. '초4', '중 1', '고3', '고등 3학년', '고등부'처럼 줄여 쓴 말도 읽는다 ('고등교육', '참여자 중 3명'은 아니다) */
-const SHORT_GRADE = (school: string, last: number) => String.raw`(?<![가-힣])${school}\s*[1-${last}](?=$|[^\d가-힣]|학년|학생)`
+/**
+ * 학교급. '초4', '중1~고3', '(중 1~3학년)', '고등 3학년', '고등부'처럼 줄여 쓴 말도 읽는다.
+ * 낱말 뒤에 띄어 쓴 '중'은 '가운데'라서 아니다 ('다문화가족 중 3~5세', '참여자 중 3명'). '고등교육'도 아니다
+ */
+const SHORT_GRADE = (school: string, last: number) =>
+  String.raw`(?:(?<![가-힣])${school}|(?<=^|[(（~～\-–,·/]\s*)${school}\s+)[1-${last}](?=$|[^\d가-힣]|학년|학생)`
 const KO_SCHOOLS = [
   new RegExp(String.raw`초등|${SHORT_GRADE('초', 6)}`),
   new RegExp(String.raw`중학|중등|${SHORT_GRADE('중', 3)}`),
@@ -161,8 +165,8 @@ const KO_NUMBER_WORDS: [RegExp, number[]][] = ([
   [`${HANGUL_BEFORE}셋(?=[^가-힣]|$|이|째|씩|만|도|은|과|에|의)`, [3]], [`${HANGUL_BEFORE}넷(?=[^가-힣]|$|이|째|씩|만|도|은|과|에|의)`, [4]],
   [`${HANGUL_BEFORE}첫`, [1]], [`${HANGUL_BEFORE}다섯째`, [5]],
 ] as [string, number[]][]).map(([pattern, values]) => [new RegExp(pattern, 'u'), values])
-/** 첫 돌 (나이 1): '돌 전', '돌이 지난', '첫돌잔치', '돌아기'. '두 돌'은 나이 2이고, '돌봄', '돌고래', '돌아가'의 돌은 아니다 */
-const KO_FIRST_BIRTHDAY = /(?:(?<!\p{Script=Hangul}|(?:한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s)(?:첫\s?)?|(?<=합동\s?))돌(?=$|[^가-힣]|이(?![켜킬])|을|은|의|에|까지|부터|전|후|무렵|쯤|잔치|상|아기|맞이|쟁이|배기|지난|지나)/u
+/** 첫 돌 (나이 1): '돌 전', '돌이 지난', '위한 돌잔치', '특별한 첫돌', '돌아기'. '두 돌'은 나이 2이고, '돌봄', '돌고래', '돌아가'의 돌은 아니다 */
+const KO_FIRST_BIRTHDAY = /(?:(?<!\p{Script=Hangul}|(?<![\p{Script=Hangul}\d])(?:한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s)(?:첫\s?)?|(?<=합동\s?))돌(?=$|[^가-힣]|이(?![켜킬])|을|은|의|에|까지|부터|전|후|무렵|쯤|잔치|상|아기|맞이|쟁이|배기|지난|지나)/u
 /** 셈하는 말 앞의 고유어 수 ('한 학기', '세 자녀', '두명', '열두 살', '석 달'). 한 글자 수는 다른 낱말('한국', '세계') 안에서는 세지 않는다 */
 const KO_COUNTS: Record<string, number> = { 한: 1, 두: 2, 세: 3, 서: 3, 석: 3, 네: 4, 너: 4, 넉: 4, 다섯: 5, 여섯: 6, 일곱: 7, 여덟: 8, 아홉: 9, 열: 10, 스무: 20 }
 const KO_COUNTERS = '번|회|명|사람|살|가족|가정|시간|가지|개|날|주|달|권|장|곳|팀|쌍|분|마리|차례|자녀|아이|학기|반|끼|해|조|그룹|과목|단계|세대|말'

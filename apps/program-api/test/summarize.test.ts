@@ -727,8 +727,14 @@ describe('머리글 검사 (보호자 웹의 제목·기관·대상)', () => {
     }
     const facts = factsOf({ target_raw: '다문화가족 초등 4학년~고등 3학년', grade_range: [4, 12] })
     expect(checkHeading({ ...HEADING.zh, target: '多元文化家庭小学4年级～高中3年级' }, facts, 'zh')).toEqual([])
-    // '참여자 중 3명', '고등교육'은 학교급이 아니다
+    expect(checkHeading({ ...HEADING.zh, target: '多元文化家庭初中1～3年级子女' }, factsOf({ target_raw: '다문화가족 자녀(중 1~3학년)', grade_range: [7, 9] }), 'zh')).toEqual([])
+    // 낱말 뒤에 띄어 쓴 '중'은 '가운데'다
     expect(checkHeading({ ...HEADING.zh, target: '多元文化家庭子女（每个家庭3名中）' }, factsOf({ target_raw: '다문화가족 자녀 (가정당 참여자 중 3명)', grade_range: null }), 'zh')).toEqual([])
+    const ages = factsOf({ target_raw: '관내 다문화가족 중 3~5세 유아 자녀를 둔 가정', grade_range: null, age_range: [3, 5] })
+    expect(checkHeading({ ...HEADING.zh, target: '辖区内有3～5岁幼儿子女的多元文化家庭' }, ages, 'zh')).toEqual([])
+    hasIssue(checkHeading({ ...HEADING.zh, target: '辖区内有3～5岁初中幼儿子女的多元文化家庭' }, ages, 'zh'), '원문에 없는 학교급(중학교)을 씀')
+    const lowerGrades = factsOf({ target_raw: '다문화가족 초등학생 중 1~3학년 자녀', grade_range: [1, 3] })
+    expect(checkHeading({ ...HEADING.zh, target: '多元文化家庭小学1～3年级子女' }, lowerGrades, 'zh')).toEqual([])
   })
 
   it('초등 중·고학년, 한국어 중·고급, 중·고령은 학교급이 아니다', () => {
@@ -785,6 +791,8 @@ describe('머리글 검사 (보호자 웹의 제목·기관·대상)', () => {
     expect(zhTarget('돌이 지난 다문화가족 영아와 보호자', '满一岁的多元文化家庭婴儿和家长')).toEqual([])
     expect(zhTarget('돌전후 다문화가족 아기와 보호자', '一岁左右的多元文化家庭宝宝和家长')).toEqual([])
     expect(checkHeading({ ...HEADING.zh, title: '多元文化家庭宝宝一周岁宴' }, factsOf({ title: '다문화가족 아기 첫돌잔치' }), 'zh')).toEqual([])
+    expect(checkHeading({ ...HEADING.zh, title: '为多元文化家庭宝宝举办的一周岁宴' }, factsOf({ title: '다문화가족 아기를 위한 돌잔치' }), 'zh')).toEqual([])
+    expect(checkHeading({ ...HEADING.zh, title: '宝宝特别的一周岁照片拍摄' }, factsOf({ title: '우리 아기 특별한 첫돌 사진 촬영' }), 'zh')).toEqual([])
     expect(zhTarget('두 돌 이하 다문화가족 영아와 보호자', '两岁以下多元文化家庭婴儿和家长')).toEqual([])
     expect(zhTarget('두 돌 이하 다문화가족 영아와 보호자', '2岁以下多元文化家庭婴儿和家长')).toEqual([])
     hasIssue(zhTarget('두 돌 이하 다문화가족 영아와 보호자', '一岁以下多元文化家庭婴儿和家长'), '원문에 없는 수를 씀: "一"')
