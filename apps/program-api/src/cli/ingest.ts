@@ -34,7 +34,7 @@ interface IngestArgs {
 
 interface Outcome {
   id: string
-  status: 'saved' | 'skipped' | 'failed'
+  status: 'saved' | 'synced' | 'skipped' | 'failed'
   record: ProgramRecord | null
   errors: string[]
 }
@@ -111,7 +111,7 @@ async function ingestOne(id: string, args: IngestArgs, now: Date): Promise<Outco
       step(`시연 표시를 source.json에 맞췄습니다 (demo: ${item.source.demo})`)
     }
     console.log('  = 원문이 바뀌지 않아 건너뜁니다 (다시 처리하려면 --force)')
-    return { id, status: 'skipped', record: synced, errors: [] }
+    return { id, status: synced === previous ? 'skipped' : 'synced', record: synced, errors: [] }
   }
 
   let started = Date.now()
@@ -153,7 +153,7 @@ async function ingestOne(id: string, args: IngestArgs, now: Date): Promise<Outco
 }
 
 function printTable(outcomes: Outcome[]): void {
-  const STATUS = { saved: '저장', skipped: '변경 없음', failed: '오류' }
+  const STATUS = { saved: '저장', synced: '시연 표시만 바꿈', skipped: '변경 없음', failed: '오류' }
   const rows = outcomes.map(({ id, status, record }) => record
     ? [
         id,

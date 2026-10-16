@@ -2,7 +2,7 @@ import type { ApplicationMethod, AttendanceRule, Audience, CompanionRule, Progra
 import { dongFromAddress } from '../geo/dong'
 import { isValidDate, isValidTime, lastApplicationDay, parseDateTime, weekdayOf } from '../match/dates'
 import { applicationStatus } from '../match/application'
-import { clockOf, compareSessions, hasOperationEnded, hasStarted, needsMidJoinCheck } from '../match/sessions'
+import { clockOf, compareSessions, hasOperationEnded, hasStarted, MID_JOIN_MENTION, needsMidJoinCheck } from '../match/sessions'
 
 // 요약에 쓸 수 있는 사실만 모은다. 원문·소개(description)·근거 인용은 넣지 않는다 (명세 5.4).
 // 예외: 회차 없이 기간만 있는 공고의 공통 장소는 원문에서 찾은 장소 인용으로만 남아 있어 그 인용을 쓴다.
@@ -176,7 +176,7 @@ function checkItems(record: ProgramRecord, now: Date): string[] {
   if (hasOperationEnded(record, clockOf(now)) || applicationStatus(record, now) === 'closed') return []
   const items = [...new Set(record.uncertain_items.map((item) => item.trim()).filter(Boolean))]
   const mentions = (word: string) => items.some((item) => item.includes(word))
-  if (needsMidJoinCheck(record, clockOf(now)) && !mentions('중도')) items.push('중도 참여 가능 여부')
+  if (needsMidJoinCheck(record, clockOf(now)) && !items.some((item) => MID_JOIN_MENTION.test(item))) items.push('중도 참여 가능 여부')
   if (record.audience === 'unknown' && !mentions('참여 대상') && !mentions('자녀가 참여')) items.push('자녀가 참여하는 프로그램인지')
   if (record.eligibility_requirements === null && record.target_type === 'unknown' && !mentions('자격')) items.push('참여 자격')
   return items.slice(0, MAX_CHECK_ITEMS)

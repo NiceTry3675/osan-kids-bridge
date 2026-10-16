@@ -399,6 +399,15 @@ describe('학년·나이와 별도 자격', () => {
     expect(program.time_match_status).toBe('unknown')
     expect(program.uncertain_items_ko).toEqual(['중도 참여 가능 여부'])
   })
+
+  it('중도입국을 묻는 항목은 중도 참여 확인을 대신하지 않는다', () => {
+    const program = evaluateProgram(record({
+      attendance_rule: 'all_sessions',
+      sessions: [session('past', '2026-10-10', '10:10', '12:00'), session('a', '2026-10-17', '10:10', '12:00')],
+      uncertain_items: ['중도입국 자녀 참여 가능 여부'],
+    }), filters({ available_windows: [SAT] }), NOW)
+    expect(program.uncertain_items_ko).toEqual(['중도입국 자녀 참여 가능 여부', MID_JOIN_ITEM])
+  })
 })
 
 describe('공유 링크 단독 상세 (filters = null)', () => {

@@ -147,6 +147,12 @@ describe('summaryFacts', () => {
     expect(factsOf().check_items).toEqual(['형제자매 동반 가능 여부'])
   })
 
+  it('중도입국을 묻는 확인 항목은 중도 참여 확인을 대신하지 않는다', () => {
+    const started = { sessions: [session('a', '2026-10-10'), session('b', '2026-10-24')] }
+    expect(factsOf({ ...started, uncertain_items: ['중도입국 자녀 참여 가능 여부'] }).check_items).toContain('중도 참여 가능 여부')
+    expect(factsOf({ ...started, uncertain_items: ['중간에 합류해도 되는지'] }).check_items).not.toContain('중도 참여 가능 여부')
+  })
+
   it('새벽 마감은 보호자 웹과 같이 전날까지로 둔다', () => {
     expect(factsOf({ application_end: '2026-10-17T00:00' }).application_end).toEqual({ date: '2026-10-16', weekday: 'fri', time: null })
     expect(factsOf({ application_end: '2026-10-30T01:00' }).application_end).toEqual({ date: '2026-10-29', weekday: 'thu', time: null })
@@ -688,6 +694,24 @@ describe('머리글 검사 (보호자 웹의 제목·기관·대상)', () => {
     hasIssue(checkHeading({ ...HEADING.zh, target: '多元文化家庭初中3～4年级' }, middleGrades, 'zh'), '원문에 없는 학교급(중학교)을 씀')
   })
 
+  it('중·고등, 중고등, 고교 표기를 읽고, 빈칸으로 떨어진 중·고나 학교가 아닌 중고는 학교급으로 읽지 않는다', () => {
+    const teens = (target_raw: string, grade_range: [number, number] | null = [7, 12]) => factsOf({ target_raw, grade_range })
+    const both = { ...HEADING.zh, target: '多元文化家庭初中和高中子女' }
+    for (const target of ['다문화가족 중·고등 자녀', '다문화가족 중고등 청소년', '다문화가족 중·고교생', '다문화가족 중고교 학생', '다문화가족 중/고등학생']) {
+      expect([target, checkHeading(both, teens(target), 'zh')]).toEqual([target, []])
+      hasIssue(checkHeading({ ...HEADING.zh, target: '多元文化家庭初中子女' }, teens(target), 'zh'), '원문의 학교급(고등학교)이 빠짐')
+    }
+    const all = teens('다문화가족 초·중·고교생', [1, 12])
+    expect(checkHeading({ ...HEADING.vi, target: 'Học sinh tiểu học, trung học cơ sở và trung học phổ thông thuộc gia đình đa văn hóa' }, all, 'vi')).toEqual([])
+    hasIssue(checkHeading({ ...HEADING.vi, target: 'Học sinh tiểu học và trung học cơ sở thuộc gia đình đa văn hóa' }, all, 'vi'), '원문의 학교급(고등학교)이 빠짐')
+    // '다문화가족 중 고등학생'은 다문화가족 가운데 고등학생이다
+    const among = teens('다문화가족 중 고등학생', [10, 12])
+    expect(checkHeading({ ...HEADING.zh, target: '多元文化家庭高中生' }, among, 'zh')).toEqual([])
+    hasIssue(checkHeading({ ...HEADING.zh, target: '多元文化家庭初中生和高中生' }, among, 'zh'), '원문에 없는 학교급(중학교)을 씀')
+    expect(checkHeading({ ...HEADING.zh, target: '育儿辛苦的多元文化家庭父母' }, teens('육아 중 고생하는 다문화가족 부모', null), 'zh')).toEqual([])
+    expect(checkHeading({ ...HEADING.zh, target: '参加二手生活用品分享的多元文化家庭' }, teens('중고생활용품 나눔에 참여하는 다문화가족', null), 'zh')).toEqual([])
+  })
+
   it('대상 원문이 비고 나이만 열린 범위면 0·99를 요구하지 않는다', () => {
     const over8 = factsOf({ target_raw: '', target_type: 'all', eligibility_requirements: [], grade_range: null, age_range: [8, 99] })
     expect(checkHeading({ ...HEADING.vi, target: 'Trẻ từ 8 tuổi trở lên' }, over8, 'vi')).toEqual([])
@@ -696,9 +720,16 @@ describe('머리글 검사 (보호자 웹의 제목·기관·대상)', () => {
     expect(checkHeading({ ...HEADING.zh, target: '7岁以下儿童' }, under7, 'zh')).toEqual([])
   })
 
-  it('원문이 숫자로 쓰지 않은 수는 중국어 글자 숫자로 옮겨도 된다', () => {
+  it('원문이 고유어로 쓴 수만 같은 값의 중국어 글자 숫자로 둘 수 있다', () => {
     const oneDay = factsOf({ title: '엄마와 함께하는 하루 캠프' })
     expect(checkHeading({ ...HEADING.zh, title: '妈妈陪伴的一日营' }, oneDay, 'zh')).toEqual([])
+    hasIssue(checkHeading({ ...HEADING.zh, title: '妈妈陪伴的三日营' }, oneDay, 'zh'), '숫자를 글자로 씀: "三"')
+    const twoFamilies = factsOf({ title: '두 가족이 함께하는 요리 교실' })
+    expect(checkHeading({ ...HEADING.zh, title: '两个家庭一起做饭' }, twoFamilies, 'zh')).toEqual([])
+    // 원문에 숫자가 없어도 원문에 없는 수를 글자로 지어내면 문제다
+    hasIssue(checkHeading({ ...HEADING.zh, title: '多元文化家庭子女三日营' }, facts(), 'zh'), '숫자를 글자로 씀: "三"')
+    hasIssue(checkHeading({ ...HEADING.zh, target: '多元文化家庭初中一年级学生' }, factsOf({ target_raw: '다문화가족 중학생', grade_range: null }), 'zh'), '숫자를 글자로 씀: "一"')
+    hasIssue(checkHeading({ ...HEADING.zh, target: '多元文化家庭五岁以下子女' }, factsOf({ target_raw: '다문화가족 자녀', grade_range: null, age_range: null }), 'zh'), '숫자를 글자로 씀: "五"')
     const single = factsOf({ title: '1인가구 반찬 만들기' })
     expect(checkHeading({ ...HEADING.zh, title: '1人家庭小菜制作' }, single, 'zh')).toEqual([])
     hasIssue(checkHeading({ ...HEADING.zh, title: '一人家庭小菜制作' }, single, 'zh'), '숫자를 글자로 씀')

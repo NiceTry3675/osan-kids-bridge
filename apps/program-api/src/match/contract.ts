@@ -3,7 +3,7 @@ import type {
 } from '../types'
 import { methodPurpose } from '../summarize/facts'
 import { isValidDate } from './dates'
-import { compareSessions, hasOperationEnded, hasStarted } from './sessions'
+import { compareSessions, hasOperationEnded, hasStarted, MID_JOIN_MENTION } from './sessions'
 import type { Clock, TimeJudgement } from './sessions'
 
 // 저장된 사실을 보호자 웹의 데이터 계약(apps/guardian-web/src/data/types.ts)에 맞춰 옮기는 규칙.
@@ -16,14 +16,16 @@ const OUTSIDE_OSAN = /^오산시 밖 장소\((.+)\)$/
 const TOPIC_RULES: [UncertainTopic, RegExp][] = [
   ['age_grade', /^자녀가 참여하는 프로그램인지/],
   ['family_eligibility', /^참여 자격 확인 필요/],
-  ['companion', /동반|형제|자매|동생|(?:함께|같이)\s*(?:와|오|가|참여|들어)/],
+  // '공동생활가정', '아동생활시설'의 '동생'은 아니다
+  ['companion', /동반|형제|자매|동생(?!활)|(?:함께|같이)\s*(?:와|오|가|참여|들어)/],
   ['korean_level', /한국어/],
   ['materials', /준비물|재료|지참|복장|추가\s*비용|간식/],
-  // 중도입국·결혼이민은 가족 배경 자격이다 (아래 일정의 '중도 참여'와 다르다)
-  ['family_eligibility', /중도\s*입국|결혼\s*이민|이주\s*배경/],
-  ['age_grade', /학년|나이|연령|\d\s*(?:세|살)/],
-  ['schedule', /일정|일시|날짜|시간|요일|회차|기간|운영|중도\s*(?:참여|참가|합류)|개강|시작|마감/],
-  ['family_eligibility', /자격|대상|거주|다문화|가족|가정|소득/],
+  // '세 살', '몇 살'도 나이다 ('살고', '살지 않는'은 거주)
+  ['age_grade', /학년|나이|연령|(?:\d|몇)\s*세(?![트대])|(?:\d|(?<![가-힣])(?:열\s*)?(?:한|두|세|네|다섯|여섯|일곱|여덟|아홉|열|몇))\s*살(?![고지아던면았기])/],
+  ['schedule', MID_JOIN_MENTION],
+  ['schedule', /일정|일시|날짜|시간|요일|회차|기간|운영|개강|시작|마감/],
+  // 중도입국·결혼이민 같은 가족 배경과 거주 지역 (그 자녀의 나이·일정을 묻는 항목은 위에서 나이·일정으로 간다)
+  ['family_eligibility', /자격|대상|거주|다문화|가족|가정|소득|중도\s*입국|결혼\s*이민|이주\s*배경|살(?:지|고\s*있지)\s*않|관외|타\s*(?:지역|시)/],
 ]
 
 /** 한국어 확인 항목 하나의 주제. 보호자 웹이 다른 자리에 보여주는 항목은 null */

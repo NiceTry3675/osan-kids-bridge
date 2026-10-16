@@ -113,17 +113,47 @@ const compact = (text: string) => text.normalize('NFKC').replace(/\s+/g, '')
 const uniqueSorted = (values: number[]) => [...new Set(values)].sort((a, b) => a - b)
 const sameNumbers = (a: number[], b: number[]) => uniqueSorted(a).join(',') === uniqueSorted(b).join(',')
 const KO_SCHOOLS = [/초등/, /중학|중등/, /고등학|고교/]
-/** 학교급을 묶어 쓴 말('중고등학생', '초·중학생', '중고생', '초중고')을 풀고, 초등 '중학년'은 중학교가 아니므로 뺀다 */
+/** 학교급 사이의 묶음표 ('초·중·고', '중/고', '초, 중'). 빈칸만 있으면 묶음이 아니다 ('다문화가족 중 고등학생', '육아 중 고생') */
+const JOIN = String.raw`\s*[·・/,]\s*`
+const ELEMENTARY_MIDDLE_HIGH = new RegExp(String.raw`(?<![가-힣])초(?:${JOIN})?중(?:${JOIN})?고(?:등학?|교)?`, 'g')
+const MIDDLE_HIGH_JOINED = new RegExp(String.raw`(?<![가-힣])중\s*[·・/]\s*고(?:등학?|교)?`, 'g')
+const ELEMENTARY_MIDDLE = new RegExp(String.raw`(?<![가-힣])초(?:${JOIN})?중(?=학|등)`, 'g')
+const ELEMENTARY_MIDDLE_BARE = new RegExp(String.raw`(?<![가-힣])초${JOIN}중(?![가-힣])`, 'g')
+/**
+ * 학교급을 묶어 쓴 말('초·중·고교생', '중·고등', '중고생', '초중학생')을 풀고, 초등 '중학년'은 중학교가 아니므로 뺀다.
+ * 묶음표 없는 '중고'는 뒤에 등·교·생이 붙어야 학교급이다 ('중고 물품', '중고생활용품'은 아니다)
+ */
 const koSchoolText = (text: string) => text
   .replace(/중학년/g, '학년')
-  .replace(/초\s*[·・,]?\s*중\s*[·・,]?\s*고(?![가-힣])/g, '초등 중학 고등학')
-  .replace(/중\s*[·・,]?\s*고생/g, '중학생 고등학생')
-  .replace(/중\s*[·・,]?\s*고(?=등)/g, '중학 고')
-  .replace(/초\s*[·・,]?\s*중(?=학|등)/g, '초등 중')
+  .replace(ELEMENTARY_MIDDLE_HIGH, '초등 중학 고등학')
+  .replace(MIDDLE_HIGH_JOINED, '중학 고등학')
+  .replace(/(?<![가-힣])중고(?:등학?|교|(?=생(?!활용)))/g, '중학 고등학')
+  .replace(ELEMENTARY_MIDDLE, '초등 중')
+  .replace(ELEMENTARY_MIDDLE_BARE, '초등 중학')
 const KO_MULTICULTURAL = /다문화|결혼\s*이민|이주\s*배경|중도\s*입국/
 const MAX_LENGTH: Record<HeadingLanguage, Record<keyof SummaryHeading, number>> = {
   vi: { title: 200, institution: 160, target: 220 },
   zh: { title: 90, institution: 80, target: 100 },
+}
+
+/** 한국어 고유어 수 ('하루 캠프', '두 가족', '일일 체험'). 중국어는 이런 수를 글자로 옮겨도 된다 ('一日营') */
+const KO_DAYS: Record<string, number> = { 하루: 1, 일일: 1, 이틀: 2, 사흘: 3, 나흘: 4, 닷새: 5, 엿새: 6, 이레: 7, 여드레: 8, 아흐레: 9, 열흘: 10 }
+const KO_COUNTS: Record<string, number> = { 한: 1, 두: 2, 세: 3, 네: 4, 다섯: 5, 여섯: 6, 일곱: 7, 여덟: 8, 아홉: 9, 열: 10 }
+const KO_DAY_WORD = new RegExp(`(?<!\\p{Script=Hangul})(${Object.keys(KO_DAYS).join('|')})`, 'gu')
+const KO_COUNT_WORD = new RegExp(`(?<![\\p{Script=Hangul}\\d])(열\\s?)?(${Object.keys(KO_COUNTS).join('|')})\\s?(?=번|회|명|사람|살|가족|가정|시간|가지|개|날|주|달|권|장|곳|팀|쌍|분|마리|차례)`, 'gu')
+function koNativeNumbers(text: string): Set<number> {
+  const values = new Set<number>()
+  for (const [, word] of text.matchAll(KO_DAY_WORD)) values.add(KO_DAYS[word])
+  for (const [, ten, word] of text.matchAll(KO_COUNT_WORD)) values.add((ten ? 10 : 0) + KO_COUNTS[word])
+  return values
+}
+
+const ZH_DIGITS: Record<string, number> = { 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 }
+/** 중국어 글자 숫자의 값 ('一' 1, '十二' 12, '二十' 20) */
+function chineseNumber(text: string): number {
+  const ten = text.indexOf('十')
+  if (ten < 0) return [...text].reduce((sum, char) => sum * 10 + (ZH_DIGITS[char] ?? 0), 0)
+  return (ten === 0 ? 1 : ZH_DIGITS[text[ten - 1]] ?? 1) * 10 + (ZH_DIGITS[text[ten + 1]] ?? 0)
 }
 
 /** 머리글 칸마다 대조할 한국어 원문 */
@@ -147,9 +177,12 @@ export function checkHeading(heading: SummaryHeading, facts: SummaryFacts, langu
     if (value.length > MAX_LENGTH[language][field]) issue(field, `너무 김 (${value.length}자)`)
     if (/\n/.test(value)) issue(field, '줄바꿈이 있음')
     if (!rules.script.test(value.replace(/\p{Script=Hangul}+/gu, ''))) issue(field, `${LANGUAGE_LABELS[language]} 글자가 없음`)
-    // 원문이 숫자로 쓴 수만 숫자로 옮기게 한다 ('하루 캠프' → '一日营'은 그대로 둔다)
-    const wordNumber = rules.wordNumber && /\d/.test(sourceField(facts, field)) ? value.match(rules.wordNumber) : null
-    if (wordNumber) issue(field, `숫자를 글자로 씀: "${wordNumber[0]}"`)
+    // 수는 아라비아 숫자로 쓴다. 원문이 고유어로 쓴 수만 같은 값의 글자로 둘 수 있다 ('하루 캠프' → '一日营')
+    if (rules.wordNumber) {
+      const native = koNativeNumbers(sourceField(facts, field))
+      const written = [...value.matchAll(new RegExp(rules.wordNumber.source, `${rules.wordNumber.flags}g`))].find((match) => !native.has(chineseNumber(match[0])))
+      if (written) issue(field, `숫자를 글자로 씀: "${written[0]}"`)
+    }
     if (language === 'zh') for (const problem of chineseScriptIssues(value.replace(/[（(][^）)]*\p{Script=Hangul}[^）)]*[）)]/gu, ''))) issue(field, problem)
   }
 

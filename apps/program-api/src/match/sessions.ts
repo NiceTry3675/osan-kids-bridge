@@ -80,6 +80,9 @@ function isOneTimeEvent(record: ProgramRecord): boolean {
   return (record.session_count ?? record.sessions.length) === 1 && record.sessions.length <= 1 && samePeriod
 }
 
+/** 확인 항목이 중도 참여를 이미 묻는지 ('중도입국'은 가족 배경이라 아니다) */
+export const MID_JOIN_MENTION = /중도(?!\s*입국)|중간\s*(?:에\s*)?(?:참여|참가|합류|들어)/
+
 /** 이미 시작했고 중도 참여 허용이 명시되지 않은 전 회차 참석형(또는 참석 방식 미상) 과정. 한 번뿐인 행사·끝난 과정은 묻지 않는다 */
 export function needsMidJoinCheck(record: ProgramRecord, clock: Clock): boolean {
   if (record.attendance_rule === 'choose_one' || record.mid_join_allowed === true) return false

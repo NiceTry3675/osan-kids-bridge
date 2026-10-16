@@ -3,7 +3,7 @@ import { applicationStatus } from './application'
 import { guardianMethods, guardianSummaries, guardianUncertainItems, representativeSession } from './contract'
 import { lastApplicationDay, seoulDateOf } from './dates'
 import { ageRangeLabel, gradeLabel, gradeRangeLabel, sessionLabel } from './labels'
-import { clockOf, hasOperationEnded, hasStarted, judgeTime, needsMidJoinCheck } from './sessions'
+import { clockOf, hasOperationEnded, hasStarted, judgeTime, MID_JOIN_MENTION, needsMidJoinCheck } from './sessions'
 import type { Clock, TimeJudgement } from './sessions'
 
 export const MID_JOIN_ITEM = '중도 참여 확인 필요'
@@ -73,7 +73,7 @@ function uncertainItems(record: ProgramRecord, eligibility: MatchStatus, clock: 
   const mentions = (word: string) => items.some((item) => item.includes(word))
   const add = (item: string) => { if (!items.includes(item)) items.push(item) }
 
-  if (needsMidJoinCheck(record, clock) && !mentions('중도')) add(MID_JOIN_ITEM)
+  if (needsMidJoinCheck(record, clock) && !items.some((item) => MID_JOIN_MENTION.test(item))) add(MID_JOIN_ITEM)
   if (eligibility === 'unknown') {
     const required = (record.eligibility_requirements ?? []).map((item) => item.trim()).filter(Boolean)
     if (record.target_type === 'multicultural_family' && !required.some((item) => MIGRANT_BACKGROUND.test(item))) required.push('다문화가족')
