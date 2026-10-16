@@ -10,7 +10,10 @@ import { ExternalLink } from '../../components/links'
 import { ActionSheet } from './ActionSheet'
 import type { ActionTab } from './ActionSheet'
 import { CompareSection, DescriptionSection, FactSheet, LanguageSection, ParticipationSection, SessionsSection, StatusNote, ToCheck } from './sections'
+import { PosterSection } from './PosterSection'
 import { useProgram } from './useProgram'
+import { ChatSheet } from '../chat/ChatSheet'
+import { AiEntry } from '../chat/AiEntry'
 
 interface Props {
   id: string
@@ -44,6 +47,7 @@ export function DetailScreen({ id, filters }: Props) {
 function ProgramDetail({ program, compared }: { program: Program; compared: boolean }) {
   const { locale, t } = useI18n()
   const [sheet, setSheet] = useState<ActionTab | null>(null)
+  const [chatOpen, setChatOpen] = useState(false)
   const text = programText(program, locale)
   const language = screenLanguageName(locale)
 
@@ -72,9 +76,11 @@ function ProgramDetail({ program, compared }: { program: Program; compared: bool
       </header>
 
       <FactSheet program={program} text={text} />
+      <AiEntry title={t('chatOpen')} body={t('chatOpenHomeBody')} onOpen={() => setChatOpen(true)} />
       <StatusNote program={program} />
       <ToCheck program={program} />
       <CompareSection program={program} compared={compared} />
+      <PosterSection programId={program.program_id} />
       <DescriptionSection program={program} text={text} />
       <SessionsSection program={program} />
       <ParticipationSection program={program} />
@@ -84,7 +90,8 @@ function ProgramDetail({ program, compared }: { program: Program; compared: bool
         <button type="button" className="btn btn--outline btn--lg" onClick={() => setSheet('ask')}>{t('askButton')}</button>
         <PrimaryAction program={program} onOpen={() => setSheet('apply')} />
       </div>
-      <ActionSheet program={program} tab={sheet} onTab={setSheet} onClose={() => setSheet(null)} />
+      <ActionSheet program={program} tab={sheet} onTab={setSheet} onClose={() => setSheet(null)} onOpenChat={() => { setSheet(null); setChatOpen(true) }} />
+      <ChatSheet open={chatOpen} onClose={() => setChatOpen(false)} program={{ program_id: program.program_id, title: program.title }} suggestions={['chatSuggestFit', 'chatSuggestMaterials', 'chatSuggestHowApply']} />
     </article>
   )
 }

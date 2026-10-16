@@ -9,6 +9,7 @@ import './styles/intro.css'
 import './styles/home.css'
 import './styles/detail.css'
 import './styles/sheet.css'
+import './styles/chat.css'
 import App from './App'
 import { I18nProvider } from './i18n'
 
