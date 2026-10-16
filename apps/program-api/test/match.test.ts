@@ -263,7 +263,7 @@ describe('시간 판정 (명세 4장)', () => {
       for (const midJoin of [null, false]) {
         const program = allSessions(sessions, { mid_join_allowed: midJoin })
         expect(program.time_match_status).toBe('unknown')
-        expect(program.uncertain_items).toContain(MID_JOIN_ITEM)
+        expect(program.uncertain_items_ko).toContain(MID_JOIN_ITEM)
       }
     })
 
@@ -272,7 +272,7 @@ describe('시간 판정 (명세 4장)', () => {
       expect(program.time_match_status).toBe('matched')
       expect(program.matched_sessions).toEqual(['a'])
       expect(program.mid_join_allowed).toBe(true)
-      expect(program.uncertain_items).not.toContain(MID_JOIN_ITEM)
+      expect(program.uncertain_items_ko).not.toContain(MID_JOIN_ITEM)
       expect(program.matched_reasons.some((reason) => reason.startsWith('남은 회차'))).toBe(true)
     })
 
@@ -353,41 +353,41 @@ describe('학년·나이와 별도 자격', () => {
     const program = evaluateProgram(record({ target_type: 'multicultural_family', target_raw: '다문화가족 초등 1~4학년', grade_range: [1, 4], eligibility_requirements: [] }), filters({ child_grade: 2 }), NOW)
     expect(program.age_grade_match_status).toBe('matched')
     expect(program.eligibility_status).toBe('unknown')
-    expect(program.uncertain_items).toContain('참여 자격 확인 필요: 다문화가족')
+    expect(program.uncertain_items_ko).toContain('참여 자격 확인 필요: 다문화가족')
   })
 
   it('별도 자격 확인 항목을 공고의 확인 필요 사항과 겹치지 않게 덧붙인다', () => {
     const covered = evaluateProgram(record({ eligibility_requirements: ['다문화가족'], uncertain_items: ['다문화가족 자격 확인'] }), null, NOW)
-    expect(covered.uncertain_items).toEqual(['다문화가족 자격 확인'])
+    expect(covered.uncertain_items_ko).toEqual(['다문화가족 자격 확인'])
     const partial = evaluateProgram(record({ eligibility_requirements: ['다문화가족', '오산시 거주'], uncertain_items: ['다문화가족 자격 확인'] }), null, NOW)
-    expect(partial.uncertain_items).toEqual(['다문화가족 자격 확인', '참여 자격 확인 필요: 오산시 거주'])
+    expect(partial.uncertain_items_ko).toEqual(['다문화가족 자격 확인', '참여 자격 확인 필요: 오산시 거주'])
     // 구체적인 자격이 없으면 일반 문구는 보호자 웹이 화면 언어로 표시한다
     const unknown = evaluateProgram(record({ eligibility_requirements: null }), null, NOW)
     expect(unknown.eligibility_status).toBe('unknown')
-    expect(unknown.uncertain_items).toEqual([])
+    expect(unknown.uncertain_items_ko).toEqual([])
   })
 
   it('자녀가 참여하는지 미상이면 확인 항목을 더하고, 판정 중 공고를 바꾸지 않는다', () => {
     const source = record({ audience: 'unknown', sessions: [session('b', '2026-10-24', '10:10', '12:00'), session('a', '2026-10-17', '10:10', '12:00')] })
     const snapshot = structuredClone(source)
     const program = evaluateProgram(source, filters({ available_windows: [SAT] }), NOW)
-    expect(program.uncertain_items).toEqual(['자녀가 참여하는 프로그램인지 확인 필요'])
+    expect(program.uncertain_items_ko).toEqual(['자녀가 참여하는 프로그램인지 확인 필요'])
     expect(program.matched_sessions).toEqual(['a', 'b'])
     expect(source).toEqual(snapshot)
   })
 
   it('한 번뿐인 행사와 이미 끝난 과정에는 중도 참여 확인을 붙이지 않는다', () => {
     const oneDay = evaluateProgram(record({ attendance_rule: 'all_sessions', session_count: 1, period_start: '2026-06-10', period_end: '2026-06-10', sessions: [session('a', '2026-06-10', '18:00', '19:30')] }), null, NOW)
-    expect(oneDay.uncertain_items).not.toContain(MID_JOIN_ITEM)
+    expect(oneDay.uncertain_items_ko).not.toContain(MID_JOIN_ITEM)
     const ended = evaluateProgram(record({ attendance_rule: 'all_sessions', sessions: [session('a', '2026-10-01', '10:10', '12:00'), session('b', '2026-10-08', '10:10', '12:00')] }), null, NOW)
-    expect(ended.uncertain_items).not.toContain(MID_JOIN_ITEM)
+    expect(ended.uncertain_items_ko).not.toContain(MID_JOIN_ITEM)
     const running = evaluateProgram(record({ attendance_rule: 'all_sessions', sessions: [session('a', '2026-10-08', '10:10', '12:00'), session('b', '2026-10-22', '10:10', '12:00')] }), null, NOW)
-    expect(running.uncertain_items).toContain(MID_JOIN_ITEM)
+    expect(running.uncertain_items_ko).toContain(MID_JOIN_ITEM)
   })
 
   it('다문화가족을 구체적으로 밝힌 자격(중도입국 등)이 있으면 다문화가족을 따로 덧붙이지 않는다', () => {
     const program = evaluateProgram(record({ target_type: 'multicultural_family', eligibility_requirements: ['중도입국'] }), null, NOW)
-    expect(program.uncertain_items).toEqual(['참여 자격 확인 필요: 중도입국'])
+    expect(program.uncertain_items_ko).toEqual(['참여 자격 확인 필요: 중도입국'])
   })
 
   it('중도 참여 확인 항목은 공고에 이미 있으면 다시 넣지 않는다', () => {
@@ -397,7 +397,7 @@ describe('학년·나이와 별도 자격', () => {
       uncertain_items: ['중도 참여 가능 여부', '중도 참여 가능 여부'],
     }), filters({ available_windows: [SAT] }), NOW)
     expect(program.time_match_status).toBe('unknown')
-    expect(program.uncertain_items).toEqual(['중도 참여 가능 여부'])
+    expect(program.uncertain_items_ko).toEqual(['중도 참여 가능 여부'])
   })
 })
 
@@ -533,8 +533,22 @@ describe('다음 회차와 일치 근거', () => {
     expect(timeOf({ sessions }, [{ day_of_week: 'sun', start_time: '10:00', end_time: '12:00' }]).next_session?.id).toBe('soon')
   })
 
-  it('앞으로의 날짜 확인 회차가 없으면 null', () => {
-    expect(evaluateProgram(record({ sessions: [session('past', '2026-10-10', '10:10', '12:00'), session('u', null, null, null)] }), null, NOW).next_session).toBeNull()
+  it('앞으로의 날짜 확인 회차가 없으면 날짜 없는 회차나 공통 장소를 날짜 없이 대표로 보내고, 장소도 없으면 null', () => {
+    const undated = evaluateProgram(record({ sessions: [session('past', '2026-10-10', '10:10', '12:00'), session('u', null, null, null)], period_end: '2026-12-31' }), null, NOW)
+    expect(undated.next_session).toMatchObject({ id: 'u', date: null, place_name: '오산시가족센터' })
+    const venue = { place_name: '세마동 행정복지센터', address: null, dong: '세마동', online: false }
+    const venueOnly = evaluateProgram(record({ sessions: [], venue }), null, NOW)
+    expect(venueOnly.next_session).toEqual({ id: 'venue', date: null, start_time: null, end_time: null, place_name: '세마동 행정복지센터', dong: '세마동', online: false, address: null })
+    expect(venueOnly.matched_sessions).toEqual([])
+    expect(evaluateProgram(record({ sessions: [], venue: null }), null, NOW).next_session).toBeNull()
+    const nowhere = { ...session('u', null, null, null), place_name: null }
+    expect(evaluateProgram(record({ sessions: [nowhere], venue: null }), null, NOW).next_session).toBeNull()
+  })
+
+  it('운영이 끝난 공고는 마지막 회차를 대표로 보낸다 (공유 링크 상세)', () => {
+    const ended = evaluateProgram(record({ sessions: [session('b', '2026-10-08', '10:10', '12:00'), session('a', '2026-10-01', '10:10', '12:00')] }), null, NOW)
+    expect(ended.application_status).toBe('closed')
+    expect(ended.next_session?.id).toBe('b')
   })
 
   it('일치 근거에 신청 상태·비용·거리를 섞지 않는다', () => {
@@ -623,7 +637,7 @@ describe('검색 결과 분류 (명세 5.1)', () => {
     const program = searchPrograms([both], filters({ available_windows: [SAT] }), NOW).needs_confirmation[0]
     expect(program.time_match_status).toBe('unknown')
     expect(program.eligibility_status).toBe('unknown')
-    expect(program.uncertain_items).toContain('참여 자격 확인 필요: 오산시 거주')
+    expect(program.uncertain_items_ko).toContain('참여 자격 확인 필요: 오산시 거주')
   })
 
   it('무료만 보기는 cost_krw 0만 남기고 비용 미상은 뺀다', () => {
@@ -654,7 +668,7 @@ describe('검색 결과 분류 (명세 5.1)', () => {
     expect(ids(searchPrograms([taekwon], filters({ available_windows: [SAT] }), NOW).needs_confirmation)).toEqual(['taekwon'])
     const browse = searchPrograms([taekwon], filters(), NOW).results[0]
     expect(browse.time_match_status).toBe('not_applied')
-    expect(browse.uncertain_items).toContain(MID_JOIN_ITEM)
+    expect(browse.uncertain_items_ko).toContain(MID_JOIN_ITEM)
   })
 })
 

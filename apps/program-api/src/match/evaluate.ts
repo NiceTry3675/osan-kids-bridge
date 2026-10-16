@@ -1,8 +1,9 @@
-import type { MatchStatus, ProgramRecord, ProgramResponse, ProgramSession, SearchFilters } from '../types'
+import type { CompanionRule, GuardianCompanionRule, MatchStatus, ProgramRecord, ProgramResponse, SearchFilters } from '../types'
 import { applicationStatus } from './application'
-import { isValidDate, lastApplicationDay, seoulDateOf } from './dates'
+import { guardianMethods, guardianSummaries, guardianUncertainItems, representativeSession } from './contract'
+import { lastApplicationDay, seoulDateOf } from './dates'
 import { ageRangeLabel, gradeLabel, gradeRangeLabel, sessionLabel } from './labels'
-import { clockOf, compareSessions, hasOperationEnded, hasStarted, judgeTime, needsMidJoinCheck } from './sessions'
+import { clockOf, hasOperationEnded, hasStarted, judgeTime, needsMidJoinCheck } from './sessions'
 import type { Clock, TimeJudgement } from './sessions'
 
 export const MID_JOIN_ITEM = '중도 참여 확인 필요'
@@ -87,10 +88,11 @@ function uncertainItems(record: ProgramRecord, eligibility: MatchStatus, clock: 
 export const supportInterpretation = (record: ProgramRecord) =>
   record.evidence.some((entry) => entry.verified && entry.field === 'support_languages' && /통역/.test(entry.quote))
 
-/** 시간이 맞으면 가장 빠른 일치 회차, 아니면 앞으로 시작할 가장 빠른 날짜 확인 회차 */
-function nextSession(record: ProgramRecord, time: TimeJudgement, clock: Clock): ProgramSession | null {
-  if (time.status === 'matched') return time.matched[0] ?? null
-  return record.sessions.filter((session) => isValidDate(session.date) && !hasStarted(session, clock)).sort(compareSessions)[0] ?? null
+const companion = (rule: CompanionRule): GuardianCompanionRule => (rule === 'unknown' ? null : rule)
+
+export interface EvaluateOptions {
+  /** 시연 데이터로 띄운 서버 (is_demo) */
+  demo?: boolean
 }
 
 /**
@@ -98,12 +100,15 @@ function nextSession(record: ProgramRecord, time: TimeJudgement, clock: Clock): 
  * filters가 null이면 공유 링크 단독 진입: 입력이 필요한 판정은 not_applied, 일치 근거는 없다.
  * 운영이 끝난 공고는 신청 기간이 남아 있어도 closed다 (공유 링크 상세에 신청 행동을 내지 않게, 명세 5.1·5.2).
  */
-export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | null, now: Date): ProgramResponse {
+export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | null, now: Date, options: EvaluateOptions = {}): ProgramResponse {
   const clock = clockOf(now)
   const ageGrade = judgeAgeGrade(record, filters)
   const eligibility = eligibilityStatus(record)
   const time = judgeTime(record, filters?.available_windows ?? [], clock)
   const reasons = [ageGrade.reason, timeReason(record, time, clock)].filter((reason): reason is string => reason !== null)
+  const checkItems = uncertainItems(record, eligibility, clock)
+  const verifiedAt = record.review.status === 'approved' ? seoulDateOf(record.review.reviewed_at) : null
+  const methods = guardianMethods(record, verifiedAt ?? seoulDateOf(record.extracted_at) ?? record.extracted_at.slice(0, 10))
 
   return {
     program_id: record.program_id,
@@ -117,7 +122,8 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
     age_grade_match_status: ageGrade.status,
     eligibility_status: eligibility,
     time_match_status: time.status,
-    uncertain_items: uncertainItems(record, eligibility, clock),
+    uncertain_items: guardianUncertainItems(record, checkItems),
+    uncertain_items_ko: checkItems,
     matched_reasons: reasons,
     attendance_rule: record.attendance_rule,
     ...(record.mid_join_allowed === null ? {} : { mid_join_allowed: record.mid_join_allowed }),
@@ -125,24 +131,27 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
     venue: record.venue ?? null,
     schedule_note: record.schedule_note ?? null,
     matched_sessions: time.matched.map((session) => session.id),
-    next_session: nextSession(record, time, clock),
+    next_session: representativeSession(record, time, clock),
     cost_krw: record.cost_krw,
     cost_raw: record.cost_raw,
     application_status: hasOperationEnded(record, clock) ? 'closed' : applicationStatus(record, now),
     application_start: seoulDateOf(record.application_start),
     application_end: lastApplicationDay(record.application_end),
-    application_methods: record.application_methods,
+    application_methods: methods.apply,
+    inquiry_methods: methods.inquiry,
     application_note: record.application_note ?? null,
     notices: record.notices ?? [],
     source_url: record.source.url,
-    verified_at: record.review.status === 'approved' ? seoulDateOf(record.review.reviewed_at) : null,
+    verified_at: verifiedAt,
+    review_state: 'current',
+    is_demo: options.demo ?? false,
     application_start_at: record.application_start,
     application_end_at: record.application_end,
     target_type: record.target_type,
     audience: record.audience,
     eligibility_requirements: record.eligibility_requirements,
-    guardian_companion: record.guardian_companion,
-    sibling_companion: record.sibling_companion,
+    guardian_companion: companion(record.guardian_companion),
+    sibling_companion: companion(record.sibling_companion),
     korean_level_required: record.korean_level_required,
     support_languages: record.support_languages,
     support_interpretation: supportInterpretation(record),
@@ -151,7 +160,7 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
     period_end: record.period_end,
     session_count: record.session_count,
     capacity: record.capacity,
-    summaries_by_language: record.summaries_by_language,
+    summaries_by_language: guardianSummaries(record, record.summaries_by_language),
     source_evidence: record.evidence.filter((entry) => entry.verified).map(({ field, quote }) => ({ field, quote })),
   }
 }

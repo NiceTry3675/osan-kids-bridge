@@ -257,9 +257,10 @@ describe('프로그램 API', () => {
     it('사람이 승인한 언어별 요약만 내보낸다 (상태만 approved로 적은 요약·승인 기록은 내보내지 않는다)', async () => {
       const reply = await get('/programs/pub-saturday')
       expect(Object.keys(reply.body.summaries_by_language)).toEqual(['ko-easy'])
-      expect(reply.body.summaries_by_language['ko-easy']).toMatchObject({ lines: koLines('pub-saturday'), status: 'approved', approved_at: NOW.toISOString() })
-      expect(reply.body.summaries_by_language['ko-easy']).not.toHaveProperty('approved_hash')
-      expect(reply.body.summaries_by_language['ko-easy']).not.toHaveProperty('reviewer')
+      expect(reply.body.summaries_by_language['ko-easy']).toEqual({
+        title: 'pub-saturday 프로그램', institution: reply.body.institution, target: reply.body.target_raw,
+        description: koLines('pub-saturday').join(' '), lines: koLines('pub-saturday'), status: 'approved', reviewed_at: NOW.toISOString(),
+      })
       const search = await post('/programs/search', {})
       const listed = search.body.results.find((program: ProgramResponse) => program.program_id === 'pub-saturday')
       expect(Object.keys(listed.summaries_by_language)).toEqual(['ko-easy'])

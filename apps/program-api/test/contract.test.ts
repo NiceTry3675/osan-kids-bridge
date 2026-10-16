@@ -1,0 +1,220 @@
+import { resolve } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import type { Program as GuardianProgram, SearchResponse as GuardianSearchResponse } from '../../guardian-web/src/data/types'
+import { DEMO_NOW } from '../src/config'
+import { guardianMethods, guardianSummaries, guardianUncertainItems, uncertainTopic } from '../src/match/contract'
+import { evaluateProgram } from '../src/match/evaluate'
+import { searchPrograms } from '../src/match/search'
+import { isPublished, publicSummaries } from '../src/review/hash'
+import { loadRecords } from '../src/store'
+import type { LanguageSummary, ProgramRecord, ProgramResponse, SearchResponse } from '../src/types'
+
+// API 응답이 보호자 웹(apps/guardian-web/src/data/types.ts)의 계약을 그대로 만족하는지.
+// 아래 두 함수는 타입 검사(npm run typecheck)에서 계약이 어긋나면 실패한다.
+export const asGuardianProgram = (program: ProgramResponse): GuardianProgram => program
+export const asGuardianSearch = (response: SearchResponse): GuardianSearchResponse => response
+
+const NOW = new Date('2026-10-15T03:00:00Z')
+
+function record(overrides: Partial<ProgramRecord> = {}): ProgramRecord {
+  return {
+    program_id: 'p-contract',
+    title: '토요 체험',
+    institution: '오산시가족센터',
+    category: 'experience_culture',
+    audience: 'child',
+    target_type: 'multicultural_family',
+    target_raw: '다문화가족 초등 1~3학년',
+    description: '체험 프로그램',
+    grade_range: [1, 3],
+    age_range: null,
+    eligibility_requirements: ['다문화가족'],
+    guardian_companion: 'required',
+    sibling_companion: 'unknown',
+    korean_level_required: null,
+    support_languages: null,
+    application_languages: null,
+    sessions: [{ id: 's1', date: '2026-10-17', start_time: '10:10', end_time: '12:00', place_name: '오산시가족센터', dong: '중앙동', online: false }],
+    period_start: null,
+    period_end: null,
+    session_count: null,
+    attendance_rule: 'choose_one',
+    mid_join_allowed: null,
+    cost_krw: 0,
+    cost_raw: '무료',
+    capacity: 20,
+    application_start: '2026-10-01T09:00',
+    application_end: '2026-10-20T18:00',
+    application_methods: [],
+    uncertain_items: [],
+    evidence: [],
+    summaries_by_language: {},
+    source: { url: 'https://example.com/p', retrieved_at: '2026-10-14', files: [], content_hash: 'hash' },
+    extracted_at: '2026-10-14T00:00:00Z',
+    model: 'test',
+    warnings: [],
+    review: { status: 'approved', reviewed_at: '2026-10-14T01:00:00Z', reviewer: '검수자', notes: null, facts_hash: null },
+    ...overrides,
+  }
+}
+
+const summary = (overrides: Partial<LanguageSummary> = {}): LanguageSummary => ({
+  lines: ['첫 줄이에요.', '둘째 줄이에요.', '셋째 줄이에요.'],
+  status: 'machine_checked',
+  generated_at: '2026-10-15T00:00:00Z',
+  issues: [],
+  ...overrides,
+})
+
+describe('기관에 확인할 점 (보호자 웹 UncertainItem)', () => {
+  it('추출·판정이 만드는 한국어 항목을 보호자 웹의 주제로 옮긴다', () => {
+    const cases: [string, string | null][] = [
+      ['운영 날짜·시간', 'schedule'],
+      ['운영 시간', 'schedule'],
+      ['나머지 회차 일정 (총 12회 중 3회만 날짜 확인)', 'schedule'],
+      ['전체 회차 수 (원문 총 12회, 일정 10개)', 'schedule'],
+      ['회차 날짜와 운영 기간', 'schedule'],
+      ['10월 3일 날짜와 요일(토) 불일치', 'schedule'],
+      ['신청 마감(10월 31일)이 운영 종료일(10월 17일)보다 늦은 점', 'schedule'],
+      ['중도 참여 확인 필요', 'schedule'],
+      ['대상 학년·나이', 'age_grade'],
+      ['자녀가 참여하는 프로그램인지 확인 필요', 'age_grade'],
+      ['참여 대상·자격', 'family_eligibility'],
+      ['참여 자격 확인 필요: 다문화가족, 오산시 거주', 'family_eligibility'],
+      ['보호자·형제자매 동반 가능 여부', 'companion'],
+      ['보호자 동반 가능 여부', 'companion'],
+      ['형제자매 동반 가능 여부', 'companion'],
+      ['필요한 한국어 수준', 'korean_level'],
+      ['준비물', 'materials'],
+      ['오산시 밖 장소(경기도 화성시 동탄구 동탄대로 446 (청계동))', 'other'],
+      ['주차 가능 여부', 'other'],
+      // 보호자 웹이 비용 행·신청 상태·신청 버튼으로 이미 보여주는 것
+      ['참가비', null],
+      ['신청 기간', null],
+      ['신청 시작일', null],
+      ['신청 마감일', null],
+      ['신청 방법', null],
+    ]
+    for (const [item, topic] of cases) expect([item, uncertainTopic(item)]).toEqual([item, topic])
+  })
+
+  it('같은 주제는 한 번만 보내고, 원문에서 찾은 관련 표현을 붙인다', () => {
+    const source = record({
+      evidence: [
+        { field: 'eligibility_requirements', quote: '대상 : 오산시 거주 다문화가족', verified: true },
+        { field: 'guardian_companion', quote: '보호자 동반 필수', verified: true },
+        { field: 'period', quote: '찾지 못한 인용', verified: false },
+      ],
+    })
+    const items = guardianUncertainItems(source, [
+      '참여 대상·자격', '보호자·형제자매 동반 가능 여부', '운영 날짜·시간', '중도 참여 확인 필요', '참가비',
+      '오산시 밖 장소(경기도 화성시 동탄대로 446)',
+    ])
+    expect(items).toEqual([
+      { topic: 'family_eligibility', note_ko: '대상 : 오산시 거주 다문화가족' },
+      { topic: 'companion', note_ko: '보호자 동반 필수' },
+      { topic: 'schedule', note_ko: null },
+      { topic: 'other', note_ko: '경기도 화성시 동탄대로 446' },
+    ])
+  })
+
+  it('응답에는 주제로 묶은 항목과 한국어 항목을 함께 담는다', () => {
+    const program = evaluateProgram(record({ uncertain_items: ['형제자매 동반 가능 여부'] }), null, NOW)
+    expect(program.uncertain_items_ko).toEqual(['형제자매 동반 가능 여부', '참여 자격 확인 필요: 다문화가족'])
+    expect(program.uncertain_items).toEqual([{ topic: 'companion', note_ko: null }, { topic: 'family_eligibility', note_ko: null }])
+  })
+})
+
+describe('신청·문의 방법', () => {
+  it('문의만 받는 연락처는 inquiry_methods로 나누고, 주소 없는 온라인 신청은 원문 주소로 연결한다', () => {
+    const source = record({
+      application_methods: [
+        { type: 'online', label: '오산시가족센터 홈페이지 프로그램 신청' },
+        { type: 'phone', label: '전화 신청', phone: '031-111-1111' },
+        { type: 'phone', label: '문의', phone: '031-222-2222' },
+        { type: 'visit', label: '방문 접수', address: '중앙동 도서관' },
+      ],
+    })
+    const { apply, inquiry } = guardianMethods(source, '2026-10-14')
+    expect(apply).toEqual([
+      { type: 'online', label: '오산시가족센터 홈페이지 프로그램 신청', url: 'https://example.com/p' },
+      { type: 'phone', label: '전화 신청', phone: '031-111-1111' },
+      { type: 'visit', label: '방문 접수', address: '중앙동 도서관' },
+    ])
+    expect(inquiry).toEqual([{ type: 'phone', phone: '031-222-2222', hours: null, languages: null, verified_at: '2026-10-14' }])
+  })
+
+  it('원문 주소가 없거나 http(s)가 아니면 온라인 신청에 주소를 붙이지 않는다', () => {
+    const online = { type: 'online' as const, label: '홈페이지 신청' }
+    expect(guardianMethods(record({ application_methods: [online], source: { ...record().source, url: null } }), '2026-10-14').apply).toEqual([online])
+    expect(guardianMethods(record({ application_methods: [online], source: { ...record().source, url: 'javascript:alert(1)' } }), '2026-10-14').apply).toEqual([online])
+    const own = { ...online, url: 'https://form.example.com/a' }
+    expect(guardianMethods(record({ application_methods: [own] }), '2026-10-14').apply).toEqual([own])
+  })
+
+  it('동반 규칙의 미상은 null, 공고 검수 전이면 문의처 확인일은 추출일', () => {
+    const program = evaluateProgram(record({
+      review: { ...record().review, status: 'pending', reviewed_at: null },
+      application_methods: [{ type: 'phone', label: '문의', phone: '031-222-2222' }],
+    }), null, NOW, { demo: true })
+    expect([program.guardian_companion, program.sibling_companion]).toEqual(['required', null])
+    expect(program.inquiry_methods[0].verified_at).toBe('2026-10-14')
+    expect(program.review_state).toBe('current')
+    expect(program.is_demo).toBe(true)
+    expect(evaluateProgram(record(), null, NOW).is_demo).toBe(false)
+  })
+})
+
+describe('언어별 안내 (보호자 웹 ReviewedSummary)', () => {
+  it('쉬운 한국어는 원문 제목·기관·대상, 베트남어·중국어는 그 언어의 머리글이 있을 때만 보낸다', () => {
+    const heading = { title: 'Trải nghiệm thứ Bảy', institution: 'Trung tâm Gia đình thành phố Osan (오산시가족센터)', target: 'Học sinh lớp 1–3 tiểu học thuộc gia đình đa văn hóa' }
+    const summaries = guardianSummaries(record(), {
+      'ko-easy': summary(),
+      vi: summary({ heading, status: 'approved', approved_at: '2026-10-15T02:00:00Z' }),
+      zh: summary(),
+    })
+    expect(Object.keys(summaries)).toEqual(['ko-easy', 'vi'])
+    expect(summaries['ko-easy']).toEqual({
+      title: '토요 체험', institution: '오산시가족센터', target: '다문화가족 초등 1~3학년',
+      description: '첫 줄이에요. 둘째 줄이에요. 셋째 줄이에요.', reviewed_at: '2026-10-15T00:00:00Z', status: 'machine_checked',
+      lines: summary().lines,
+    })
+    expect(summaries.vi).toMatchObject({ ...heading, reviewed_at: '2026-10-15T02:00:00Z', status: 'approved' })
+  })
+
+  it('자동 대조를 통과하지 못한 요약은 보내지 않는다', () => {
+    expect(guardianSummaries(record(), { 'ko-easy': summary({ status: 'machine_draft', issues: ['문제'] }) })).toEqual({})
+  })
+})
+
+describe('시연 데이터 (npm run demo)', () => {
+  const demoDir = resolve(import.meta.dirname, '../demo')
+  const now = new Date(DEMO_NOW)
+  const published = loadRecords(demoDir).filter(isPublished).map((source) => ({ ...source, summaries_by_language: publicSummaries(source, true) }))
+  const topics = new Set(['family_eligibility', 'companion', 'korean_level', 'schedule', 'age_grade', 'materials', 'other'])
+
+  it('모든 시연 공고가 보호자 웹이 읽는 값으로 나온다', () => {
+    expect(published.length).toBeGreaterThan(0)
+    for (const source of published) {
+      const program = evaluateProgram(source, null, now, { demo: true })
+      expect(program.is_demo).toBe(true)
+      for (const item of program.uncertain_items) expect(topics.has(item.topic)).toBe(true)
+      for (const rule of [program.guardian_companion, program.sibling_companion]) expect([null, 'required', 'allowed', 'not_allowed']).toContain(rule)
+      for (const method of program.inquiry_methods) expect(method.verified_at).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      for (const method of program.application_methods) if (method.type === 'online') expect(method.url).toMatch(/^https?:\/\//)
+      for (const text of Object.values(program.summaries_by_language)) {
+        for (const value of [text.title, text.institution, text.target, text.description]) expect(value.trim()).not.toBe('')
+      }
+      // 장소가 원문에 있으면 대표 회차로 보여준다
+      if (source.sessions.some((session) => session.place_name) || source.venue?.place_name) expect(program.next_session?.place_name).toBeTruthy()
+    }
+  })
+
+  it('초등 2학년·토요일 오전 시나리오: 결과 2건, 시간 확인 필요 1건', () => {
+    const response = searchPrograms(published, {
+      child_grade: 2, available_windows: [{ day_of_week: 'sat', start_time: '10:05', end_time: '12:10' }], interests: [], free_only: false,
+    }, now, { demo: true })
+    expect(response.results.map((program) => program.program_id)).toEqual(['demo-saturday-craft', 'demo-korean-play'])
+    expect(response.needs_confirmation.map((program) => program.program_id)).toEqual(['demo-weekend-art'])
+  })
+})

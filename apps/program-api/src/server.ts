@@ -26,6 +26,8 @@ export interface ServerOptions {
   log?: Warn
   /** 자동 대조를 통과한 미승인 요약도 내보낼지 (기본: SHOW_MACHINE_CHECKED_SUMMARIES=1) */
   showMachineChecked?: boolean
+  /** 시연 데이터로 띄운 서버인지. 응답의 is_demo가 되어 보호자 웹이 실제 기관 링크로 보내지 않는다 (기본: PROGRAM_DEMO=1) */
+  demo?: boolean
 }
 
 class HttpError extends Error {
@@ -110,6 +112,7 @@ export function createServer(options: ServerOptions = {}): Server {
   const origins = options.origins ?? corsOrigins()
   const records = recordWatcher(options.dataDir ?? dataDir(), log)
   const showMachineChecked = options.showMachineChecked ?? process.env.SHOW_MACHINE_CHECKED_SUMMARIES === '1'
+  const evaluation = { demo: options.demo ?? process.env.PROGRAM_DEMO === '1' }
 
   // 파일이 바뀌어 다시 읽었을 때만 게시 여부(해시)와 내보낼 요약을 다시 계산한다
   interface Cache {
@@ -165,14 +168,14 @@ export function createServer(options: ServerOptions = {}): Server {
     if (path === '/programs/search') {
       if (method !== 'POST') throw methodNotAllowed('POST')
       const filters = parseFilters(await readBody(request))
-      return send(response, 200, searchPrograms(current().published, filters, now()))
+      return send(response, 200, searchPrograms(current().published, filters, now(), evaluation))
     }
 
     const detail = path.match(/^\/programs\/([^/]+)$/)
     if (detail) {
       if (method !== 'GET') throw methodNotAllowed('GET')
       // 공유 링크 단독 진입: 입력하지 않은 조건은 판정하지 않는다
-      return send(response, 200, evaluateProgram(publishedRecord(detail[1]), null, now()))
+      return send(response, 200, evaluateProgram(publishedRecord(detail[1]), null, now(), evaluation))
     }
 
     const evaluate = path.match(/^\/programs\/([^/]+)\/evaluate$/)
@@ -181,7 +184,7 @@ export function createServer(options: ServerOptions = {}): Server {
       // 본문을 다 받은 뒤 공고(404·410)를 먼저 확인하고 조건(400)을 검사한다
       const text = await readBody(request)
       const record = publishedRecord(evaluate[1])
-      return send(response, 200, evaluateProgram(record, parseFilters(text), now()))
+      return send(response, 200, evaluateProgram(record, parseFilters(text), now(), evaluation))
     }
 
     throw new HttpError(404, '요청한 주소를 찾을 수 없습니다.')

@@ -1,19 +1,19 @@
+import { DEMO_NOW } from '../config'
 import { approveRecord } from '../review/lifecycle'
 import { unverifiedFacts } from '../review/critical'
 import { effectiveReviewStatus } from '../review/hash'
 
 // 시연용 데이터(demo/)로 서버를 띄우거나, 시연 공고를 한 번에 승인한다.
-// npm run demo            : demo 데이터로 API 실행 (기준 시각 고정, 자동 대조를 통과한 요약도 표시)
+// npm run demo            : demo 데이터로 API 실행 (기준 시각 고정, 자동 대조를 통과한 요약도 표시, 응답의 is_demo는 true)
 // npm run demo:approve    : demo 공고 중 근거가 확인된 공고를 '시연 데이터' 검수자로 승인
 // npm run demo:ingest -- <ID ...> : demo/inbox의 공고를 Gemini로 추출·요약한 뒤 바로 승인 (현장 시연용, 키 필요)
 
-/** 시연 기준 시각: 2026-10-15(목) 10:00 (서울). 공고의 신청·운영 상태가 이 시각 기준으로 계산된다 */
-export const DEMO_NOW = '2026-10-15T01:00:00Z'
 const DEMO_REVIEWER = '시연 데이터'
 
 process.env.PROGRAM_DATA_DIR ??= 'demo'
 process.env.PROGRAM_API_NOW ??= DEMO_NOW
 process.env.SHOW_MACHINE_CHECKED_SUMMARIES ??= '1'
+process.env.PROGRAM_DEMO ??= '1'
 
 const [command = 'serve'] = process.argv.slice(2)
 

@@ -1,6 +1,6 @@
 // 공고 구조화 데이터와 보호자 웹 API의 데이터 계약.
-// 보호자 웹(apps/guardian-web/src/types.ts)의 Program을 그대로 포함하고,
-// 보호자 명세 v2.2 6장에서 제안한 필드를 덧붙인다.
+// API 응답(ProgramResponse)은 보호자 웹(apps/guardian-web/src/data/types.ts)의 Program을 그대로 만족하고
+// (test/contract.test.ts가 타입으로 확인), 보호자 명세 v2.2 6장의 추가 필드를 덧붙인다.
 
 export type MatchStatus = 'matched' | 'not_matched' | 'unknown' | 'not_applied'
 export type ApplicationStatus = 'open' | 'upcoming' | 'closed' | 'unknown'
@@ -16,6 +16,8 @@ export type TargetType = 'multicultural_family' | 'all' | 'parent_only' | 'unkno
 export type Audience = 'child' | 'parent_child' | 'parent_only' | 'adult' | 'unknown'
 
 export type CompanionRule = 'required' | 'allowed' | 'not_allowed' | 'unknown'
+/** 보호자 웹 계약의 동반 규칙. 미상은 null */
+export type GuardianCompanionRule = Exclude<CompanionRule, 'unknown'> | null
 
 export type AvailableWindow =
   | { day_of_week: Weekday; start_time: string; end_time: string }
@@ -73,9 +75,18 @@ export interface Evidence {
 
 export type SummaryStatus = 'machine_draft' | 'machine_checked' | 'approved'
 
+/** 목록·상세 머리에 쓰는 그 언어의 제목·기관·대상 (베트남어·중국어만 저장. 쉬운 한국어는 원문을 쓴다) */
+export interface SummaryHeading {
+  title: string
+  institution: string
+  target: string
+}
+
 export interface LanguageSummary {
   /** 3줄 안내. 구조화된 사실만으로 만든다 */
   lines: string[]
+  /** 그 언어의 제목·기관·대상. 베트남어·중국어에서 이것이 없으면 보호자 웹에 그 언어 안내를 내보내지 않는다 */
+  heading?: SummaryHeading
   status: SummaryStatus
   generated_at: string
   /** 자동 대조에서 발견한 문제. 비어 있어야 machine_checked */
@@ -173,6 +184,37 @@ export interface ProgramRecord {
   review: ReviewState
 }
 
+/** 보호자 웹의 '기관에 확인할 점' 주제 (guardian-web UncertainItem.topic) */
+export type UncertainTopic = 'family_eligibility' | 'companion' | 'korean_level' | 'schedule' | 'age_grade' | 'materials' | 'other'
+
+export interface UncertainItem {
+  topic: UncertainTopic
+  /** 원문에서 찾은 관련 표현. 없으면 null */
+  note_ko: string | null
+}
+
+/** 문의 목적의 연락 방법. 운영 시간·상담 언어는 원문에서 따로 확인하지 않으므로 null */
+export interface InquiryMethod {
+  type: 'phone' | 'visit' | 'online'
+  phone?: string
+  address?: string
+  url?: string
+  hours: string | null
+  languages: string[] | null
+  /** 연락처를 확인한 날 (YYYY-MM-DD, 공고 검수일) */
+  verified_at: string
+}
+
+/** 보호자 웹이 받는 언어별 안내 (guardian-web ReviewedSummary + 검수 상태·3줄) */
+export interface GuardianSummary extends SummaryHeading {
+  /** 3줄 안내를 이어 붙인 글 */
+  description: string
+  /** 사람이 승인한 시각, 자동 대조만 거친 시연용 요약이면 만든 시각 */
+  reviewed_at: string
+  status: Extract<SummaryStatus, 'approved' | 'machine_checked'>
+  lines: string[]
+}
+
 /** 보호자 웹이 받는 프로그램 한 건 (guardian-web Program + 명세 v2.2 추가 필드) */
 export interface ProgramResponse {
   program_id: string
@@ -186,7 +228,10 @@ export interface ProgramResponse {
   age_grade_match_status: MatchStatus
   eligibility_status: MatchStatus
   time_match_status: MatchStatus
-  uncertain_items: string[]
+  /** 기관에 확인할 점 (보호자 웹이 화면 언어로 보여주는 주제) */
+  uncertain_items: UncertainItem[]
+  /** 같은 내용의 한국어 문구 (주제로 묶기 전 전부) */
+  uncertain_items_ko: string[]
   matched_reasons: string[]
   attendance_rule: AttendanceRule
   mid_join_allowed?: boolean
@@ -194,6 +239,10 @@ export interface ProgramResponse {
   venue: ProgramVenue | null
   schedule_note: string | null
   matched_sessions: string[]
+  /**
+   * 대표 회차: 시간이 맞으면 가장 빠른 일치 회차, 아니면 앞으로 시작할 가장 빠른 회차.
+   * 그런 회차가 없으면 끝난 공고는 마지막 회차, 날짜 미상이면 장소가 있는 회차나 원문의 공통 장소(날짜 null, id 'venue')
+   */
   next_session: ProgramSession | null
   cost_krw: number | null
   cost_raw: string | null
@@ -201,11 +250,17 @@ export interface ProgramResponse {
   /** YYYY-MM-DD. 보호자 웹 formatDate가 날짜만 받으므로 날짜 부분만 보낸다 */
   application_start: string | null
   application_end: string | null
+  /** 신청 방법 (문의만 받는 연락처는 inquiry_methods로 뺀다). 주소가 없는 온라인 신청은 원문 주소로 연결한다 */
   application_methods: ApplicationMethod[]
+  inquiry_methods: InquiryMethod[]
   application_note: string | null
   notices: string[]
   source_url: string | null
   verified_at: string | null
+  /** 게시된 공고만 내보내므로 늘 current (승인 뒤 사실이 바뀐 공고는 410) */
+  review_state: 'current' | 'recheck'
+  /** 시연 데이터로 띄운 서버의 공고 (보호자 웹이 실제 기관 링크로 보내지 않는다) */
+  is_demo: boolean
   // 명세 v2.2 6장 추가 필드
   /** 원문에 시각까지 있으면 YYYY-MM-DDTHH:MM, 아니면 YYYY-MM-DD */
   application_start_at: string | null
@@ -213,8 +268,8 @@ export interface ProgramResponse {
   target_type: TargetType
   audience: Audience
   eligibility_requirements: string[] | null
-  guardian_companion: CompanionRule
-  sibling_companion: CompanionRule
+  guardian_companion: GuardianCompanionRule
+  sibling_companion: GuardianCompanionRule
   korean_level_required: string | null
   support_languages: string[] | null
   /** 원문이 그 언어 지원을 '통역'이라고 밝힘 (수업 언어가 아니다) */
@@ -224,7 +279,8 @@ export interface ProgramResponse {
   period_end: string | null
   session_count: number | null
   capacity: number | null
-  summaries_by_language: SummariesByLanguage
+  /** 내보낼 수 있는 언어별 안내만 (명세 5.4: 없는 언어는 보호자 웹이 '안내 없음'으로 보여준다) */
+  summaries_by_language: Partial<Record<DisplayLanguage, GuardianSummary>>
   /** 주요 사실의 원문 근거 (원문에서 찾은 인용만). field는 ProgramRecord.evidence와 같은 이름 */
   source_evidence: Pick<Evidence, 'field' | 'quote'>[]
 }

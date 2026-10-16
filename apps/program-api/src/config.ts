@@ -47,6 +47,9 @@ export function geminiConfig(): GeminiConfig {
   }
 }
 
+/** 시연 기준 시각: 2026-10-15(목) 10:00 (서울). npm run demo의 신청·운영 상태가 이 시각 기준으로 계산된다 */
+export const DEMO_NOW = '2026-10-15T01:00:00Z'
+
 export function dataDir(): string {
   return resolveFromApp(process.env.PROGRAM_DATA_DIR ?? 'data/local')
 }
