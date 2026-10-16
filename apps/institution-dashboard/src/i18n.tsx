@@ -37,6 +37,12 @@ const ko = {
   interestExperience: '체험·문화', interestKorean: '한국어', interestSports: '예술·체육', interestCareer: '진로',
   demoResultNote: '이 결과는 시연용 가정과 가상 장소를 사용합니다. 실제 편성 전 확인이 필요합니다.', approximate: '조합이 많아 근사 방식으로 추천했습니다.',
   insights: '추천 이유와 준비할 점', insightSummary: '시간과 장소를 조합해 더 많은 가정에 닿도록 골랐습니다.', languageAdvice: '사용 언어 분포에 맞춰 번역 안내와 통역을 준비하세요.', teachingAdvice: '자녀 한국어 수준에 맞춰 쉬운 설명 자료와 보조 인력을 준비하세요.', originalDetails: '한국어 세부 분석', originalNote: '아래 분석 문장은 한국어 원문입니다.',
+  questionsTab: '보호자 질문', questionsLead: '보호자가 AI 상담에서 공고로 답을 찾지 못해, 이름 없이 기관에 알린 질문이에요.', questionsTotal: '질문 {n}건 · 공고 {m}개',
+  questionsLive: '보호자 웹에서 들어온 질문 {n}건 포함', questionsDemo: '시연용 예시 질문이 섞여 있어요.', questionsEmpty: '아직 들어온 질문이 없어요.',
+  questionsCount: '{n}명이 물었어요', questionsFix: '공고에 이것을 적어 두면 같은 질문이 줄어요', questionsTopicCount: '주제별 질문 수', questionsRefresh: '새로고침', questionsSource: '질문 원문(한국어)',
+  topicFamily: '참여 자격', topicCompanion: '동반', topicKoreanLevel: '한국어 수준·통역', topicSchedule: '일정·참석 방식', topicAgeGrade: '나이·학년', topicMaterials: '준비물·복장', topicOther: '비용 등 그 밖의 내용',
+  fixFamily: '참여 자격(다문화가족 여부, 거주 지역)', fixCompanion: '보호자·형제자매 동반 가능 여부', fixKoreanLevel: '필요한 한국어 수준과 통역 지원 언어', fixSchedule: '회차별 시간과 참석 방식', fixAgeGrade: '대상 나이·학년', fixMaterials: '준비물과 복장', fixOther: '참가비 등 빠진 안내',
+  questionsPrivacy: '이름·연락처·대화 내용은 받지 않고, 공고·주제·일반화한 질문·날짜만 받아요.',
 } as const
 type Key = keyof typeof ko
 type Dictionary = Record<Key, string>
@@ -72,6 +78,12 @@ const vi: Dictionary = {
   interestExperience: 'Trải nghiệm·văn hóa', interestKorean: 'Tiếng Hàn', interestSports: 'Nghệ thuật·thể thao', interestCareer: 'Định hướng nghề',
   demoResultNote: 'Kết quả dựa trên giả định và địa điểm mô phỏng. Hãy xác minh trước khi tổ chức.', approximate: 'Quá nhiều tổ hợp nên kết quả dùng phương pháp xấp xỉ.',
   insights: 'Lý do và việc cần chuẩn bị', insightSummary: 'Lịch và địa điểm được chọn để tiếp cận nhiều gia đình hơn.', languageAdvice: 'Chuẩn bị bản dịch và phiên dịch theo phân bố ngôn ngữ.', teachingAdvice: 'Chuẩn bị tài liệu dễ hiểu và người hỗ trợ theo trình độ tiếng Hàn của trẻ.', originalDetails: 'Phân tích chi tiết bằng tiếng Hàn', originalNote: 'Các nhận xét dưới đây chỉ có bản tiếng Hàn.',
+  questionsTab: 'Câu hỏi', questionsLead: 'Câu hỏi phụ huynh không tìm được câu trả lời trong thông báo khi hỏi trợ lý AI, và đã báo cho đơn vị (không ghi tên).', questionsTotal: '{n} câu hỏi · {m} thông báo',
+  questionsLive: 'Gồm {n} câu hỏi từ web phụ huynh', questionsDemo: 'Có lẫn câu hỏi mẫu để trình diễn.', questionsEmpty: 'Chưa có câu hỏi nào.',
+  questionsCount: '{n} người đã hỏi', questionsFix: 'Ghi rõ điều này trong thông báo sẽ giảm câu hỏi giống nhau', questionsTopicCount: 'Số câu hỏi theo chủ đề', questionsRefresh: 'Làm mới', questionsSource: 'Câu hỏi gốc (tiếng Hàn)',
+  topicFamily: 'Điều kiện tham gia', topicCompanion: 'Đi cùng', topicKoreanLevel: 'Tiếng Hàn·phiên dịch', topicSchedule: 'Lịch·cách tham gia', topicAgeGrade: 'Tuổi·lớp', topicMaterials: 'Đồ chuẩn bị·trang phục', topicOther: 'Chi phí và nội dung khác',
+  fixFamily: 'Điều kiện tham gia (gia đình đa văn hóa, nơi cư trú)', fixCompanion: 'Phụ huynh, anh chị em có được đi cùng không', fixKoreanLevel: 'Trình độ tiếng Hàn cần có và ngôn ngữ phiên dịch', fixSchedule: 'Giờ từng buổi và cách tham gia', fixAgeGrade: 'Tuổi·lớp đối tượng', fixMaterials: 'Đồ chuẩn bị và trang phục', fixOther: 'Phí tham gia và thông tin còn thiếu',
+  questionsPrivacy: 'Không nhận tên, liên lạc hay nội dung trò chuyện; chỉ nhận thông báo, chủ đề, câu hỏi đã khái quát và ngày.',
 }
 const zh: Dictionary = {
   brand: '乌山市儿童活动', institution: '机构端', language: '页面语言', demo: '模拟数据 · 并非真实家长反馈',
@@ -105,6 +117,12 @@ const zh: Dictionary = {
   interestExperience: '体验·文化', interestKorean: '韩语', interestSports: '艺术·体育', interestCareer: '职业探索',
   demoResultNote: '结果使用模拟假设和虚构地点。实际安排前请核实。', approximate: '组合过多，已使用近似推荐方法。',
   insights: '推荐理由与准备事项', insightSummary: '通过组合时段和地点，让更多家庭能够参加。', languageAdvice: '根据语言分布准备翻译资料和口译支持。', teachingAdvice: '根据孩子的韩语水平准备简明资料和辅助人员。', originalDetails: '韩语详细分析', originalNote: '以下分析内容仅提供韩语原文。',
+  questionsTab: '家长提问', questionsLead: '家长在AI咨询中没能从公告找到答案，并匿名告诉机构的问题。', questionsTotal: '问题{n}条 · 公告{m}个',
+  questionsLive: '含家长网页提交的问题{n}条', questionsDemo: '其中混有演示用的示例问题。', questionsEmpty: '还没有收到问题。',
+  questionsCount: '{n}人问过', questionsFix: '在公告中写明这一点，同样的问题会减少', questionsTopicCount: '各主题的问题数', questionsRefresh: '刷新', questionsSource: '问题原文（韩语）',
+  topicFamily: '参加资格', topicCompanion: '陪同', topicKoreanLevel: '韩语水平·翻译', topicSchedule: '日程·参加方式', topicAgeGrade: '年龄·年级', topicMaterials: '准备物品·服装', topicOther: '费用等其他内容',
+  fixFamily: '参加资格（是否多文化家庭、居住地区）', fixCompanion: '家长·兄弟姐妹能否陪同', fixKoreanLevel: '需要的韩语水平和翻译支持语言', fixSchedule: '各场次时间和参加方式', fixAgeGrade: '对象年龄·年级', fixMaterials: '准备物品和服装', fixOther: '参加费等缺少的说明',
+  questionsPrivacy: '不收集姓名、联系方式和聊天内容，只收集公告、主题、概括后的问题和日期。',
 }
 const dictionaries: Record<Locale, Dictionary> = { 'ko-easy': ko, vi, zh }
 const storageKey = 'osan-dashboard-locale'

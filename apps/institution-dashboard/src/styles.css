@@ -13,7 +13,7 @@
 .view-head .btn--quiet { margin-right: -8px; flex: none; }
 
 .tabbar {
-  position: sticky; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(3, 1fr);
+  position: sticky; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(4, 1fr);
   padding: 4px 8px calc(6px + env(safe-area-inset-bottom));
   background: color-mix(in srgb, var(--paper) 94%, transparent); backdrop-filter: blur(8px); border-top: 1px solid var(--line);
 }
@@ -137,3 +137,21 @@
 .insight-copy ul, .dot-list { display: grid; gap: 6px; padding-left: 18px; list-style: disc; }
 .dot-list { font-size: var(--text-sm); }
 .dot-list li::marker, .insight-copy li::marker { color: var(--ink-3); }
+
+/* 보호자 질문 */
+.questions-meta { display: grid; gap: 2px; font-size: var(--text-sm); }
+.questions-meta small { color: var(--ink-3); font-size: var(--text-xs); }
+.questions-live { color: var(--action); font-weight: 750; font-size: var(--text-xs); }
+.topic-bars { display: grid; gap: 6px; margin-top: 4px; }
+.topic-bars li { display: grid; grid-template-columns: 7.5em 1fr 2em; gap: 8px; align-items: center; font-size: var(--text-xs); }
+.topic-name { color: var(--ink-2); font-weight: 650; }
+.topic-track { height: 10px; border-radius: 999px; background: var(--heat-0); overflow: hidden; }
+.topic-fill { display: block; height: 100%; border-radius: 999px; background: var(--heat-4); }
+.topic-count { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+.question-fix { margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: var(--action-soft); font-size: var(--text-sm); }
+.question-fix-title { font-weight: 800; margin-bottom: 4px; }
+.question-fix ul { display: grid; gap: 2px; padding-left: 18px; list-style: disc; }
+.question-list li { display: grid; gap: 1px; padding: 6px 2px; font-size: var(--text-sm); }
+.question-list small { color: var(--ink-3); font-size: var(--text-xs); }
+.question-list li.is-live span::after { content: ' ●'; color: var(--action); font-size: 10px; vertical-align: middle; }
+.questions-privacy { font-size: var(--text-xs); }

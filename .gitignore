@@ -23,3 +23,6 @@ dist-preview/
 .DS_Store
 .vscode/
 .idea/
+
+# Vite 캐시
+.vite/
