@@ -80,8 +80,8 @@ function isOneTimeEvent(record: ProgramRecord): boolean {
   return (record.session_count ?? record.sessions.length) === 1 && record.sessions.length <= 1 && samePeriod
 }
 
-/** 확인 항목이 중도 참여를 이미 묻는지 ('중도입국', '중도 포기 시 환불', '중도·중복 장애'는 아니다) */
-export const MID_JOIN_MENTION = /(?:중도|중간)\s*(?:에\s*)?(?:참여|참가|참석|출석|수강|합류|신청|등록|접수|들어|입반|입소|가입)/
+/** 확인 항목이 중도 참여를 이미 묻는지 ('중도입국', '중도 (수강) 포기 시 환불', '중도 수강료', '중도·중복 장애'는 아니다) */
+export const MID_JOIN_MENTION = /(?:중도|중간)\s*(?:에\s*)?(?:참여|참가|참석|출석|수강|합류|신청|등록|접수|들어|입반|입소|가입)(?!료|\s*(?:을\s*)?(?:포기|취소|중단|해지|환불|탈락))/
 
 /** 이미 시작했고 중도 참여 허용이 명시되지 않은 전 회차 참석형(또는 참석 방식 미상) 과정. 한 번뿐인 행사·끝난 과정은 묻지 않는다 */
 export function needsMidJoinCheck(record: ProgramRecord, clock: Clock): boolean {

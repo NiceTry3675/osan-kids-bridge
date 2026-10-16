@@ -698,17 +698,17 @@ describe('머리글 검사 (보호자 웹의 제목·기관·대상)', () => {
   it('중·고등, 중고등, 고교, 초중고 표기를 읽고, 빈칸으로 떨어진 중·고나 학교가 아닌 중고는 학교급으로 읽지 않는다', () => {
     const teens = (target_raw: string, grade_range: [number, number] | null = [7, 12]) => factsOf({ target_raw, grade_range })
     const both = { ...HEADING.zh, target: '多元文化家庭初中和高中子女' }
-    for (const target of ['다문화가족 중·고등 자녀', '다문화가족 중고등 청소년', '다문화가족 중·고교생', '다문화가족 중고교 학생', '다문화가족 중/고등학생', '다문화가족 중, 고등학생', '다문화가족 중,고생', '다문화중고생', '다문화중·고생', '관내중·고등학생 다문화가족 자녀', '중·고에 다니는 다문화가족 자녀']) {
+    for (const target of ['다문화가족 중·고등 자녀', '다문화가족 중고등 청소년', '다문화가족 중·고교생', '다문화가족 중고교 학생', '다문화가족 중/고등학생', '다문화가족 중, 고등학생', '다문화가족 중,고생', '다문화중고생', '다문화중·고생', '관내중·고등학생 다문화가족 자녀', '중·고에 다니는 다문화가족 자녀', '다문화가족 중ㆍ고등학생']) {
       expect([target, checkHeading(both, teens(target, null), 'zh')]).toEqual([target, []])
       hasIssue(checkHeading({ ...HEADING.zh, target: '多元文化家庭高中子女' }, teens(target), 'zh'), '원문의 학교급(중학교)이 빠짐')
     }
     const allLevels = { ...HEADING.zh, target: '多元文化家庭小学、初中和高中学生' }
-    for (const target of ['다문화가족 초·중·고교생', '다문화가족 초중고 자녀', '다문화가족 유초중고 자녀', '다문화가족 초 중 고등학생', '관내초중고 다문화가족 학생', '관내 초·중·고에 재학 중인 다문화가족 자녀']) {
+    for (const target of ['다문화가족 초·중·고교생', '다문화가족 초중고 자녀', '다문화가족 유초중고 자녀', '다문화가족 초 중 고등학생', '관내초중고 다문화가족 학생', '관내 초·중·고에 재학 중인 다문화가족 자녀', '다문화가족 초ㆍ중ㆍ고 자녀']) {
       expect([target, checkHeading(allLevels, teens(target, null), 'zh')]).toEqual([target, []])
       hasIssue(checkHeading({ ...HEADING.zh, target: '多元文化家庭高中学生' }, teens(target, [1, 12]), 'zh'), '원문의 학교급(초등)이 빠짐')
     }
     const elementaryMiddle = { ...HEADING.zh, target: '辖区内多元文化家庭小学和初中子女' }
-    for (const target of ['관내초·중학생 다문화가족 자녀', '다문화초중학생']) {
+    for (const target of ['관내초·중학생 다문화가족 자녀', '다문화초중학생', '다문화가족 초ㆍ중학생']) {
       expect([target, checkHeading(elementaryMiddle, teens(target, null), 'zh')]).toEqual([target, []])
       hasIssue(checkHeading({ ...HEADING.zh, target: '辖区内多元文化家庭初中子女' }, teens(target, [1, 9]), 'zh'), '원문의 학교급(초등)이 빠짐')
     }
@@ -718,6 +718,17 @@ describe('머리글 검사 (보호자 웹의 제목·기관·대상)', () => {
     hasIssue(checkHeading({ ...HEADING.zh, target: '多元文化家庭初中生和高中生' }, among, 'zh'), '원문에 없는 학교급(중학교)을 씀')
     expect(checkHeading({ ...HEADING.zh, target: '育儿辛苦的多元文化家庭父母' }, teens('육아 중 고생하는 다문화가족 부모', null), 'zh')).toEqual([])
     expect(checkHeading({ ...HEADING.zh, target: '参加二手生活用品分享的多元文化家庭' }, teens('중고생활용품 나눔에 참여하는 다문화가족', null), 'zh')).toEqual([])
+  })
+
+  it('줄여 쓴 학교급(고등 3학년, 초4~고3, 고등부)도 읽는다', () => {
+    for (const target_raw of ['다문화가족 초등 4학년~고등 3학년', '다문화가족 초4~고3', '다문화가족 초등 4학년~고등부']) {
+      const facts = factsOf({ target_raw, grade_range: [4, 12] })
+      hasIssue(checkHeading({ ...HEADING.zh, target: target_raw.includes('부') ? '多元文化家庭小学4年级～初中' : '多元文化家庭小学4年级～初中3年级' }, facts, 'zh'), '원문의 학교급(고등학교)이 빠짐')
+    }
+    const facts = factsOf({ target_raw: '다문화가족 초등 4학년~고등 3학년', grade_range: [4, 12] })
+    expect(checkHeading({ ...HEADING.zh, target: '多元文化家庭小学4年级～高中3年级' }, facts, 'zh')).toEqual([])
+    // '참여자 중 3명', '고등교육'은 학교급이 아니다
+    expect(checkHeading({ ...HEADING.zh, target: '多元文化家庭子女（每个家庭3名中）' }, factsOf({ target_raw: '다문화가족 자녀 (가정당 참여자 중 3명)', grade_range: null }), 'zh')).toEqual([])
   })
 
   it('초등 중·고학년, 한국어 중·고급, 중·고령은 학교급이 아니다', () => {
@@ -767,6 +778,17 @@ describe('머리글 검사 (보호자 웹의 제목·기관·대상)', () => {
     hasIssue(zhTarget('두 자녀 이상 다문화가족', '有2岁以上子女的多元文化家庭'), '숫자가 원문 대상과 다름 (원문 없음)')
     expect(zhTarget('여섯 살 다문화가족 자녀', '6岁多元文化家庭子女')).toEqual([])
     expect(zhTarget('여섯 살 다문화가족 자녀', '六岁多元文化家庭子女')).toEqual([])
+  })
+
+  it('돌은 나이 1, 두 돌은 나이 2로 읽는다', () => {
+    const zhTarget = (target_raw: string, target: string) => checkHeading({ ...HEADING.zh, target }, factsOf({ target_raw, grade_range: null, age_range: null }), 'zh')
+    expect(zhTarget('돌이 지난 다문화가족 영아와 보호자', '满一岁的多元文化家庭婴儿和家长')).toEqual([])
+    expect(zhTarget('돌전후 다문화가족 아기와 보호자', '一岁左右的多元文化家庭宝宝和家长')).toEqual([])
+    expect(checkHeading({ ...HEADING.zh, title: '多元文化家庭宝宝一周岁宴' }, factsOf({ title: '다문화가족 아기 첫돌잔치' }), 'zh')).toEqual([])
+    expect(zhTarget('두 돌 이하 다문화가족 영아와 보호자', '两岁以下多元文化家庭婴儿和家长')).toEqual([])
+    expect(zhTarget('두 돌 이하 다문화가족 영아와 보호자', '2岁以下多元文化家庭婴儿和家长')).toEqual([])
+    hasIssue(zhTarget('두 돌 이하 다문화가족 영아와 보호자', '一岁以下多元文化家庭婴儿和家长'), '원문에 없는 수를 씀: "一"')
+    hasIssue(zhTarget('아이돌봄 다문화가족 영아와 보호자', '使用儿童照护的多元文化家庭一岁婴儿和家长'), '원문에 없는 수를 씀: "一"')
   })
 
   it('수가 아닌 一은 두고, 원문에 없는 학년·나이·횟수를 글자 숫자로 지어내면 문제', () => {

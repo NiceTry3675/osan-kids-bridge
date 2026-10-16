@@ -111,7 +111,13 @@ ${block(headingFacts(facts))}
 
 const compact = (text: string) => text.normalize('NFKC').replace(/\s+/g, '')
 const uniqueSorted = (values: number[]) => [...new Set(values)].sort((a, b) => a - b)
-const KO_SCHOOLS = [/초등/, /중학|중등/, /고등학|고교/]
+/** 학교급. '초4', '중 1', '고3', '고등 3학년', '고등부'처럼 줄여 쓴 말도 읽는다 ('고등교육', '참여자 중 3명'은 아니다) */
+const SHORT_GRADE = (school: string, last: number) => String.raw`(?<![가-힣])${school}\s*[1-${last}](?=$|[^\d가-힣]|학년|학생)`
+const KO_SCHOOLS = [
+  new RegExp(String.raw`초등|${SHORT_GRADE('초', 6)}`),
+  new RegExp(String.raw`중학|중등|${SHORT_GRADE('중', 3)}`),
+  new RegExp(String.raw`고등(?:학|부|\s*\d|\s*과정|(?![가-힣]))|고교|${SHORT_GRADE('고', 3)}`),
+]
 /** 학교급 사이의 묶음표 ('초·중·고', '중/고', '중, 고'). 빈칸만으로는 묶지 않는다 ('다문화가족 중 고등학생', '육아 중 고생') */
 const JOIN = String.raw`\s*[·・/,]\s*`
 /** 학교급 '고': 뒤에 등·교·생·학생·학교나 조사('초·중·고에 재학 중인')가 오거나 한글이 끝난다. '고급', '고령', '(초등 중·)고학년', '중고생활용품'은 아니다 */
@@ -130,8 +136,8 @@ const SCHOOL_RULES: [RegExp, string][] = [
   [new RegExp(String.raw`(?<![기최])초(?:${JOIN})?중(?=학|등)`, 'g'), '초등 중'],
   [new RegExp(String.raw`(?<![기최])초${JOIN}중(?![가-힣]|${JOIN}고)`, 'g'), '초등 중학'],
 ]
-/** 학교급을 묶어 쓴 말을 학교급마다 풀어 쓴다 */
-const koSchoolText = (text: string) => SCHOOL_RULES.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), text)
+/** 학교급을 묶어 쓴 말을 학교급마다 풀어 쓴다 (한글 문서의 가운뎃점 'ㆍ'도 '·'로 본다) */
+const koSchoolText = (text: string) => SCHOOL_RULES.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), text.replace(/[ㆍ‧∙･]/g, '·'))
 const KO_MULTICULTURAL = /다문화|결혼\s*이민|이주\s*배경|중도\s*입국/
 const MAX_LENGTH: Record<HeadingLanguage, Record<keyof SummaryHeading, number>> = {
   vi: { title: 200, institution: 160, target: 220 },
@@ -155,17 +161,17 @@ const KO_NUMBER_WORDS: [RegExp, number[]][] = ([
   [`${HANGUL_BEFORE}셋(?=[^가-힣]|$|이|째|씩|만|도|은|과|에|의)`, [3]], [`${HANGUL_BEFORE}넷(?=[^가-힣]|$|이|째|씩|만|도|은|과|에|의)`, [4]],
   [`${HANGUL_BEFORE}첫`, [1]], [`${HANGUL_BEFORE}다섯째`, [5]],
 ] as [string, number[]][]).map(([pattern, values]) => [new RegExp(pattern, 'u'), values])
-/** 첫 돌 (나이 1). '돌봄', '돌고래'의 돌은 아니다 */
-const KO_FIRST_BIRTHDAY = /(?<!\p{Script=Hangul})(?:첫\s*)?돌(?![가-힣])|(?<!\p{Script=Hangul})돌(?=쟁이|잔치|배기)/u
+/** 첫 돌 (나이 1): '돌 전', '돌이 지난', '첫돌잔치', '돌아기'. '두 돌'은 나이 2이고, '돌봄', '돌고래', '돌아가'의 돌은 아니다 */
+const KO_FIRST_BIRTHDAY = /(?:(?<!\p{Script=Hangul}|(?:한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s)(?:첫\s?)?|(?<=합동\s?))돌(?=$|[^가-힣]|이(?![켜킬])|을|은|의|에|까지|부터|전|후|무렵|쯤|잔치|상|아기|맞이|쟁이|배기|지난|지나)/u
 /** 셈하는 말 앞의 고유어 수 ('한 학기', '세 자녀', '두명', '열두 살', '석 달'). 한 글자 수는 다른 낱말('한국', '세계') 안에서는 세지 않는다 */
 const KO_COUNTS: Record<string, number> = { 한: 1, 두: 2, 세: 3, 서: 3, 석: 3, 네: 4, 너: 4, 넉: 4, 다섯: 5, 여섯: 6, 일곱: 7, 여덟: 8, 아홉: 9, 열: 10, 스무: 20 }
 const KO_COUNTERS = '번|회|명|사람|살|가족|가정|시간|가지|개|날|주|달|권|장|곳|팀|쌍|분|마리|차례|자녀|아이|학기|반|끼|해|조|그룹|과목|단계|세대|말'
-const KO_COUNT = new RegExp(String.raw`(?<![\p{Script=Hangul}\d])(열\s?)?(${Object.keys(KO_COUNTS).join('|')})(?=(\s*)(살|${KO_COUNTERS})|\s)`, 'gu')
+const KO_COUNT = new RegExp(String.raw`(?<![\p{Script=Hangul}\d])(열\s?)?(${Object.keys(KO_COUNTS).join('|')})(?=(\s*)(살|돌|${KO_COUNTERS})|\s)`, 'gu')
 
 interface WrittenNumbers {
   /** 한글로 적은 모든 수 */
   all: Set<number>
-  /** 그중 나이로 적은 수 ('여섯 살', '돌') */
+  /** 그중 나이로 적은 수 ('여섯 살', '돌', '두 돌') */
   ages: Set<number>
 }
 
@@ -177,7 +183,7 @@ function koWrittenNumbers(text: string): WrittenNumbers {
   for (const [, ten, word, , counter] of text.matchAll(KO_COUNT)) {
     const value = (ten ? 10 : 0) + KO_COUNTS[word]
     all.add(value)
-    if (counter === '살') ages.add(value)
+    if (counter === '살' || counter === '돌') ages.add(value)
   }
   return { all, ages }
 }
