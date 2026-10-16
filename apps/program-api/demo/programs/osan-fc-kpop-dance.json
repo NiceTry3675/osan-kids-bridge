@@ -5,15 +5,12 @@
   "category": "sports_arts",
   "audience": "child",
   "target_type": "multicultural_family",
-  "target_raw": "다문화가족 초등 3~6학년 자녀",
-  "description": "오산시 가족센터에서 다문화가족 초등 3~6학년 자녀를 대상으로 K-POP 안무를 배우고 마지막 회차에 가족 앞에서 발표회를 진행하는 프로그램이다.",
-  "grade_range": [
-    3,
-    6
-  ],
+  "target_raw": "만 5세 ~ 초등학교 6학년 다문화가족 자녀 (성별 무관)",
+  "description": "오산시가족센터에서 만 5세부터 초등학교 6학년 다문화가족 자녀를 대상으로 K-POP 기본 동작과 방송댄스 안무를 배우는 프로그램을 운영합니다.",
+  "grade_range": null,
   "age_range": null,
   "eligibility_requirements": [
-    "다문화가족"
+    "다문화가족 자녀"
   ],
   "guardian_companion": "unknown",
   "sibling_companion": "unknown",
@@ -24,7 +21,7 @@
     {
       "id": "osan-fc-kpop-dance-s1",
       "date": "2026-10-19",
-      "start_time": "16:00",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -34,7 +31,7 @@
     {
       "id": "osan-fc-kpop-dance-s2",
       "date": "2026-10-23",
-      "start_time": "16:00",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -44,7 +41,7 @@
     {
       "id": "osan-fc-kpop-dance-s3",
       "date": "2026-10-26",
-      "start_time": "16:00",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -54,7 +51,7 @@
     {
       "id": "osan-fc-kpop-dance-s4",
       "date": "2026-10-30",
-      "start_time": "16:00",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -64,7 +61,7 @@
     {
       "id": "osan-fc-kpop-dance-s5",
       "date": "2026-11-02",
-      "start_time": "16:00",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -73,8 +70,8 @@
     },
     {
       "id": "osan-fc-kpop-dance-s6",
-      "date": "2026-11-06",
-      "start_time": "16:00",
+      "date": "2026-11-09",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -83,8 +80,8 @@
     },
     {
       "id": "osan-fc-kpop-dance-s7",
-      "date": "2026-11-16",
-      "start_time": "16:00",
+      "date": "2026-11-13",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -93,8 +90,8 @@
     },
     {
       "id": "osan-fc-kpop-dance-s8",
-      "date": "2026-11-20",
-      "start_time": "16:00",
+      "date": "2026-11-16",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -103,8 +100,8 @@
     },
     {
       "id": "osan-fc-kpop-dance-s9",
-      "date": "2026-11-23",
-      "start_time": "16:00",
+      "date": "2026-11-20",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -113,8 +110,8 @@
     },
     {
       "id": "osan-fc-kpop-dance-s10",
-      "date": "2026-11-27",
-      "start_time": "16:00",
+      "date": "2026-11-23",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -123,8 +120,8 @@
     },
     {
       "id": "osan-fc-kpop-dance-s11",
-      "date": "2026-11-30",
-      "start_time": "16:00",
+      "date": "2026-11-27",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -134,7 +131,7 @@
     {
       "id": "osan-fc-kpop-dance-s12",
       "date": "2026-12-04",
-      "start_time": "16:00",
+      "start_time": "15:30",
       "end_time": "17:30",
       "place_name": "오산시가족센터 2층 교류소통공간",
       "dong": "남촌동",
@@ -152,24 +149,36 @@
   "period_start": "2026-10-19",
   "period_end": "2026-12-04",
   "session_count": 12,
-  "attendance_rule": "all_sessions",
+  "attendance_rule": "unknown",
   "mid_join_allowed": null,
-  "cost_krw": 0,
-  "cost_raw": "무료",
-  "capacity": 15,
+  "cost_krw": null,
+  "cost_raw": null,
+  "capacity": 6,
   "application_start": "2026-10-01T00:00",
   "application_end": "2026-10-17T00:00",
   "application_methods": [
     {
       "type": "online",
-      "label": "오산시가족센터 홈페이지 프로그램 신청"
+      "label": "신청 QR코드"
+    },
+    {
+      "type": "phone",
+      "label": "031-376-3428 (가족사업팀)",
+      "phone": "031-376-3428"
     }
   ],
   "application_note": null,
   "uncertain_items": [
-    "보호자·형제자매 동반 가능 여부"
+    "참가비",
+    "대상 학년·나이",
+    "보호자·형제자매 동반 가능 여부",
+    "A반과 B반 중복 신청 가능 여부",
+    "온라인 신청 QR코드 세부 접속 주소"
   ],
-  "notices": [],
+  "notices": [
+    "우선순위: 오산시가족센터 신규 다문화 가족",
+    "프로그램 내용: K-POP 기본 동작 배우기, 쉽고 재미있는 방송댄스 안무, 음악에 맞춰 한 곡 완성하기"
+  ],
   "evidence": [
     {
       "field": "title",
@@ -178,47 +187,47 @@
     },
     {
       "field": "institution",
-      "quote": "오산시 가족센터 > 프로그램안내 > 프로그램신청",
+      "quote": "오산시 가족센터",
       "verified": true
     },
     {
       "field": "target_type",
-      "quote": "■ 대상: 다문화가족 초등 3~6학년 자녀",
+      "quote": "대상: 만 5세 ~ 초등학교 6학년 다문화가족 자녀 (성별 무관)",
       "verified": true
     },
     {
       "field": "target_raw",
-      "quote": "다문화가족 초등 3~6학년 자녀",
+      "quote": "만 5세 ~ 초등학교 6학년 다문화가족 자녀 (성별 무관)",
       "verified": true
     },
     {
       "field": "audience",
-      "quote": "■ 대상: 다문화가족 초등 3~6학년 자녀",
-      "verified": true
-    },
-    {
-      "field": "grade_range",
-      "quote": "초등 3~6학년",
+      "quote": "대상: 만 5세 ~ 초등학교 6학년 다문화가족 자녀 (성별 무관)",
       "verified": true
     },
     {
       "field": "eligibility_requirements",
-      "quote": "다문화가족",
+      "quote": "다문화가족 자녀",
+      "verified": true
+    },
+    {
+      "field": "eligibility_requirements",
+      "quote": "오산시가족센터 신규 다문화 가족",
       "verified": true
     },
     {
       "field": "venue",
-      "quote": "장소 : 경기도 오산시 청학로 80 (궐동) 2층 교류소통공간",
-      "verified": true
-    },
-    {
-      "field": "venue",
-      "quote": "■ 장소: 오산시가족센터 2층 교류소통공간",
+      "quote": "경기도 오산시 청학로 80 (궐동) 2층 교류소통공간",
       "verified": true
     },
     {
       "field": "period",
       "quote": "행사기간 : 2026-10-19 ~ 2026-12-04",
+      "verified": true
+    },
+    {
+      "field": "period",
+      "quote": "운영 기간: 2026. 10. 19.(월) ~ 12. 04.(금)",
       "verified": true
     },
     {
@@ -228,137 +237,127 @@
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s1].date",
-      "quote": "10/19(월)",
+      "quote": "10/19",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s1].time",
-      "quote": "16:00~17:30",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s2].date",
-      "quote": "10/23(금)",
+      "quote": "10/23",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s2].time",
-      "quote": "16:00~17:30",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s3].date",
-      "quote": "10/26(월)",
+      "quote": "10/26",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s3].time",
-      "quote": "16:00~17:30",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s4].date",
-      "quote": "10/30(금)",
+      "quote": "10/30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s4].time",
-      "quote": "16:00~17:30",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s5].date",
-      "quote": "11/2(월)",
+      "quote": "11/2",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s5].time",
-      "quote": "16:00~17:30",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s6].date",
-      "quote": "11/6(금)",
+      "quote": "11/9",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s6].time",
-      "quote": "16:00~17:30",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s7].date",
-      "quote": "11/16(월)",
+      "quote": "11/13",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s7].time",
-      "quote": "16:00~17:30",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s8].date",
-      "quote": "11/20(금)",
+      "quote": "11/16",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s8].time",
-      "quote": "16:00~17:30",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s9].date",
-      "quote": "11/23(월)",
+      "quote": "11/20",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s9].time",
-      "quote": "16:00~17:30",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s10].date",
-      "quote": "11/27(금)",
+      "quote": "11/23",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s10].time",
-      "quote": "16:00~17:30",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s11].date",
-      "quote": "11/30(월)",
+      "quote": "11/27",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s11].time",
-      "quote": "16:00~17:30",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s12].date",
-      "quote": "12/4(금)",
+      "quote": "12/4",
       "verified": true
     },
     {
       "field": "sessions[osan-fc-kpop-dance-s12].time",
-      "quote": "16:00~17:30",
-      "verified": true
-    },
-    {
-      "field": "attendance_rule",
-      "quote": "■ 12회 전 과정에 참여하는 프로그램입니다.",
-      "verified": true
-    },
-    {
-      "field": "cost",
-      "quote": "■ 참가비: 무료",
+      "quote": "15:30~17:30",
       "verified": true
     },
     {
       "field": "capacity",
-      "quote": "■ 모집 인원: 15명 (선착순)",
+      "quote": "각 반 6명",
       "verified": true
     },
     {
@@ -368,16 +367,31 @@
     },
     {
       "field": "application_methods.online",
-      "quote": "■ 신청 방법: 오산시가족센터 홈페이지 프로그램 신청",
+      "quote": "신청: 신청 QR코드",
+      "verified": true
+    },
+    {
+      "field": "application_methods.phone",
+      "quote": "문의: 031-376-3428 (가족사업팀)",
+      "verified": true
+    },
+    {
+      "field": "notices",
+      "quote": "우선순위: 오산시가족센터 신규 다문화 가족",
+      "verified": true
+    },
+    {
+      "field": "notices",
+      "quote": "프로그램 내용: K-POP 기본 동작 배우기, 쉽고 재미있는 방송댄스 안무, 음악에 맞춰 한 곡 완성하기",
       "verified": true
     }
   ],
   "summaries_by_language": {
     "ko-easy": {
       "lines": [
-        "오산시가족센터가 '다문화가족 자녀성장프로그램 k-pop 방송댄스'를 열어요. 다문화가족 초등 3~6학년 자녀가 대상이에요.",
-        "10월 19일(월)부터 12월 4일(금)까지 월·금요일, 시간은 16:00~17:30에 총 12번 해요. 장소는 오산시가족센터 2층 교류소통공간이에요. 11월 9일(월), 11월 13일(금)은 쉬고 모든 회차에 참여하는 과정이에요.",
-        "무료예요. 10월 1일(목) 00:00부터 10월 16일(금)까지 온라인 신청(오산시가족센터 홈페이지 프로그램 신청)으로 신청해요. 보호자나 형제자매도 같이 가도 되는지는 기관에 물어보세요."
+        "오산시가족센터가 '다문화가족 자녀성장프로그램 k-pop 방송댄스'를 열어요. 다문화가족 자녀가 대상이에요. 나이와 학년은 기관에 물어보세요.",
+        "10월 19일(월)부터 12월 4일(금)까지 월·금요일에 총 12회 해요. 시간은 15:30~17:30이에요. 11월 6일(금), 11월 30일(월)은 쉬어요. 장소는 오산시가족센터 2층 교류소통공간이에요.",
+        "비용은 기관에 물어보세요. 신청은 10월 1일(목) 00:00부터 10월 16일(금)까지 온라인 신청 (신청 QR코드)으로 해요. 문의는 031-376-3428이에요."
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
@@ -385,33 +399,33 @@
     },
     "vi": {
       "lines": [
-        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) mở chương trình “다문화가족 자녀성장프로그램 k-pop 방송댄스” (Chương trình hỗ trợ con em gia đình đa văn hóa phát triển: nhảy K-pop). Đối tượng là học sinh tiểu học lớp 3–6 thuộc gia đình đa văn hóa.",
-        "Từ 19/10 (Thứ Hai) đến 4/12 (Thứ Sáu) vào Thứ Hai và Thứ Sáu (tổng 12 buổi), thời gian là 16:00–17:30 tại 오산시가족센터 2층 교류소통공간 (không gian giao lưu tầng 2 Trung tâm Gia đình thành phố Osan). Ngày 9/11 (Thứ Hai) và 13/11 (Thứ Sáu) nghỉ, đây là khóa học tham gia tất cả các buổi.",
-        "Miễn phí. Đăng ký từ 1/10 (Thứ Năm) 00:00 đến 16/10 (Thứ Sáu) qua đăng ký trực tuyến (오산시가족센터 홈페이지 프로그램 신청 – trang web Trung tâm Gia đình thành phố Osan). Hãy hỏi đơn vị tổ chức về việc phụ huynh và anh chị em có được đi cùng hay không."
+        "Trung tâm Gia đình thành phố Osan (오산시가족센터) tổ chức chương trình “다문화가족 자녀성장프로그램 k-pop 방송댄스” (Chương trình hỗ trợ con em gia đình đa văn hóa phát triển: nhảy K-pop). Đối tượng là con em gia đình đa văn hóa.",
+        "Chương trình diễn ra từ 19/10 (Thứ Hai) đến 4/12 (Thứ Sáu) vào Thứ Hai và Thứ Sáu, tổng cộng 12 buổi, thời gian là 15:30–17:30 tại 오산시가족센터 2층 교류소통공간 (không gian giao lưu kết nối tầng 2 Trung tâm Gia đình thành phố Osan). Ngày 6/11 (Thứ Sáu) và 30/11 (Thứ Hai) sẽ nghỉ.",
+        "Đăng ký từ 1/10 (Thứ Năm) 00:00 đến 16/10 (Thứ Sáu) qua đăng ký trực tuyến (신청 QR코드 – mã QR đăng ký). Liên hệ hỏi thông tin qua 031-376-3428. Hãy hỏi đơn vị tổ chức về chi phí cùng độ tuổi và khối lớp của đối tượng tham gia."
       ],
+      "heading": {
+        "title": "Chương trình hỗ trợ con em gia đình đa văn hóa phát triển: Nhảy K-pop",
+        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
+        "target": "Con em gia đình đa văn hóa từ tròn 5 tuổi đến lớp 6 tiểu học (không phân biệt giới tính)"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": [],
-      "heading": {
-        "title": "Chương trình hỗ trợ con em gia đình đa văn hóa phát triển: nhảy K-pop",
-        "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
-        "target": "Con em gia đình đa văn hóa lớp 3–6 tiểu học"
-      }
+      "issues": []
     },
     "zh": {
       "lines": [
-        "오산시가족센터（乌山市家庭中心）开办“다문화가족 자녀성장프로그램 k-pop 방송댄스”（多元文化家庭子女成长项目K-POP舞蹈班），对象为多元文化家庭小学3至6年级子女。",
-        "10月19日（周一）至12月4日（周五）周一、周五共12次，时间为16:00–17:30，11月9日（周一）和11月13日（周五）停课。地点在오산시가족센터 2층 교류소통공간（乌山市家庭中心2楼交流沟通空间），需参加全部场次。",
-        "费用免费。报名时间为10月1日（周四）00:00至10月16日（周五），通过网上报名（오산시가족센터 홈페이지 프로그램 신청，即乌山市家庭中心官网项目申请）。家长及兄弟姐妹是否可以同行请向机构确认。"
+        "“다문화가족 자녀성장프로그램 k-pop 방송댄스”（多元文化家庭子女成长项目：K-POP舞蹈）由오산시가족센터（乌山市家庭中心）举办。对象为多元文化家庭子女，具体年龄与学年请向机构确认。",
+        "活动自10月19日（周一）至12月4日（周五）逢周一和周五进行，共12次，时间为15:30–17:30，11月6日（周五）与11月30日（周一）不上课。地点在오산시가족센터 2층 교류소통공간（乌山市家庭中心2楼交流沟通空间）。",
+        "费用请向机构确认。报名时间为10月1日（周四）00:00至10月16日（周五），通过网上报名 (신청 QR코드，即申请二维码在线报名)。咨询电话为031-376-3428。"
       ],
+      "heading": {
+        "title": "多元文化家庭子女成长项目：K-POP舞蹈",
+        "institution": "乌山市家庭中心（오산시가족센터）",
+        "target": "满5岁～小学6年级多元文化家庭子女（不限性别）"
+      },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
-      "issues": [],
-      "heading": {
-        "title": "多元文化家庭子女成长项目K-POP舞蹈班",
-        "institution": "乌山市家庭中心（오산시가족센터）",
-        "target": "多元文化家庭小学3～6年级子女"
-      }
+      "issues": []
     }
   },
   "source": {
@@ -420,18 +434,21 @@
     "files": [
       "page.txt"
     ],
-    "content_hash": "b03d485ddadaa1d393d0ddd2c2dc758a2d7f1086ffbbd9ad592dd666d8198223"
+    "content_hash": "a9bab814eaf3c12d3cc224e8caf34d6365f7cde3f6c475d84dc9caf36cdda702"
   },
   "extracted_at": "2026-10-15T01:00:00.000Z",
   "model": "gemini-3.8-flash",
   "warnings": [
-    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-10-19, 회차 2026-10-23, 회차 2026-10-26, 회차 2026-10-30, 회차 2026-11-02, 회차 2026-11-06, 회차 2026-11-16, 회차 2026-11-20, 회차 2026-11-23, 회차 2026-11-27, 회차 2026-11-30, 회차 2026-12-04"
+    "학년 범위: 값이 근거 인용과 맞지 않아 비웠습니다 (값: '1~6', 인용: '초등학교 6학년')",
+    "나이 범위: 값이 근거 인용과 맞지 않아 비웠습니다 (값: '5~99', 인용: '만 5세')",
+    "참석 방식: 값이 근거 인용과 맞지 않아 비웠습니다 (값: 'choose_one', 인용: 'A반(월요일)')",
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-10-19, 회차 2026-10-26, 회차 2026-11-02, 회차 2026-11-09, 회차 2026-11-16, 회차 2026-11-23, 회차 2026-10-23, 회차 2026-10-30, 회차 2026-11-13, 회차 2026-11-20, 회차 2026-11-27, 회차 2026-12-04"
   ],
   "review": {
     "status": "approved",
     "reviewed_at": "2026-10-15T01:00:00.000Z",
     "reviewer": "시연 데이터",
     "notes": null,
-    "facts_hash": "eacb4cfb85ba5e9535a2745c6e9fc906d1890055c9300cc58787199f672ee37a"
+    "facts_hash": "f483edb186776eca691366204c2f75b46c53446ab279f499be039e5b4e960078"
   }
 }
