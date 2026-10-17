@@ -6,8 +6,9 @@ export function DataGuide() {
   const { t } = useLanguage()
   return (
     <div className="view guide">
-      <ViewHeader title={t('guideTab')} />
-      <section className="block" aria-labelledby="guide-collect">
+      <ViewHeader title={t('guideTab')} lead={t('guideLead')} />
+      <div className="dash-grid">
+      <section className="card block-card" aria-labelledby="guide-collect">
         <h2 id="guide-collect" className="block-title">{t('guideCollected')}</h2>
         <dl className="rows">
           <div className="row"><dt>{t('guideDistrict')}</dt><dd>{t('guideDistrictValue')}</dd></div>
@@ -18,7 +19,7 @@ export function DataGuide() {
           <div className="row"><dt>{t('guideLanguage')}</dt><dd>{t('guideLanguageValue')}</dd></div>
         </dl>
       </section>
-      <section className="block" aria-labelledby="guide-not-collect">
+      <section className="card block-card" aria-labelledby="guide-not-collect">
         <h2 id="guide-not-collect" className="block-title">{t('guideNotCollected')}</h2>
         <ul className="dot-list">
           <li>{t('name')}</li>
@@ -27,7 +28,7 @@ export function DataGuide() {
           <li>{t('origin')}</li>
         </ul>
       </section>
-      <section className="block" aria-labelledby="guide-privacy">
+      <section className="card block-card" aria-labelledby="guide-privacy">
         <h2 id="guide-privacy" className="block-title">{t('guidePrivacy')}</h2>
         <ul className="dot-list">
           <li>{t('privacy1')}</li>
@@ -36,6 +37,7 @@ export function DataGuide() {
           <li>{t('privacy4', { n: SUPPRESSION_THRESHOLD })}</li>
         </ul>
       </section>
+      </div>
       <div className="notice notice--info" role="note">
         <p className="notice-title">{t('nextStepTitle')}</p>
         <div className="notice-body"><p>{t('nextStepBody')}</p></div>
