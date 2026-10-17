@@ -516,6 +516,8 @@ function koreanWordWrap(xml, { everyParagraph }) {
   return xml
     .replace(/<a:lvl[1-9]pPr\b[^>]*>/g, off)
     .replace(/<a:pPr\b[^>]*>/g, (tag) => (everyParagraph || /\beaLnBrk="/.test(tag) ? off(tag) : tag))
+    // 실제 PowerPoint(맥)는 글자 언어가 en-US면 eaLnBrk와 상관없이 한글 낱말을 중간에서 자른다. 한국어로 표시해야 낱말 단위로 줄을 바꾼다
+    .replace(/(<a:(?:rPr|endParaRPr|defRPr)\b[^>]*\blang=")en-US"/g, '$1ko-KR"')
 }
 
 async function applyTheme(file) {

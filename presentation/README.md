@@ -34,6 +34,7 @@ DECK_QA=1 node build-deck.js   # 맥 Quick Look 미리 보기용 사본(render/d
 
 ## 검수 한계
 
-- 이 맥에서는 macOS 권한 때문에 PowerPoint·Keynote 자동화가 막혀 있었습니다. 그래서 `DECK_QA=1` 사본(`build/render/deck-qa.pptx`)을 슬라이드별로 나눠 Quick Look(`qlmanage -t`)으로 그린 그림을 보고 검수했습니다.
-- Quick Look은 네이티브 차트(2·3번 슬라이드)를 그리지 않습니다. 표 행 높이(10번)와 한글 줄바꿈 위치도 PowerPoint와 다를 수 있습니다. **제출 전에 PowerPoint로 열어** 차트·표·줄바꿈을 한 번 확인합니다.
+- 2026-10-17 최종본을 **실제 PowerPoint(맥)에서 15장 모두** 열어 확인했습니다. 차트(2·3번), 표(10번), 맑은 고딕 글꼴, 한글 낱말 단위 줄바꿈이 의도대로 보였습니다. 스크립트로 PowerPoint를 조작하는 방식(AppleScript·MCP)은 macOS 권한에 막혀, 화면을 직접 넘겨 보며 확인했습니다.
+- 한글 줄바꿈: PowerPoint는 글자 언어가 `en-US`이면 `eaLnBrk="0"`이어도 한글 낱말을 중간에서 자릅니다. 그래서 `build-deck.js`가 글자 언어를 `ko-KR`로 바꿉니다.
+- 빠른 미리 보기는 `DECK_QA=1` 사본(`build/render/deck-qa.pptx`)을 Quick Look(`qlmanage -t`)으로 그려 봅니다. Quick Look은 차트를 그리지 않고 한글을 글자마다 자르므로, 덱을 고친 뒤에는 PowerPoint로 한 번 더 확인합니다.
 - 덱과 영상은 `research/`(추적하지 않음), `apps/program-api/data/local`(`.gitignore`), API 키가 모두 있는 컴퓨터에서만 다시 만들 수 있습니다.
