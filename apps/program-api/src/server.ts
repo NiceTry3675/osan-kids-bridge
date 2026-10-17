@@ -1,8 +1,12 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync } from 'node:fs'
 import { createServer as createHttpServer } from 'node:http'
 import type { IncomingMessage, Server, ServerResponse } from 'node:http'
-import { join, resolve } from 'node:path'
+import { basename, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { addAddenda, adminDetail, adminRow, parseAddenda, parseReviewRequest, removeAddendum } from './admin/programs'
+import type { AdminContext } from './admin/programs'
+import { parseImproveRequest, runImprover } from './admin/improve'
+import type { Improver } from './admin/improve'
 import { runAgent } from './agent/agent'
 import type { AgentReply, AgentRequest } from './agent/agent'
 import { parseAgentRequest, parseQuestion, summarizeQuestions } from './agent/requests'
@@ -10,11 +14,13 @@ import type { StoredQuestion } from './agent/requests'
 import type { ToolContext } from './agent/tools'
 import { corsOrigins, dataDir, posterDir, serverPort } from './config'
 import { evaluateProgram, parseSearchFilters, searchPrograms, seoulToday } from './match'
-import { findSourcePoster, POSTER_LANGUAGES, servablePoster } from './poster/translate'
+import { findSourcePoster, POSTER_LANGUAGES, readReport, servablePoster, translatedDir, translatedPosterPath, writeReport } from './poster/translate'
 import type { PosterLanguage } from './poster/tokens'
 import { nowSource } from './review/clock'
+import { unverifiedFacts } from './review/critical'
 import { isPublished, publicSummaries } from './review/hash'
-import { isValidProgramId, recordWatcher } from './store'
+import { approveRecord, rejectRecord, resetReview } from './review/lifecycle'
+import { isValidProgramId, recordWatcher, saveRecord } from './store'
 import type { Warn } from './store'
 import type { ProgramRecord, SearchFilters } from './types'
 
@@ -37,6 +43,13 @@ export interface ServerOptions {
   posterDir?: string
   /** 상담 에이전트 (시험에서 바꿔 끼운다) */
   agent?: (request: AgentRequest, context: ToolContext) => Promise<AgentReply>
+  /**
+   * 기관 대시보드용 관리자 API(/admin/...)를 열지 (기본: ADMIN_API=1, npm run demo는 켬).
+   * 로그인이 없으므로 시연이나 기관 내부망에서만 켠다
+   */
+  admin?: boolean
+  /** 공고 보완 도우미 (시험에서 바꿔 끼운다) */
+  improver?: Improver
 }
 
 class HttpError extends Error {
@@ -142,7 +155,11 @@ export function createServer(options: ServerOptions = {}): Server {
   const showMachineChecked = options.showMachineChecked ?? process.env.SHOW_MACHINE_CHECKED_SUMMARIES === '1'
   const posters = options.posterDir ?? posterDir()
   const agent = options.agent ?? runAgent
-  const questionsFile = join(options.dataDir ?? dataDir(), 'questions', 'questions.jsonl')
+  const dataFolder = options.dataDir ?? dataDir()
+  const questionsFile = join(dataFolder, 'questions', 'questions.jsonl')
+  const adminEnabled = options.admin ?? process.env.ADMIN_API === '1'
+  const improver = options.improver ?? runImprover
+  const adminContext = (): AdminContext => ({ now: now(), dataDir: dataFolder, posterDir: posters, showMachineChecked })
   const posterLanguages = (id: string): PosterLanguage[] => POSTER_LANGUAGES.filter((language) => servablePoster(id, language, showMachineChecked, posters))
 
   // 파일이 바뀌어 다시 읽었을 때만 게시 여부(해시)와 내보낼 요약을 다시 계산한다
@@ -280,6 +297,133 @@ export function createServer(options: ServerOptions = {}): Server {
       return sendFile(response, servable.path, 'image/png')
     }
 
+    if (path === '/admin' || path.startsWith('/admin/')) {
+      if (!adminEnabled) throw new HttpError(404, '요청한 주소를 찾을 수 없습니다.')
+      return adminRoute(request, response, path, method)
+    }
+
+    throw new HttpError(404, '요청한 주소를 찾을 수 없습니다.')
+  }
+
+  /** 기관 대시보드의 관리자 API. 게시 여부와 상관없이 모든 공고를 보고, 검수·추가 안내를 저장한다 */
+  async function adminRoute(request: IncomingMessage, response: ServerResponse, path: string, method: string): Promise<void> {
+    const anyRecord = (rawId: string): ProgramRecord => {
+      let id: string
+      try {
+        id = decodeURIComponent(rawId)
+      } catch {
+        throw new HttpError(404, NOT_FOUND)
+      }
+      const record = isValidProgramId(id) ? current().byId.get(id) : undefined
+      if (!record) throw new HttpError(404, NOT_FOUND)
+      return record
+    }
+    const save = (record: ProgramRecord) => {
+      saveRecord(record, dataFolder)
+      return send(response, 200, adminDetail(record, adminContext()))
+    }
+
+    if (path === '/admin/programs') {
+      if (method !== 'GET') throw methodNotAllowed('GET')
+      const context = adminContext()
+      return send(response, 200, { now: context.now.toISOString(), programs: current().source.map((record) => adminRow(record, context)) })
+    }
+
+    const detail = path.match(/^\/admin\/programs\/([^/]+)$/)
+    if (detail) {
+      if (method !== 'GET') throw methodNotAllowed('GET')
+      return send(response, 200, adminDetail(anyRecord(detail[1]), adminContext()))
+    }
+
+    const review = path.match(/^\/admin\/programs\/([^/]+)\/review$/)
+    if (review) {
+      if (method !== 'POST') throw methodNotAllowed('POST')
+      const parsed = parseReviewRequest(parseJson(await readBody(request)))
+      if (!parsed.ok) throw new HttpError(400, '검수 요청을 확인해 주세요.', parsed.errors)
+      const record = anyRecord(review[1])
+      const { action, reviewer, language_reviewer: languageReviewer, summaries, note, force } = parsed.request
+      if (action === 'reset') return save(resetReview(record))
+      if (action === 'reject') return save(rejectRecord(record, { reviewer: reviewer!, now: now(), notes: note! }))
+      const missing = unverifiedFacts(record)
+      if (missing.length && !force) throw new HttpError(409, '원문 근거로 확인되지 않은 핵심 사실이 있습니다. 원문과 대조한 뒤 확인을 표시하고 승인해 주세요.', missing)
+      try {
+        return save(approveRecord(record, { reviewer: reviewer!, now: now(), notes: note, summaries, languageReviewer }))
+      } catch (error) {
+        throw new HttpError(400, (error as Error).message)
+      }
+    }
+
+    const addenda = path.match(/^\/admin\/programs\/([^/]+)\/addenda(?:\/([^/]+))?$/)
+    if (addenda) {
+      const record = anyRecord(addenda[1])
+      if (addenda[2]) {
+        if (method !== 'DELETE') throw methodNotAllowed('DELETE')
+        const next = removeAddendum(record, decodeURIComponent(addenda[2]))
+        if (!next) throw new HttpError(404, '추가 안내를 찾을 수 없습니다.')
+        return save(next)
+      }
+      if (method !== 'POST') throw methodNotAllowed('POST')
+      const toConfirm = evaluateProgram(record, null, now()).uncertain_items_ko
+      const parsed = parseAddenda(parseJson(await readBody(request)), toConfirm)
+      if (!parsed.ok) throw new HttpError(400, '추가 안내를 확인해 주세요.', parsed.errors)
+      try {
+        return save(addAddenda(record, parsed.input, now()))
+      } catch (error) {
+        throw new HttpError(400, (error as Error).message)
+      }
+    }
+
+    const improve = path.match(/^\/admin\/programs\/([^/]+)\/improve$/)
+    if (improve) {
+      if (method !== 'POST') throw methodNotAllowed('POST')
+      const text = await readBody(request)
+      const record = anyRecord(improve[1])
+      const parsed = parseImproveRequest(parseJson(text))
+      if (!parsed.ok) throw new HttpError(400, '질문 목록을 확인해 주세요.', parsed.errors)
+      try {
+        return send(response, 200, await improver({ record, questions: parsed.questions, now: now() }))
+      } catch (error) {
+        log(`[program-api] 공고 보완 도우미 실패: ${(error as Error)?.stack ?? String(error)}`)
+        throw new HttpError(503, '공고 보완 도우미가 지금 답할 수 없습니다. 잠시 후 다시 시도해 주세요.')
+      }
+    }
+
+    const posterApprove = path.match(/^\/admin\/posters\/([^/]+)\/(vi|zh)\/approve$/)
+    if (posterApprove) {
+      if (method !== 'POST') throw methodNotAllowed('POST')
+      const body = parseJson(await readBody(request)) as { reviewer?: unknown } | undefined
+      const reviewer = typeof body?.reviewer === 'string' ? body.reviewer.trim() : ''
+      if (!reviewer || reviewer.length > 40) throw new HttpError(400, '검수자 이름(1~40자)이 필요합니다.')
+      const record = anyRecord(posterApprove[1])
+      const language = posterApprove[2] as PosterLanguage
+      const report = readReport(record.program_id, language, posters)
+      const source = findSourcePoster(record.program_id, posters)
+      if (!report || report.chosen_attempt === null) throw new HttpError(409, '자동 검증을 통과한 번역 포스터가 없어 승인할 수 없습니다.')
+      if (!source || source.sha256 !== report.source_sha256) throw new HttpError(409, '번역한 뒤 원본 포스터가 바뀌었습니다. 다시 번역한 뒤 승인해 주세요.')
+      writeReport({ ...report, status: 'approved', reviewer, approved_at: now().toISOString() }, posters)
+      return send(response, 200, adminDetail(record, adminContext()))
+    }
+
+    const posterImage = path.match(/^\/admin\/posters\/([^/]+)\/(original|vi|zh)(?:-(\d{1,2}))?$/)
+    if (posterImage) {
+      if (method !== 'GET') throw methodNotAllowed('GET')
+      const record = anyRecord(posterImage[1])
+      const [, , variant, attemptText] = posterImage
+      if (variant === 'original') {
+        const source = attemptText ? null : findSourcePoster(record.program_id, posters)
+        if (!source) throw new HttpError(404, '원본 포스터가 없습니다.')
+        return sendFile(response, source.path, source.mimeType)
+      }
+      const report = readReport(record.program_id, variant as PosterLanguage, posters)
+      if (!report) throw new HttpError(404, '이 언어의 번역 포스터가 없습니다.')
+      const attempt = attemptText ? report.attempts.find((item) => item.n === Number(attemptText)) : undefined
+      if (attemptText && !attempt) throw new HttpError(404, '그 회차의 번역 포스터가 없습니다.')
+      // 회차 파일 이름은 번역 기록에 적힌 것이지만 폴더 밖을 가리키지 못하게 이름만 쓴다
+      const file = attempt ? join(translatedDir(posters), basename(attempt.file)) : translatedPosterPath(record.program_id, variant as PosterLanguage, posters)
+      if (!existsSync(file)) throw new HttpError(404, '번역 포스터 파일이 없습니다.')
+      return sendFile(response, file, 'image/png')
+    }
+
     throw new HttpError(404, '요청한 주소를 찾을 수 없습니다.')
   }
 
@@ -293,7 +437,7 @@ export function createServer(options: ServerOptions = {}): Server {
       request.resume()
       if (origin !== undefined && !allowed) return send(response, 403, { error: '허용되지 않은 출처입니다.' })
       response.writeHead(204, {
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Max-Age': '600',
       })
