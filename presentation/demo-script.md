@@ -20,7 +20,7 @@ VITE_API_BASE_URL=http://127.0.0.1:8787 npm run dev -w @osan-kids-bridge/institu
 - `.claude/launch.json`에 같은 설정이 있다(program-api-demo, guardian-web-api, institution-dashboard).
 - 보호자 웹에서 화면 언어를 Tiếng Việt로 고르고 시작한다. 이전 대화가 남지 않도록 새 탭에서 연다.
 - 번역 포스터는 `apps/program-api/data/local/translated/`에 있어야 한다(없으면 `npm run poster -w @osan-kids-bridge/program-api`).
-- 기관 대시보드의 질문 기록을 비우려면 `apps/program-api/demo/questions/`를 지운다.
+- API를 다시 켜면 공고는 처음 상태(추가 안내 없음)로 돌아간다. 보호자 질문 기록을 비우려면 `apps/program-api/data/local/demo-session/questions/`를 지운다.
 - 상담 답은 10~25초 걸린다. 영상에서는 기다리는 부분을 빨리 감기하고 자막에 '실제 응답 시간 약 15초'라고 적는다.
 
 ## 장면
