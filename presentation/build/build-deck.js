@@ -239,17 +239,17 @@ pres.addSection({ title: '문제' })
 }
 
 // =========================================================
-// 6~11. 해결: 세 에이전트
+// 6~12. 해결: 세 에이전트
 // =========================================================
 pres.addSection({ title: '해결' })
 {
   const slide = content('해결 개요', '세 에이전트가 \'읽기 → 연결 → 편성\'의 순환을 만든다',
-    '코드: apps/program-api(src/poster, src/agent), apps/guardian-web, apps/institution-dashboard', '해결')
+    '코드: apps/program-api(src/poster, src/agent, src/admin), apps/guardian-web, apps/institution-dashboard', '해결')
   const nodes = [
     // 한글이 낱자 단위로 줄바꿈되지 않게 줄을 직접 나눈다(맑은 고딕 기준 줄마다 상자 폭의 95% 안쪽)
     ['1', '읽기', '포스터 통번역 에이전트', '기관이 올린 한국어 포스터를\n디자인 그대로 보호자 언어로.\n다른 AI가 다시 읽어 검증하고\n틀린 곳만 다시 만든다'],
     ['2', '연결', '상담 에이전트', '공고 사실만으로 보호자 언어로\n답하고, 아이 조건을 비교하고,\n공고에 없는 건 기관에 보낼\n한국어 문장으로'],
-    ['3', '편성', '기관 대시보드', '보호자가 공고에서 못 찾은 질문과\n익명 수요를 모아, 다음 공고에\n적을 것과 요일·시간·장소를 제안'],
+    ['3', '편성', '공고 보완 에이전트', '보호자가 못 찾은 질문으로 공고에\n덧붙일 안내 초안을 쓰고, 담당자가\n확정하면 상담에 바로 반영한다.\n익명 수요로 요일·시간·장소 제안'],
   ]
   nodes.forEach(([no, verb, title, body], index) => {
     const x = 0.6 + index * 4.2
@@ -360,7 +360,7 @@ pres.addSection({ title: '해결' })
     ['언어', '한국어 위주', '보호자가 고른 언어(베트남어·중국어·쉬운 한국어)'],
     ['우리 아이에게 맞는지', '판단하지 않음', '학년·시간은 기존 규칙으로 판정, 자격은 단정하지 않음'],
     ['포스터', '이미지 속 글은 읽지 못함', '포스터를 보호자 언어로 옮기고 검증'],
-    ['기관에 돌아가는 것', '없음', '공고에서 답을 못 찾은 질문을 주제별로 집계'],
+    ['기관에 돌아가는 것', '없음', '못 찾은 질문으로 공고 보완 초안 (기관이 확정)'],
   ]
   // 오른쪽 열의 긴 문구가 맑은 고딕에서 한 줄에 들어가도록 가운데 열을 줄였다(colW)
   slide.addTable([
@@ -373,26 +373,41 @@ pres.addSection({ title: '해결' })
   ], { x: 0.6, y: 1.65, w: 12.13, colW: [2.6, 3.6, 5.93], fontSize: 15, rowH: 0.7, valign: 'middle', border: { type: 'solid', color: 'FFFFFF', pt: 2 }, margin: [0.06, 0.15, 0.06, 0.15], objectName: name('compare-table') })
 }
 {
-  const slide = content('③ 편성 · 기관 대시보드', '기관은 보호자가 무엇을 모르는지 보고 다음 공고를 고친다',
-    '기관 대시보드 실제 화면. 보호자 질문 탭은 시연용 예시 질문과 보호자 웹에서 들어온 질문을 함께 보여 준다. 수요·추천은 합성 데이터', '해결')
-  phone(slide, img('dash-questions.png'), { x: 0.75, y: 1.6, h: 5.15 })
-  phone(slide, img('dash-recommend.png'), { x: 3.45, y: 1.6, h: 5.15 })
+  const slide = content('③ 편성 · 공고 보완 에이전트', '보호자가 못 찾은 답은 AI가 초안을 쓰고, 기관이 확정해 채운다',
+    '기관 대시보드 실제 화면(시연 데이터, 보호자 질문은 시연용 예시). 초안은 gemini-3.8-flash가 도구로 쓰고, 검사는 코드가 한다(apps/program-api/src/admin)', '해결')
+  picture(slide, img('dash-improve-drafts.png'), { x: 0.65, y: 1.6, w: 6.5, h: 5.15 })
   const blocks = [
-    ['보호자 질문', '보호자가 AI 상담에서 공고로 답을 찾지 못해\n\'기관에 알리기\'를 누른 질문을 공고별·주제별로 센다'],
-    ['공고에 적을 것', '많이 나온 주제를 \'참가비, 준비물·복장, 형제 동반\'처럼\n다음 공고에 적을 항목으로 바꿔 보여 준다'],
-    ['일정·장소 추천', '보호자가 익명으로 남긴 가능 요일·시간·동을 모아,\n가장 많은 가정이 올 수 있는 조합을 추천한다'],
+    ['에이전트가 하는 일', '공고 읽기 → 질문 읽기 → 초안 → 코드 검사\n→ 걸리면 고쳐 쓰기 → 통과해야 제출'],
+    ['값은 지어내지 않는다', '참가비·가능 여부처럼 기관만 아는 값은 빈칸으로 남긴다.\n빈칸 밖의 \'무료·가능해요\' 같은 단정은 막고, 숫자·날짜·\n수량은 공고 원문과 코드로 대조한다'],
+    ['확정하면 순환이 닫힌다', '담당자가 빈칸을 채워 덧붙이면 보호자 AI 상담이\n바로 그 안내를 근거로 답하고(\'기관이 덧붙인 안내\' 표시),\n보호자 화면의 \'기관에 확인할 점\'에서 빠진다'],
   ]
   blocks.forEach(([title, body], index) => {
-    const y = 1.6 + index * 1.45
-    card(slide, { x: 6.45, y, w: 6.3, h: 1.28, fill: index === 1 ? C.accent5 : C.background2 })
-    text(slide, title, { x: 6.75, y: y + 0.13, w: 5.8, h: 0.4, fontSize: 17, bold: true, color: C.accent1 })
-    text(slide, body, { x: 6.75, y: y + 0.55, w: 5.8, h: 0.68, fontSize: 13 })
+    const y = 1.6 + index * 1.72
+    card(slide, { x: 7.5, y, w: 5.25, h: 1.55, fill: index === 1 ? C.accent5 : C.background2 })
+    text(slide, title, { x: 7.75, y: y + 0.13, w: 4.85, h: 0.4, fontSize: 17, bold: true, color: C.accent1 })
+    text(slide, body, { x: 7.75, y: y + 0.55, w: 4.9, h: 0.95, fontSize: 12.5 })
   })
-  text(slide, '이름·연락처·대화 내용은 받지 않는다.\n공고·주제·일반화한 질문·날짜만 받고, 적은 수의 집계는 가린다', { x: 6.45, y: 6.0, w: 6.3, h: 0.7, fontSize: 13, color: MUTED })
+}
+{
+  const slide = content('③ 편성 · 기관 관리자 화면', 'AI가 읽고 옮긴 공고는 담당자가 원문과 나란히 보고 승인한다',
+    '기관 대시보드 실제 화면(데스크톱). 포스터 원본: 오산시가족센터. 승인 규칙은 사람 검수 CLI(npm run review)와 같다. 수요·추천은 합성 데이터', '해결')
+  picture(slide, img('dash-review.png'), { x: 0.65, y: 1.6, w: 7.6, h: 4.75 })
+  const blocks = [
+    ['한 화면에 세 칸', '원본 포스터·원문 | AI가 읽은 사실과\n원문 근거 | 번역 포스터와 회차별 검증 기록'],
+    ['근거가 없으면 형광펜', '원문 인용으로 확인되지 않은 사실은 노랗게.\n직접 대조했다고 표시해야 승인된다'],
+    ['편성도 같은 화면에서', '익명 수요 히트맵과 요일·시간·장소 추천\n(가장 많은 가정이 올 수 있는 조합)'],
+  ]
+  blocks.forEach(([title, body], index) => {
+    const y = 1.6 + index * 1.62
+    card(slide, { x: 8.6, y, w: 4.15, h: 1.45, fill: index === 1 ? C.accent5 : C.background2 })
+    text(slide, title, { x: 8.85, y: y + 0.13, w: 3.75, h: 0.4, fontSize: 16, bold: true, color: C.accent1 })
+    text(slide, body, { x: 8.85, y: y + 0.53, w: 3.8, h: 0.85, fontSize: 12 })
+  })
+  text(slide, '로그인이 없는 시연이라 관리자 기능은 시연·내부망에서만 켠다', { x: 0.65, y: 6.45, w: 7.6, h: 0.35, fontSize: 12, color: MUTED })
 }
 
 // =========================================================
-// 12~14. 라이프케어·신뢰·실행
+// 13~15. 라이프케어·신뢰·실행
 // =========================================================
 pres.addSection({ title: '라이프케어와 실행' })
 {
@@ -480,7 +495,7 @@ pres.addSection({ title: '라이프케어와 실행' })
 }
 
 // =========================================================
-// 15. 마무리
+// 16. 마무리
 // =========================================================
 pres.addSection({ title: '마무리' })
 {
@@ -492,7 +507,7 @@ pres.addSection({ title: '마무리' })
     { text: '오산의 AX 라이프케어', options: { fontSize: 32 } },
   ], { placeholder: 'title' })
   slide.addText([
-    { text: '포스터 통번역 → 상담 → 보호자 질문 → 다음 공고', options: { breakLine: true } },
+    { text: '포스터 통번역 → 상담 → 공고 보완 → 다음 공고', options: { breakLine: true } },
     { text: 'github.com/NiceTry3675/osan-kids-bridge', options: { color: C.accent4 } },
   ], { placeholder: 'body' })
   const team = [['선우', '문제 근거·통계'], ['채현', '공고 확보·개인정보'], ['소영', '보호자 서비스·UX'], ['준현', 'LLM 구조화·에이전트·대시보드']]

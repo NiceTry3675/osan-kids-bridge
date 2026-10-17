@@ -1,5 +1,5 @@
 // 발표 자료용 화면 캡처 (headless Chrome). 먼저 API(8787)·보호자 웹(5173)·기관 대시보드(5174)를 띄운다.
-// node capture.js [all|home|detail|chat|dashboard]
+// node capture.js [all|home|detail|chat|dashboard]  (dashboard는 관리자 API가 켜진 npm run demo를 새로 띄운 상태에서)
 const { chromium } = require('playwright-core')
 const path = require('node:path')
 
@@ -62,19 +62,33 @@ async function main() {
       if (report) { await report.click(); await page.waitForSelector('.unanswered-sent'); await shoot('.chat-unanswered', 'app-chat-reported-vi.png', 60) }
     }
     if (which === 'all' || which === 'dashboard') {
-      const page = await phone(browser, 'ko-easy')
-      await page.goto(DASHBOARD + '/')
-      await page.waitForSelector('#tab-questions')
-      // headless 캡처에서 반투명 흐림(backdrop-filter)이 탭 막대 글자를 지워 버려, 캡처할 때만 끈다
-      await page.addStyleTag({ content: '.tabbar { backdrop-filter: none !important; background: #fff !important; }' })
-      await page.screenshot({ path: path.join(OUT, 'dash-demand.png') })
-      await page.click('#tab-questions')
-      await page.waitForSelector('.question-program')
-      await page.waitForTimeout(300)
-      await page.screenshot({ path: path.join(OUT, 'dash-questions.png') })
-      await page.click('#tab-recommend')
-      await page.waitForTimeout(500)
-      await page.screenshot({ path: path.join(OUT, 'dash-recommend.png') })
+      // 관리자 화면은 데스크톱(1440×900) 기준. 승인·보완이 남지 않은 처음 상태에서 찍는다(API를 새로 켜면 처음 상태)
+      const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 })
+      await context.addInitScript(() => {
+        localStorage.setItem('osan-dashboard-locale', 'ko-easy')
+        localStorage.setItem('osan-dashboard-reviewer', '담당자(시연)')
+      })
+      const page = await context.newPage()
+      await page.goto(DASHBOARD + '/#programs')
+      await page.waitForSelector('.table tbody tr')
+      await page.screenshot({ path: path.join(OUT, 'dash-programs.png') })
+      await page.goto(DASHBOARD + '/#programs/osan-fc-sports-day')
+      await page.waitForSelector('.review-grid .poster-img')
+      await page.waitForFunction(() => [...document.querySelectorAll('.poster-img')].every((image) => image.complete && image.naturalWidth > 0))
+      await page.waitForTimeout(400)
+      await page.screenshot({ path: path.join(OUT, 'dash-review.png') })
+      // 공고 보완 도우미: 실제 에이전트를 부른다(10~20초). 빈칸은 채우지 않은 채로 찍어 'AI가 값을 정하지 않는다'를 보인다
+      await page.setViewportSize({ width: 1440, height: 1140 })
+      await page.goto(DASHBOARD + '/#questions/osan-fc-sports-day')
+      await page.waitForSelector('.improve .btn--primary')
+      await page.click('.improve .btn--primary')
+      await page.waitForSelector('.draft', { timeout: 120_000 })
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.waitForTimeout(400)
+      await page.screenshot({ path: path.join(OUT, 'dash-improve.png') })
+      await page.evaluate(() => { const el = document.querySelector('.improve'); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 16) })
+      await page.waitForTimeout(400)
+      await page.screenshot({ path: path.join(OUT, 'dash-improve-drafts.png') })
     }
   } finally {
     await browser.close()
