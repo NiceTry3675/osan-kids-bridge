@@ -24,7 +24,8 @@ export interface AgentStep {
 
 export interface AgentReply {
   reply: string
-  citations: { program_id: string; title: string; quote: string }[]
+  /** source: 공고 원문(notice) 또는 게시 뒤 기관이 덧붙인 추가 안내(addendum). 예전 서버는 보내지 않는다 */
+  citations: { program_id: string; title: string; quote: string; source?: 'notice' | 'addendum' }[]
   follow_ups: string[]
   steps: AgentStep[]
   programs: { program_id: string; title: string }[]
