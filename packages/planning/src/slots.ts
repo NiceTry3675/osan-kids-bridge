@@ -1,5 +1,5 @@
-import { DAY_PART_HOURS, MIN_SLOT_OVERLAP_MINUTES } from '../data/assumptions'
-import type { DayPart, GuardianAvailableWindow, SlotKey, Weekday } from '../types'
+import { DAY_PART_HOURS, MIN_SLOT_OVERLAP_MINUTES } from './assumptions'
+import type { DayPart, GuardianAvailableWindow, SlotKey, Weekday } from './types'
 
 export const WEEKDAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 export const DAY_PARTS: DayPart[] = ['morning', 'afternoon', 'evening']

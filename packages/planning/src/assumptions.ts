@@ -4,7 +4,7 @@
 // 합성 데이터 생성, 시간대 변환, 소수 셀 억제, 추천 규칙이 모두 이 값을 읽습니다.
 // 값을 바꾸면 화면과 테스트 결과가 함께 바뀝니다.
 // ─────────────────────────────────────────────────────────────────────────────
-import type { DayPart, Dong, Grade, Interest, KoreanLevel, ProgramPlan, ScreenLanguage, Weekday } from '../types'
+import type { DayPart, Dong, Grade, Interest, KoreanLevel, ProgramPlan, ScreenLanguage, Weekday } from './types'
 
 /** 시연용 가정: 고정 시드. 새로고침해도 같은 합성 데이터가 나옵니다. */
 export const DEMO_SEED = 20261014

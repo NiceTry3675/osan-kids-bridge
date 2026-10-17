@@ -1,4 +1,4 @@
-import type { Venue } from '../types'
+import type { Venue } from './types'
 
 // 시연용 후보 장소. 이름과 대관 가능한 칸은 모두 지어낸 값입니다(실제 시설 정보 아님).
 export const VENUES: Venue[] = [

@@ -1,4 +1,4 @@
-import type { Grade, Interest, KoreanLevel, ScreenLanguage } from '../types'
+import type { Grade, Interest, KoreanLevel, ScreenLanguage } from './types'
 
 export const INTERESTS: Interest[] = ['experience_culture', 'korean_study', 'sports_arts', 'career']
 export const LANGUAGES: ScreenLanguage[] = ['ko-easy', 'vi', 'zh']

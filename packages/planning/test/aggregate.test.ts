@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { DONGS } from './data/assumptions'
-import { DEMO_RESPONSES } from './data/generate'
+import { DONGS } from '../src/assumptions'
+import { DEMO_RESPONSES } from '../src/generate'
 import {
   defaultFilters, filterResponses, formatCount, formatHouseholds, formatPeople, heatLegend, heatLevel, safePercent, summarize, suppress, suppressPartition,
-} from './lib/aggregate'
-import type { DemandFilters } from './lib/aggregate'
-import { GRADES, INTERESTS, KOREAN_LEVELS, LANGUAGES } from './lib/labels'
-import { SLOTS } from './lib/slots'
-import { recoverableCells, subtractableCells } from './testing/disclosure'
-import type { DemandResponse, Dong, Grade, KoreanLevel, SlotKey } from './types'
+} from '../src/aggregate'
+import type { DemandFilters } from '../src/aggregate'
+import { GRADES, INTERESTS, KOREAN_LEVELS, LANGUAGES } from '../src/labels'
+import { SLOTS } from '../src/slots'
+import { recoverableCells, subtractableCells } from '../src/testing/disclosure'
+import type { DemandResponse, Dong, Grade, KoreanLevel, SlotKey } from '../src/types'
 
 let serial = 0
 const household = (overrides: Partial<DemandResponse> = {}): DemandResponse => ({

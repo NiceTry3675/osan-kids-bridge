@@ -11,6 +11,7 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
+    "@osan-kids-bridge/planning": "*",
     "@osan-kids-bridge/ui": "*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"

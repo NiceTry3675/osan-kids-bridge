@@ -2,17 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { Heatmap, InsufficientPanel } from './Charts'
 import { Sheet } from './Sheet'
 import { ViewHeader } from './ViewHeader'
-import { ENROLLMENT_RATE, MAX_CAPACITY, MIN_CAPACITY } from '../data/assumptions'
-import { DEMO_RESPONSES } from '../data/generate'
-import { VENUES } from '../data/venues'
-import { countSlots, suppress, suppressSlots } from '../lib/aggregate'
-import { GRADES, INTERESTS, KOREAN_LEVELS, LANGUAGES, percent } from '../lib/labels'
+import { ENROLLMENT_RATE, MAX_CAPACITY, MIN_CAPACITY, DEMO_RESPONSES, VENUES, countSlots, suppress, suppressSlots, GRADES, INTERESTS, KOREAN_LEVELS, LANGUAGES, percent, recommend, selectEligible, SLOTS } from '@osan-kids-bridge/planning'
+import type { Grade, Interest, ProgramOption, Recommendation, RecommendResult, SafeCount, SlotKey } from '@osan-kids-bridge/planning'
 import { CLASS_COUNTS, initialPlanForm, toProgramPlan } from '../lib/plan'
 import type { PlanForm } from '../lib/plan'
-import { recommend, selectEligible } from '../lib/recommend'
-import { SLOTS } from '../lib/slots'
 import { localizedCount, localizedDong, localizedInterest, localizedLanguage, localizedLevel, localizedPeople, localizedSlot, localizedVenue, useLanguage } from '../i18n'
-import type { Grade, Interest, ProgramOption, Recommendation, RecommendResult, SafeCount, SlotKey } from '../types'
 
 const INTEREST_ART: Record<Interest | 'all', { emoji: string; tone: string }> = {
   all: { emoji: '✨', tone: 'sand' },
@@ -31,7 +25,7 @@ function readComboLimit(): number | undefined {
 
 /**
  * 추천 탭. ‘조건’ → ‘결과’ 두 화면을 오가고 ‘자세히’는 시트로 엽니다(보호자 웹의 조건 → 결과와 같은 흐름).
- * 추천 계산은 lib/recommend.ts 그대로입니다.
+ * 추천 계산은 @osan-kids-bridge/planning의 recommend() 그대로입니다.
  */
 export function RecommendView({ form, setForm }: Props) {
   const { locale, t } = useLanguage()

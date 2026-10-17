@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { DayPart, Dong, Interest, KoreanLevel, SafeCount, ScreenLanguage, SlotKey, Venue, Weekday } from './types'
-import { SUPPRESSION_THRESHOLD } from './data/assumptions'
+import { SUPPRESSION_THRESHOLD } from '@osan-kids-bridge/planning'
+import type { DayPart, Dong, Interest, KoreanLevel, SafeCount, ScreenLanguage, SlotKey, Venue, Weekday } from '@osan-kids-bridge/planning'
 import type { LanguageOption, LanguageState } from '@osan-kids-bridge/ui'
 
 export type Locale = 'ko-easy' | 'vi' | 'zh'

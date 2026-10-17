@@ -2,9 +2,9 @@ import {
   DEMO_RECORD_COUNT, DEMO_SEED, DONG_HOUSEHOLD_WEIGHTS, GRADE_WEIGHTS, INTEREST_PROBABILITIES, KOREAN_LEVEL_RESPONSE_RATE,
   KOREAN_LEVEL_WEIGHTS, SCREEN_LANGUAGE_WEIGHTS, SLOTS_PER_HOUSEHOLD_WEIGHTS, SLOT_WEIGHTS,
 } from './assumptions'
-import { INTERESTS } from '../lib/labels'
-import { SLOTS, slotParts, sortSlots } from '../lib/slots'
-import type { DemandResponse, Grade, SlotKey } from '../types'
+import { INTERESTS } from './labels'
+import { SLOTS, slotParts, sortSlots } from './slots'
+import type { DemandResponse, Grade, SlotKey } from './types'
 
 /** 32비트 시드 PRNG(mulberry32). 같은 시드면 항상 같은 수열을 냅니다. */
 export function mulberry32(seed: number): () => number {

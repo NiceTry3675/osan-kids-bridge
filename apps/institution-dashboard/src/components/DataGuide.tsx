@@ -1,4 +1,4 @@
-import { SUPPRESSION_THRESHOLD } from '../data/assumptions'
+import { SUPPRESSION_THRESHOLD } from '@osan-kids-bridge/planning'
 import { useLanguage } from '../i18n'
 import { ViewHeader } from './ViewHeader'
 

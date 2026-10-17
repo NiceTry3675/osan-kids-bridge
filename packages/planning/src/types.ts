@@ -1,7 +1,7 @@
-// 데이터 항목 초안 v0.2(계획서 3절). 초안이 바뀌면 이 파일과 src/data/generate.ts를 함께 바꿉니다.
+// 데이터 항목 초안 v0.2(계획서 3절). 초안이 바뀌면 이 파일과 ./generate.ts를 함께 바꿉니다.
 export type Dong = '중앙동' | '대원동' | '남촌동' | '신장동' | '세마동' | '초평동'
 export type Weekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'
-/** 오전 06~12시, 오후 12~18시, 저녁 18~22시 (경계 시각은 src/data/assumptions.ts) */
+/** 오전 06~12시, 오후 12~18시, 저녁 18~22시 (경계 시각은 ./assumptions.ts) */
 export type DayPart = 'morning' | 'afternoon' | 'evening'
 export type SlotKey = `${Weekday}-${DayPart}`
 /** 보호자 웹과 같은 관심 분야 값 */
@@ -23,7 +23,7 @@ export interface DemandResponse {
   screen_language: ScreenLanguage
 }
 
-/** 보호자 웹 src/types.ts의 AvailableWindow와 같은 모양(앱끼리 직접 가져오지 않도록 복사해 둠) */
+/** 보호자 웹 apps/guardian-web/src/data/types.ts의 AvailableWindow와 같은 모양(앱끼리 직접 가져오지 않도록 복사해 둠) */
 export type GuardianAvailableWindow =
   | { day_of_week: Weekday; start_time: string; end_time: string }
   | { date: string; start_time: string; end_time: string }

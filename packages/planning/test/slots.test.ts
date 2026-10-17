@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { SLOTS, slotLabel, slotLongLabel, toSlots, weekdayOfDate, windowsToSlots, WEEKDAYS } from './lib/slots'
+import { SLOTS, slotLabel, slotLongLabel, toSlots, weekdayOfDate, windowsToSlots, WEEKDAYS } from '../src/slots'
 
 // @types/node 없이 시간대 환경 변수만 바꿉니다.
 const env = (globalThis as unknown as { process: { env: Record<string, string | undefined> } }).process.env

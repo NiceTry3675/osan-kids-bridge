@@ -1,8 +1,6 @@
-import { heatLegend, heatLevel, safePercent } from '../lib/aggregate'
-import { DAY_PARTS, WEEKDAYS } from '../lib/slots'
+import { heatLegend, heatLevel, safePercent, DAY_PARTS, WEEKDAYS, DAY_PART_HOURS, SUPPRESSION_THRESHOLD } from '@osan-kids-bridge/planning'
+import type { SafeCount, SlotKey } from '@osan-kids-bridge/planning'
 import { localizedCount, localizedDay, localizedPart, localizedSlot, useLanguage } from '../i18n'
-import { DAY_PART_HOURS, SUPPRESSION_THRESHOLD } from '../data/assumptions'
-import type { SafeCount, SlotKey } from '../types'
 
 const pad = (hour: number) => String(hour).padStart(2, '0')
 

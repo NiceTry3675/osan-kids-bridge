@@ -1,7 +1,7 @@
-import { DONGS, SUPPRESSION_THRESHOLD } from '../data/assumptions'
+import { DONGS, SUPPRESSION_THRESHOLD } from './assumptions'
 import { KOREAN_LEVELS, LANGUAGES } from './labels'
 import { SLOTS } from './slots'
-import type { DemandResponse, Dong, Grade, Interest, KoreanLevel, SafeCount, ScreenLanguage, SlotKey } from '../types'
+import type { DemandResponse, Dong, Grade, Interest, KoreanLevel, SafeCount, ScreenLanguage, SlotKey } from './types'
 
 export interface DemandFilters {
   /** 비어 있으면 6개 동 전체 */

@@ -1,14 +1,14 @@
 import {
   BEGINNER_SHARE_FOR_ASSISTANT, DONGS, DONG_ADJACENCY, ENROLLMENT_RATE, EXACT_SEARCH_COMBO_LIMIT, FLUENT_SHARE_FOR_ADVANCED,
   LOW_KOREAN_LEVEL_RESPONSE, SUPPRESSION_THRESHOLD,
-} from '../data/assumptions'
+} from './assumptions'
 import { formatHouseholds, formatPeople, inGradeRange, matchesInterest, roundPeople, suppress, suppressPartition } from './aggregate'
 import { KOREAN_LEVELS, LANGUAGES, LANGUAGE_LABELS, percent } from './labels'
 import { SLOTS, SLOT_INDEX, slotLabel, slotLongLabel } from './slots'
 import type {
   BaselineClass, BaselineResult, ClassResult, DemandResponse, Dong, KoreanLevel, ProgramOption, ProgramPlan, Recommendation,
   RecommendResult, SafeCount, ScreenLanguage, SearchMethod, SlotKey, Venue,
-} from '../types'
+} from './types'
 
 export interface RecommendOptions {
   adjacency?: Record<Dong, Dong[]>
