@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import App from './App'
 import { fillBlanks, hasBlank } from './data/admin'
-import type { ImproveResult, ProgramDetail, ProgramRow } from './data/admin'
+import type { ImproveResult, PlanResult, ProgramDetail, ProgramRow } from './data/admin'
 import { LanguageProvider } from './i18n'
 
 vi.hoisted(() => { vi.stubEnv('VITE_API_BASE_URL', 'http://api.test') })
@@ -195,5 +195,68 @@ describe('공고 보완 도우미', () => {
     open('#questions/osan-fc-sports-day')
     fireEvent.click(await screen.findByRole('button', { name: /보완 초안 만들기/ }))
     expect(await screen.findByText('공고 보완 도우미가 지금 답할 수 없습니다. 잠시 후 다시 시도해 주세요.')).toBeTruthy()
+  })
+})
+
+describe('AI 편성 제안', () => {
+  const PLAN: PlanResult = {
+    passed: true, rounds: 2, model: 'test', data_note: '시연용 가상 응답 400가정 · 가상 장소 9곳 (실제 통계 아님)',
+    steps: [{ tool: 'read_demand', ok: true, label: '초1~6' }, { tool: 'read_questions', ok: true }, { tool: 'read_programs', ok: true }, { tool: 'simulate_plan', ok: true, label: '초1~4 · 한국어' }, { tool: 'check_plan', ok: false, problems: 1 }, { tool: 'submit_plan', ok: true, problems: 0 }],
+    proposals: [{
+      id: 'plan-1', rank: 2, title: '초등 1~4학년 한국어 놀이 교실', interest: 'korean_study', interest_label: '한국어', grade_range: [1, 4], class_count: 2, capacity: 12,
+      classes: [
+        { n: 1, slot: 'wed-evening', when: '수요일 저녁', venue_id: 'v-sinjang-gym', venue: '신장동 체육관', dong: '신장동', reach: '33가정', reach_count: { suppressed: false, value: 33 }, expected: '약 9명', expected_people: 9.2, over_capacity: false },
+        { n: 2, slot: 'mon-evening', when: '월요일 저녁', venue_id: 'v-sinjang-family', venue: '신장동 가족센터', dong: '신장동', reach: '30가정', reach_count: { suppressed: false, value: 30 }, expected: '약 8명', expected_people: 8.4, over_capacity: false },
+      ],
+      eligible: 131, covered: '54가정', covered_count: { suppressed: false, value: 54 }, coverage_pct: 41, baseline: { label: '지금처럼 모두 토요일 오전', covered: '29가정', coverage_pct: 22 }, gain: 25,
+      language_support: [{ language: 'vi', label: '베트남어' }], language_needs: [], teaching: [], warnings: [],
+      reasons: [{ text: '한국어에 관심 표시한 가정이 121가정인데 한국어 공고는 1개예요.', facts: [{ id: 'd1.interest.korean_study', label: '초1~6 · 한국어에 관심 표시한 가정', value: '121가정' }] }],
+      problems: [],
+    }],
+  }
+
+  it('보호자 질문을 보내 편성안을 받고, 숫자의 근거와 지금 관행과의 비교를 보여 주며, 추천 화면으로 넘긴다', async () => {
+    serve({ 'GET /admin/programs': () => json({ now: '', programs: [SPORTS] }), 'POST /admin/planning/propose': () => json(PLAN) })
+    open('#plan')
+    expect(await screen.findByText('보호자 익명 통계')).toBeTruthy()
+    fireEvent.click(await screen.findByRole('button', { name: 'AI 편성안 만들기' }))
+    expect(await screen.findByText('초등 1~4학년 한국어 놀이 교실')).toBeTruthy()
+    const sent = JSON.parse(String(calls.find((entry) => entry.url.endsWith('/admin/planning/propose'))!.init!.body))
+    expect(sent.questions[0]).toEqual({ question_ko: '참가비가 있나요?', topic: 'other', count: 9 })
+    expect(screen.getByText('편성 계산 · 초1~4 · 한국어')).toBeTruthy()
+    expect(screen.getByText('코드 검사 통과 (2회 검사) · 근거의 숫자가 모두 도구 결과와 같아요')).toBeTruthy()
+    expect(screen.getAllByText('41%').length).toBeGreaterThan(0)
+    expect(screen.getByText('+25가정')).toBeTruthy()
+    expect(screen.getByTitle('초1~6 · 한국어에 관심 표시한 가정').textContent).toContain('121가정')
+    // 히트맵이 편성안 대상으로 바뀌고 반 번호가 표시된다
+    expect(screen.getByText('편성안 대상 한국어 · 초1~4 · 131가정의 가능 시간과 편성안의 반(번호)이에요.')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /일정·장소 추천에서 자세히 보기/ }))
+    expect(window.location.hash).toBe('#recommend')
+    expect(await screen.findByRole('radio', { name: '2개 반', checked: true })).toBeTruthy()
+    // 편성안이 고른 안(2안)을 펼친다
+    expect(screen.getByRole('tab', { name: '2안' }).getAttribute('aria-selected')).toBe('true')
+    // 추천 화면을 다녀와도 편성안이 남는다
+    fireEvent.click(screen.getByRole('link', { name: /AI 편성 제안/ }))
+    expect(await screen.findByText('초등 1~4학년 한국어 놀이 교실')).toBeTruthy()
+  })
+
+  it('실행 중에 다른 메뉴로 갔다 와도 실행이 끊기지 않고 결과가 남는다', async () => {
+    let finish: (response: Response) => void = () => {}
+    serve({ 'GET /admin/programs': () => json({ now: '', programs: [SPORTS] }), 'POST /admin/planning/propose': () => new Promise<Response>((resolve) => { finish = resolve }) })
+    open('#plan')
+    fireEvent.click(await screen.findByRole('button', { name: 'AI 편성안 만들기' }))
+    expect(await screen.findByText(/편성을 계산하고 있어요/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('link', { name: /수요 현황/ }))
+    finish(json(PLAN))
+    await waitFor(() => expect(window.location.hash).toBe('#demand'))
+    fireEvent.click(screen.getByRole('link', { name: /AI 편성 제안/ }))
+    expect(await screen.findByText('초등 1~4학년 한국어 놀이 교실')).toBeTruthy()
+  })
+
+  it('편성 도우미가 실패하면 서버의 오류 문장을 보여 준다', async () => {
+    serve({ 'GET /admin/programs': () => json({ now: '', programs: [] }), 'POST /admin/planning/propose': () => json({ error: '편성 도우미가 지금 답할 수 없습니다. 잠시 후 다시 시도해 주세요.' }, 503) })
+    open('#plan')
+    fireEvent.click(await screen.findByRole('button', { name: 'AI 편성안 만들기' }))
+    expect(await screen.findByText('편성 도우미가 지금 답할 수 없습니다. 잠시 후 다시 시도해 주세요.')).toBeTruthy()
   })
 })

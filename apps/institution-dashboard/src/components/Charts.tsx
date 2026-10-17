@@ -1,8 +1,6 @@
-import { heatLegend, heatLevel, safePercent } from '../lib/aggregate'
-import { DAY_PARTS, WEEKDAYS } from '../lib/slots'
+import { heatLegend, heatLevel, safePercent, DAY_PARTS, WEEKDAYS, DAY_PART_HOURS, SUPPRESSION_THRESHOLD } from '@osan-kids-bridge/planning'
+import type { SafeCount, SlotKey } from '@osan-kids-bridge/planning'
 import { localizedCount, localizedDay, localizedPart, localizedSlot, useLanguage } from '../i18n'
-import { DAY_PART_HOURS, SUPPRESSION_THRESHOLD } from '../data/assumptions'
-import type { SafeCount, SlotKey } from '../types'
 
 const pad = (hour: number) => String(hour).padStart(2, '0')
 
@@ -38,7 +36,7 @@ export function Heatmap({ counts, max, caption, marks, baselineSlots = [], compa
               const isBaseline = baselineSlots.includes(slot)
               const label = localizedSlot(slot, t) + ' ' + localizedCount(count, t) + (badges.length ? ', ' + t('recommended') : '') + (isBaseline ? ', ' + t('existing') : '')
               return (
-                <div key={slot} role="cell" className={`heat-cell ${level}${badges.length ? ' marked' : ''}${isBaseline ? ' baseline' : ''}`} title={label}>
+                <div key={slot} role="cell" className={`heat-cell ${level}${badges.length ? ' heat-marked' : ''}${isBaseline ? ' baseline' : ''}`} title={label}>
                   <span className="visually-hidden">{label}</span>
                   <span className="heat-value" aria-hidden="true">{localizedCount(count, t, 'short')}</span>
                   {(badges.length > 0 || isBaseline) && (

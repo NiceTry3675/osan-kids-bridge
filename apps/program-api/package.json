@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.30.0",
+    "@osan-kids-bridge/planning": "*",
     "jsqr": "^1.4.0",
     "sharp": "^0.35.5"
   },

@@ -1,6 +1,6 @@
 // 테스트 전용: 화면 숫자만으로 가린 칸을 역산할 수 있는지 점검하는 도구(앱 번들에는 들어가지 않음)
-import { suppressPartition } from '../lib/aggregate'
-import type { PartitionOptions } from '../lib/aggregate'
+import { suppressPartition } from '../aggregate'
+import type { PartitionOptions } from '../aggregate'
 import type { SafeCount } from '../types'
 
 const sameDisplay = <K extends string>(keys: readonly K[], a: Record<K, SafeCount>, b: Record<K, SafeCount>) =>

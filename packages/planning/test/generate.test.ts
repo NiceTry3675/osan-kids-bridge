@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   DEMO_RECORD_COUNT, DEMO_SEED, DONGS, DONG_ADJACENCY, DONG_HOUSEHOLD_WEIGHTS, GRADE_WEIGHTS, KOREAN_LEVEL_WEIGHTS, SCREEN_LANGUAGE_WEIGHTS,
   SLOTS_PER_HOUSEHOLD_WEIGHTS,
-} from './data/assumptions'
-import { DEMO_RESPONSES, generateDemand, mulberry32 } from './data/generate'
-import { VENUES } from './data/venues'
-import { countSlots } from './lib/aggregate'
-import { INTERESTS, KOREAN_LEVELS, LANGUAGES } from './lib/labels'
-import { SLOTS, SLOT_INDEX } from './lib/slots'
+} from '../src/assumptions'
+import { DEMO_RESPONSES, generateDemand, mulberry32 } from '../src/generate'
+import { VENUES } from '../src/venues'
+import { countSlots } from '../src/aggregate'
+import { INTERESTS, KOREAN_LEVELS, LANGUAGES } from '../src/labels'
+import { SLOTS, SLOT_INDEX } from '../src/slots'
 
 const sum = (record: Record<string | number, number>) => Object.values(record).reduce((total, value) => total + value, 0)
 

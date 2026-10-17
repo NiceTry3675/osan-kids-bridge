@@ -3,13 +3,9 @@ import { BarList, Heatmap, InsufficientPanel } from './Charts'
 import { Icon } from './icons'
 import { Sheet } from './Sheet'
 import { ViewHeader } from './ViewHeader'
-import { DONGS } from '../data/assumptions'
-import { DEMO_RESPONSES } from '../data/generate'
-import { defaultFilters, filterResponses, summarize } from '../lib/aggregate'
-import type { DemandFilters, DemandSummary } from '../lib/aggregate'
-import { GRADES, INTERESTS, LANGUAGES } from '../lib/labels'
+import { DONGS, DEMO_RESPONSES, defaultFilters, filterResponses, summarize, GRADES, INTERESTS, LANGUAGES } from '@osan-kids-bridge/planning'
+import type { DemandFilters, DemandSummary, Dong, Grade, Interest, ScreenLanguage } from '@osan-kids-bridge/planning'
 import { localizedDong, localizedInterest, localizedLanguage, localizedLevel, localizedSlot, useLanguage } from '../i18n'
-import type { Dong, Grade, Interest, ScreenLanguage } from '../types'
 
 interface Props { filters: DemandFilters; setFilters: (filters: DemandFilters) => void }
 

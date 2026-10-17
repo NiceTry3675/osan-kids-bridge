@@ -1,6 +1,5 @@
-import { DEFAULT_PLAN } from '../data/assumptions'
-import { VENUES } from '../data/venues'
-import type { ProgramOption, ProgramPlan } from '../types'
+import { DEFAULT_PLAN, VENUES } from '@osan-kids-bridge/planning'
+import type { ProgramOption, ProgramPlan } from '@osan-kids-bridge/planning'
 
 /** 반 수 선택지(1~3) */
 export const CLASS_COUNTS = [1, 2, 3] as const

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_PLAN, DONGS, DONG_ADJACENCY, ENROLLMENT_RATE, MIN_CAPACITY } from './data/assumptions'
-import { DEMO_RESPONSES, mulberry32 } from './data/generate'
-import { VENUES } from './data/venues'
-import { roundPeople, suppress } from './lib/aggregate'
-import { GRADES, INTERESTS, KOREAN_LEVELS, LANGUAGES } from './lib/labels'
-import { SLOTS } from './lib/slots'
-import { choose, popcount32, recommend } from './lib/recommend'
-import { recoverableCells, subtractableCells } from './testing/disclosure'
-import type { DemandResponse, Dong, Grade, Interest, KoreanLevel, ProgramPlan, RecommendResult, SlotKey, Venue } from './types'
+import { DEFAULT_PLAN, DONGS, DONG_ADJACENCY, ENROLLMENT_RATE, MIN_CAPACITY } from '../src/assumptions'
+import { DEMO_RESPONSES, mulberry32 } from '../src/generate'
+import { VENUES } from '../src/venues'
+import { roundPeople, suppress } from '../src/aggregate'
+import { GRADES, INTERESTS, KOREAN_LEVELS, LANGUAGES } from '../src/labels'
+import { SLOTS } from '../src/slots'
+import { choose, popcount32, recommend } from '../src/recommend'
+import { recoverableCells, subtractableCells } from '../src/testing/disclosure'
+import type { DemandResponse, Dong, Grade, Interest, KoreanLevel, ProgramPlan, RecommendResult, SlotKey, Venue } from '../src/types'
 
 // ── 독립 무차별 대입 기준값: 비트셋·묶음 없이 정의 그대로 계산 ──────────────────────────
 interface RawOption { slot: SlotKey; venue: Venue }
