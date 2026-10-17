@@ -198,7 +198,7 @@ pres.addSection({ title: '문제' })
 }
 {
   const slide = content('문제 ③ 현장 관찰', '사이트는 번역돼도, 포스터 이미지 속 정보는 한국어 그대로다',
-    '출처: 오산시가족센터 누리집 프로그램 신청 화면(팀 캡처, 2026.10), 한국건강가정진흥원 「전국 다문화가족지원센터 통번역 지원사 배치현황」(2025.9.24 데이터)', '문제')
+    '출처: 오산시가족센터 누리집 화면(팀 캡처, 2026.10), 다누리 오산시가족센터 게시판(2026.10.17 확인), 한국건강가정진흥원 통번역 지원사 배치현황(2025.9.24)', '문제')
   picture(slide, img('problem-kpop-listing.png'), { x: 0.65, y: 1.65, w: 6.6, h: 3.5 })
   text(slide, '공고 상세: 일정·대상·신청 QR이 모두 포스터 이미지 안에 있다', { x: 0.65, y: 5.28, w: 6.6, h: 0.35, fontSize: 13, color: MUTED })
   picture(slide, img('problem-translated-site.png'), { x: 7.75, y: 1.65, w: 2.9, h: 4.6 })
@@ -210,7 +210,11 @@ pres.addSection({ title: '문제' })
   text(slide, '129곳', { x: 11.1, y: 4.2, w: 1.55, h: 0.65, fontSize: 30, bold: true, color: C.accent1 })
   text(slide, [{ text: '전국 가족센터', options: { breakLine: true } }, { text: '221곳 중', options: { breakLine: true } }, { text: '1개 언어만', options: { breakLine: true } }, { text: '통번역하는 곳', options: {} }], { x: 11.1, y: 4.9, w: 1.6, h: 1.25, fontSize: 12 })
   card(slide, { x: 0.65, y: 5.75, w: 6.6, h: 1.0, fill: C.accent2 })
-  text(slide, '보호자는 공고마다 포스터 속 한국어를 직접 읽어야 한다', { x: 0.9, y: 5.85, w: 6.2, h: 0.8, fontSize: 16, bold: true, valign: 'middle' })
+  // 다누리 사실은 '프로그램안내 게시판'으로 좁혀 쓴다 (공지사항에는 10·11월 계획 이미지가 있다). 검증: research/기존서비스문제/검증_기존서비스분석_2026-10-17.md
+  text(slide, [
+    { text: '보호자는 공고마다 포스터 속 한국어를 직접 읽어야 한다', options: { bold: true, fontSize: 16, breakLine: true } },
+    { text: '다누리의 오산 센터 프로그램안내는 8.12 글이 마지막, 다국어게시판은 0건', options: { fontSize: 12.5 } },
+  ], { x: 0.9, y: 5.8, w: 6.2, h: 0.9, valign: 'middle' })
 }
 {
   const slide = content('문제 ④ 양쪽의 단절', '보호자는 포스터에서 막히고, 기관은 어디서 막히는지 모른다',
@@ -441,7 +445,7 @@ pres.addSection({ title: '라이프케어와 실행' })
 }
 {
   const slide = content('신뢰 설계', 'AI가 틀려도 보호자가 잘못 판단하지 않게 설계했다',
-    '기준: 보호자 서비스 명세 v2.2(program_connection_spec_v2_2.md), 구현: apps/program-api, apps/guardian-web', '라이프케어와 실행')
+    '기준: 보호자 서비스 명세 v2.2, 구현: apps/program-api·apps/guardian-web. 실제 사례: 오산시가족센터 K-pop 방송댄스 공고 화면(팀 캡처, 2026.10)', '라이프케어와 실행')
   const items = [
     ['사람이 마지막에 확인', '자동 검증만 통과한 포스터·안내는 \'담당자 확인 전\'으로 표시하고, 승인하면 바뀐다'],
     ['모르는 것은 노란 형광펜', '비용·자격·상담 언어처럼 공고에 없는 것은 확인되지 않았다고 표시한다'],
@@ -454,14 +458,21 @@ pres.addSection({ title: '라이프케어와 실행' })
     const col = index % 3
     const row = Math.floor(index / 3)
     const x = 0.6 + col * 4.1
-    const y = 1.65 + row * 2.1
-    card(slide, { x, y, w: 3.85, h: 1.9, fill: row === 0 ? C.background2 : C.accent5 })
-    badge(slide, String(index + 1), { x: x + 0.3, y: y + 0.28, size: 0.5, fontSize: 16 })
-    text(slide, title, { x: x + 0.95, y: y + 0.28, w: 2.8, h: 0.5, fontSize: 17, bold: true, valign: 'middle' })
-    text(slide, body, { x: x + 0.3, y: y + 0.95, w: 3.3, h: 0.85, fontSize: 14 })
+    const y = 1.6 + row * 1.86
+    card(slide, { x, y, w: 3.85, h: 1.72, fill: row === 0 ? C.background2 : C.accent5 })
+    badge(slide, String(index + 1), { x: x + 0.3, y: y + 0.22, size: 0.5, fontSize: 16 })
+    text(slide, title, { x: x + 0.95, y: y + 0.22, w: 2.8, h: 0.5, fontSize: 17, bold: true, valign: 'middle' })
+    text(slide, body, { x: x + 0.3, y: y + 0.85, w: 3.3, h: 0.8, fontSize: 14 })
   })
-  card(slide, { x: 0.6, y: 6.0, w: 12.13, h: 0.8, fill: C.text2 })
-  text(slide, '자동 검증은 \'틀렸을 가능성\'을 줄이고, 마지막 판단은 사람과 원문이 한다', { x: 0.9, y: 6.0, w: 11.6, h: 0.8, fontSize: 16, bold: true, color: C.background1, valign: 'middle' })
+  // 실제 공고에서 AI가 잡은 사례. 코드가 따로 처리하는 것은 신청(접수) 기간 불일치뿐이라 그것만 말한다
+  card(slide, { x: 0.6, y: 5.38, w: 12.13, h: 0.78, fill: C.accent2 })
+  text(slide, '실제 사례', { x: 0.85, y: 5.38, w: 1.3, h: 0.78, fontSize: 15, bold: true, valign: 'middle' })
+  text(slide, [
+    { text: 'K-pop 방송댄스 공고는 같은 공고 안에서 신청 기간이 둘이다: 상단 10.1~10.17, 포스터 9.28~10.14', options: { breakLine: true } },
+    { text: 'AI 요약은 상단 기간을 안내하며 \'공고 안에 신청 기간이 다르게 적힌 곳도 있으니 기관에 확인\'을 덧붙인다 (3개 언어)', options: {} },
+  ], { x: 2.15, y: 5.38, w: 10.4, h: 0.78, fontSize: 13, valign: 'middle' })
+  card(slide, { x: 0.6, y: 6.3, w: 12.13, h: 0.55, fill: C.text2 })
+  text(slide, '자동 검증은 \'틀렸을 가능성\'을 줄이고, 마지막 판단은 사람과 원문이 한다', { x: 0.9, y: 6.3, w: 11.6, h: 0.55, fontSize: 15, bold: true, color: C.background1, valign: 'middle' })
 }
 {
   const slide = content('실행 계획', '오산에서 바로 시작할 수 있다',
