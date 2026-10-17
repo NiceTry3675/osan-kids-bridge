@@ -46,7 +46,7 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
   },
   {
     name: 'get_program',
-    description: '공고 한 건의 검수된 사실 전부: 대상, 회차, 장소, 비용, 신청 기간·방법, 문의처, 동반, 언어 지원, 안내 문장, 기관에 확인할 점, 원문 근거 인용.',
+    description: '공고 한 건의 검수된 사실 전부: 대상, 회차, 장소, 비용, 신청 기간·방법, 문의처, 동반, 언어 지원, 안내 문장, 기관 추가 안내, 기관에 확인할 점, 원문 근거 인용.',
     parametersJsonSchema: { type: 'object', properties: { program_id: { type: 'string' } }, required: ['program_id'] },
   },
   {
@@ -88,7 +88,7 @@ export const TOOL_DECLARATIONS: FunctionDeclaration[] = [
         answer: { type: 'string', description: '보호자 언어로 쓴 답' },
         citations: {
           type: 'array',
-          description: '답의 근거가 된 원문 인용. get_program의 evidence·notices에 있는 한국어 문장을 글자 그대로',
+          description: '답의 근거가 된 원문 인용. get_program의 evidence·notices·institution_addenda에 있는 한국어 문장을 글자 그대로',
           items: { type: 'object', properties: { program_id: { type: 'string' }, quote: { type: 'string' } }, required: ['program_id', 'quote'] },
         },
         follow_ups: { type: 'array', items: { type: 'string' }, description: '보호자가 이어서 물을 만한 짧은 질문 0~3개 (보호자 언어)' },
@@ -171,7 +171,8 @@ function filtersFrom(args: Record<string, unknown>) {
   })
 }
 
-function facts(program: ProgramResponse, record: ProgramRecord, today: string, posters: string[]) {
+/** get_program이 돌려주는 공고 사실 (공고 보완 도우미도 같은 사실을 읽는다) */
+export function noticeFacts(program: ProgramResponse, record: ProgramRecord, today: string, posters: string[]) {
   return {
     today,
     program_id: program.program_id,
@@ -209,6 +210,8 @@ function facts(program: ProgramResponse, record: ProgramRecord, today: string, p
     support_is_interpretation: program.support_interpretation,
     application_page_languages: program.application_languages ?? '공고에 없음',
     notices: program.notices,
+    /** 공고가 나온 뒤 기관 담당자가 보호자 질문을 보고 확정해 덧붙인 안내 */
+    institution_addenda: (record.addenda ?? []).map((addendum) => ({ text: addendum.text, confirmed_on: seoulToday(new Date(addendum.added_at)) })),
     to_confirm_with_institution: program.uncertain_items_ko,
     evidence: program.source_evidence,
     source_url: program.source_url,
@@ -264,7 +267,7 @@ export function runTool(name: string, args: Record<string, unknown>, context: To
       if (!record) return notFound(name)
       remember(record)
       state.steps.push({ tool: name, program_id: record.program_id, title: record.title, ok: true })
-      return facts(evaluateProgram(record, null, context.now), record, seoulToday(context.now), context.posterLanguages?.(record.program_id) ?? [])
+      return noticeFacts(evaluateProgram(record, null, context.now), record, seoulToday(context.now), context.posterLanguages?.(record.program_id) ?? [])
     }
     case 'check_fit': {
       const record = lookup(args.program_id)

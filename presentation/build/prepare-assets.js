@@ -2,6 +2,7 @@
 const sharp = require('sharp')
 const path = require('node:path')
 const fs = require('node:fs')
+const JSZip = require(require.resolve('jszip', { paths: [require.resolve('pptxgenjs')] }))
 
 const ROOT = path.resolve(__dirname, '../..')
 const LOCAL = path.join(ROOT, 'apps/program-api/data/local')
@@ -33,8 +34,15 @@ async function main() {
   }
   // 조사 폴더의 기존 서비스 캡처 (webp → png)
   const research = path.join(ROOT, 'research/기존서비스문제')
-  for (const [from, to] of [['035157cf29478378.webp', 'problem-kpop-listing.png'], ['e6fe6097a071267b.webp', 'problem-translated-site.png'], ['5b82eb926b204881.webp', 'problem-chatbot.png']]) {
-    await sharp(path.join(research, from)).png().toFile(path.join(OUT, to))
+  await sharp(path.join(research, '035157cf29478378.webp')).png().toFile(path.join(OUT, 'problem-kpop-listing.png'))
+  // 다누리 번역 화면과 경기도 이주민 포털 챗봇은 팀원 자료(기존서비스_분석.pptx)에 같은 화면의 고해상도판(약 1.8배)이 있어 그것을 쓴다
+  // (1번 슬라이드 그림 = image1, 3번 슬라이드 그림 = image4). 자료가 없으면 예전 webp를 쓴다
+  const teamDeck = path.join(research, '기존서비스_분석.pptx')
+  const zip = fs.existsSync(teamDeck) ? await JSZip.loadAsync(fs.readFileSync(teamDeck)) : null
+  for (const [media, fallback, to] of [['ppt/media/image1.png', 'e6fe6097a071267b.webp', 'problem-translated-site.png'], ['ppt/media/image4.png', '5b82eb926b204881.webp', 'problem-chatbot.png']]) {
+    const entry = zip?.file(media)
+    const input = entry ? await entry.async('nodebuffer') : path.join(research, fallback)
+    await sharp(input).png().toFile(path.join(OUT, to))
   }
   for (const name of fs.readdirSync(OUT).sort()) {
     const { width, height } = await sharp(path.join(OUT, name)).metadata()

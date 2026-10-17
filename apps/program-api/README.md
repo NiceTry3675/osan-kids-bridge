@@ -28,7 +28,7 @@ GOOGLE_APPLICATION_CREDENTIALS=../../<서비스-계정-키>.json
 # 선택: GOOGLE_CLOUD_PROJECT (기본은 키의 project_id), GEMINI_LOCATION=global, GEMINI_MODEL=gemini-3.8-flash
 ```
 
-모델은 Vertex AI의 `gemini-3.8-flash`입니다. 그 밖의 설정: `PROGRAM_DATA_DIR`(기본 `data/local`), `PORT`(기본 8787), `HOST`(기본 127.0.0.1), `CORS_ORIGINS`(기본 `http://127.0.0.1:5173,http://localhost:5173`와 기관 대시보드의 `5174`, `*`는 모두 허용), `PROGRAM_API_NOW`(판정 기준 시각을 ISO로 고정, 시연·시험용), `SHOW_MACHINE_CHECKED_SUMMARIES=1`(아래 요약 설명 참고).
+모델은 Vertex AI의 `gemini-3.8-flash`입니다. 그 밖의 설정: `PROGRAM_DATA_DIR`(기본 `data/local`), `PORT`(기본 8787), `HOST`(기본 127.0.0.1), `CORS_ORIGINS`(기본 `http://127.0.0.1:5173,http://localhost:5173`와 기관 대시보드의 `5174`, `*`는 모두 허용), `PROGRAM_API_NOW`(판정 기준 시각을 ISO로 고정, 시연·시험용), `SHOW_MACHINE_CHECKED_SUMMARIES=1`(아래 요약 설명 참고), `ADMIN_API=1`(기관용 관리자 API, 아래 참고).
 
 ## 실제 공고 자료의 보관
 
@@ -140,8 +140,8 @@ npm run poster -- approve <ID> --lang vi --reviewer 이름               # 사�
 | `respond` | 보호자 언어로 답하고 근거 인용을 붙여 끝냄 |
 
 - 공고에 없는 것은 추측하지 않고 "공고에는 없어요"라고 말한 뒤 문의문을 만듭니다. 참여 자격을 단정하지 않고 확인된 것과 확인할 것을 나눕니다. 이름·국적·연락처는 묻지 않습니다.
-- 모델이 낸 원문 인용은 코드가 그 공고의 검증된 근거·안내 문장에서 다시 찾아, 없으면 버립니다(`verifiedCitations`).
-- 보호자가 '기관에 이름 없이 알리기'를 누를 때만 `{공고, 주제, 일반화한 질문, 날짜}`를 `<데이터 폴더>/questions/questions.jsonl`에 남깁니다. 기관 대시보드의 '보호자 질문' 탭이 이것을 공고별·주제별로 모아 '공고에 무엇을 적어야 하는지'를 보여 줍니다.
+- 모델이 낸 원문 인용은 코드가 그 공고의 검증된 근거·안내 문장·기관 추가 안내에서 다시 찾아, 없으면 버립니다(`verifiedCitations`). 인용마다 공고 원문(`notice`)인지 기관 추가 안내(`addendum`)인지 붙여 보호자 화면이 구별해 보여 줍니다.
+- 보호자가 '기관에 이름 없이 알리기'를 누를 때만 `{공고, 주제, 일반화한 질문, 날짜}`를 `<데이터 폴더>/questions/questions.jsonl`에 남깁니다. 기관 대시보드의 '보호자 질문' 화면이 이것을 공고별·주제별로 모으고, 아래 공고 보완 도우미가 추가 안내 초안을 씁니다.
 
 | 요청 | 동작 |
 |---|---|
@@ -150,6 +150,35 @@ npm run poster -- approve <ID> --lang vi --reviewer 이름               # 사�
 | `GET /agent/questions` | 공고별·주제별 집계 |
 | `GET /posters/{id}` | 원본 포스터 유무와 내보낼 수 있는 번역 포스터의 검증 요약 |
 | `GET /posters/{id}/original` · `/vi` · `/zh` | 포스터 이미지. 번역본은 승인됐거나 시연 설정(`SHOW_MACHINE_CHECKED_SUMMARIES=1`)에서 자동 검증을 통과한 것만, 원본이 바뀌면 내림 |
+
+## 기관용 관리자 API와 공고 보완 도우미
+
+기관 대시보드(`apps/institution-dashboard`)가 쓰는 API입니다(`src/admin/`). **로그인이 없으므로** `ADMIN_API=1`일 때만 열리고(`npm run demo`는 켬), 시연이나 기관 내부망에서만 씁니다. 다른 사이트의 페이지가 보낸 요청을 막으려고 `CORS_ORIGINS`에 없는 출처(Origin)는 403, JSON이 아닌 POST 본문은 415로 거절합니다(`CORS_ORIGINS=*`이면 이 보호가 꺼집니다). 게시 여부와 상관없이 모든 공고를 보고, 사람 검수 CLI(`npm run review`, `npm run poster approve`)와 같은 규칙으로 저장합니다.
+
+| 요청 | 동작 |
+|---|---|
+| `GET /admin/programs` | 모든 공고의 검수 상태, 근거 미확인 사실 수, 언어별 요약·번역 포스터 상태, 확인할 점 수, 기관 추가 안내 |
+| `GET /admin/programs/{id}` | 검수 화면: 사실마다 값·원문 근거 인용·확인 상태, 원문 글·포스터 판독문, 언어별 요약, 번역 포스터의 회차별 검증 기록 |
+| `POST /admin/programs/{id}/review` | `{action: approve\|reject\|reset, reviewer, summaries?, language_reviewer?, note?, force?}`. 근거가 확인되지 않은 핵심 사실이 있으면 `force`(담당자가 원문과 직접 대조했다는 표시) 없이는 409 |
+| `GET /admin/posters/{id}/original` · `/vi` · `/zh` · `/vi-2` | 원본·내보내는 번역본·n회차 시도 이미지 |
+| `POST /admin/posters/{id}/{vi\|zh}/approve` | `{reviewer}`. 자동 검증을 통과했고 원본이 그대로인 번역 포스터만 |
+| `POST /admin/programs/{id}/improve` | `{questions: [{question_ko, topic, count}]}` → 공고 보완 도우미의 초안·검사 기록. 모델 오류는 503 |
+| `POST /admin/programs/{id}/addenda` | `{author, items: [{topic, text, resolves_questions, resolves_items, drafted_by_ai}]}` 기관 추가 안내 저장 |
+| `DELETE /admin/programs/{id}/addenda/{addendumId}` | 추가 안내 지우기 |
+
+**공고 보완 도우미**(`src/admin/improve.ts`)는 보호자가 공고에서 답을 찾지 못한 질문으로 '기관 추가 안내' 초안을 쓰는 에이전트입니다.
+
+```text
+read_notice(공고 사실·원문 인용·확인할 점) → read_questions(질문·알린 사람 수) → 초안 → check_draft(코드 검사) → 고쳐 쓰기 → submit(같은 검사를 다시 통과해야 받음)
+```
+
+- 항목마다 `already_in_notice`(공고에 답이 이미 있음: 원문 인용을 코드가 다시 찾아 확인) 또는 `add_notice`(공고에 덧붙일 안내)로 나눕니다.
+- 기관만 아는 값(금액, 가능 여부, 준비물 등)은 AI가 정하지 않고 `{{빈칸}}`으로 남깁니다. 코드 검사(`src/admin/check.ts`, 포스터 루프의 고정값 추출을 다시 씀):
+  - `add_notice`: 빈칸 밖에 답을 단정하는 말('무료', '가능합니다', '할 수 있어요', '없어요', '제공해요' 등)을 쓸 수 없고, 숫자·날짜·시각·전화·인터넷 주소와 단위가 붙은 수량('3명')은 공고에서 확인된 글에 있는 것만 다시 쓸 수 있습니다.
+  - `already_in_notice`: 다시 쓴 문장의 고정값·수량·단정은 **인용한 원문 문장**에 있어야 하고, 단정의 대상 낱말('참가비는 무료')도 그 문장에 있어야 합니다. 공고 다른 곳의 '주차는 무료'를 근거로 '참가비는 무료'라고 쓰지 못합니다.
+  - 낱말 단위의 규칙이라 모든 지어냄을 막지는 못합니다. 그래서 공고에 이미 있는 답은 담당자가 골라야 덧붙이고, 빈칸은 담당자가 채워야 저장됩니다.
+- 담당자가 빈칸을 채우고 고른 항목만 저장합니다. 저장할 때 빈칸이 남았거나, '기관에 확인할 점' 목록에 없는 문구를 풀겠다고 하면 400입니다.
+- 추가 안내(`addenda`)는 원문이 아니라 담당자가 이름을 걸고 확정한 문장이라 사실 해시에 넣지 않습니다(덧붙여도 원문 검수가 풀리지 않음). 저장하면 바로 ① 상담 에이전트의 `get_program`에 `institution_addenda`로 들어가 인용할 수 있고 ② 고른 '기관에 확인할 점'이 보호자 화면에서 빠집니다.
 
 ## 시연 데이터 (`demo/`)
 
@@ -161,11 +190,13 @@ MVP 시연용 공고 25건이 `demo/`에 들어 있습니다. 서비스 계정 �
 - 베트남어·중국어 요약은 자동 대조를 통과한 `machine_checked`이며 제목·기관·대상 머리글까지 채워져 있습니다(언어별 검수자 승인 전).
 
 ```bash
-npm run demo                      # 시연 데이터로 API 실행 (기준 시각 2026-10-15 10:00 고정, 자동 대조를 통과한 요약도 표시)
+npm run demo                      # 시연 데이터로 API 실행 (기준 시각 2026-10-15 10:00 고정, 자동 대조를 통과한 요약도 표시, 관리자 API 켬)
 npm run demo:ingest -- <ID ...>   # demo/inbox의 공고를 Gemini로 다시 추출·요약하고 바로 승인 (현장 시연, 키 필요)
 npm run demo:approve              # 근거가 확인된 시연 공고를 '시연 데이터' 검수자로 승인
 npm run demo:headings -- [ID ...] [--force]  # 머리글(제목·기관·대상)이 없거나 검사에 걸린 베트남어·중국어 요약에 머리글만 채움 (키 필요, --force면 모두 다시)
 ```
+
+`npm run demo`는 켤 때마다 `demo/programs`·`demo/inbox`를 `data/local/demo-session/`(gitignore)에 새로 복사해 그 사본으로 띄웁니다. 기관 대시보드에서 공고를 승인·반려하거나 추가 안내를 덧붙여도 커밋된 `demo/`는 바뀌지 않고, 서버를 다시 켜면 공고는 처음 상태로 돌아갑니다(이어 쓰려면 `DEMO_KEEP_SESSION=1`). 보호자가 보낸 질문은 사본 폴더의 `questions/`에, 번역 포스터 승인은 포스터 폴더(`data/local/translated`)에 그대로 남습니다.
 
 현장에서 포스터를 새로 넣어 보여 주려면 `demo/inbox/<새-ID>/`에 `poster.png`와 `source.json`을 넣고 `npm run demo:ingest -- <새-ID>`를 실행한 뒤 보호자 웹을 새로고침합니다. 한 건에 30초~1분 정도 걸립니다.
 

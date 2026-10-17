@@ -184,6 +184,28 @@ export interface ProgramRecord {
   /** 정규화 중 발견한 경고 (원문과 맞지 않는 값, 근거 없는 값 등) */
   warnings: string[]
   review: ReviewState
+  /** 게시 뒤 기관 담당자가 보호자 질문을 보고 덧붙인 안내. 이 필드가 생기기 전에 저장한 공고에는 없다 */
+  addenda?: Addendum[]
+}
+
+/**
+ * 기관 추가 안내: 공고에 없어 보호자들이 되물은 내용을 기관 담당자가 확정해 덧붙인 문장.
+ * 원문이 아니라 담당자의 확인이므로 사실 해시(원문 검수)에 넣지 않고, 담당자 이름·시각을 함께 남긴다.
+ */
+export interface Addendum {
+  id: string
+  topic: UncertainTopic
+  /** 담당자가 확정한 한국어 문장 */
+  text: string
+  /** 이 안내로 답이 된 보호자 질문 (질문 문장 그대로) */
+  resolves_questions: string[]
+  /** 이 안내로 더 이상 '기관에 확인할 점'이 아닌 항목 (확인 항목 문구 그대로) */
+  resolves_items: string[]
+  author: string
+  /** ISO */
+  added_at: string
+  /** AI 초안에서 시작했는가 */
+  drafted_by_ai: boolean
 }
 
 /** 보호자 웹의 '기관에 확인할 점' 주제 (guardian-web UncertainItem.topic) */

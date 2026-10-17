@@ -28,7 +28,7 @@ export function DemandView({ filters, setFilters }: Props) {
   )
 
   return <div className="view">
-    <ViewHeader title={t('demandTab')} action={
+    <ViewHeader kicker={t('navPlan')} title={t('demandTab')} lead={t('demandLead')} action={
       <button className="btn btn--quiet" type="button" aria-haspopup="dialog" onClick={() => setFilterOpen(true)}>
         <Icon name="sliders" />{filtered ? t('filterOpen') : t('filterTitle')}
       </button>
@@ -74,7 +74,8 @@ export function DemandView({ filters, setFilters }: Props) {
 
     {summary.status === 'insufficient' ? <InsufficientPanel onReset={() => setFilters(defaultFilters())} resetLabel={t('reset')} /> : <>
       <DemandSummaryLine summary={summary} filtered={filtered} />
-      <section className="block" aria-labelledby="heat-title">
+      <div className="dash-grid">
+      <section className="card block-card dash-grid-wide" aria-labelledby="heat-title">
         <h2 id="heat-title" className="block-title">{t('heatTitle')}</h2>
         <Heatmap counts={summary.slots} max={summary.maxSlotValue} caption={t('heatCaption')} />
         <dl className="rows key-rows">
@@ -82,9 +83,10 @@ export function DemandView({ filters, setFilters }: Props) {
           <div className="row"><dt>{t('koreanResponse')}</dt><dd>{summary.koreanLevelResponseRate === null ? t('hidden') : Math.round(summary.koreanLevelResponseRate * 100) + '%'}</dd></div>
         </dl>
       </section>
-      <section className="block" aria-labelledby="dong-title"><h2 id="dong-title" className="block-title">{t('districtTitle')}</h2><BarList label={t('districtCount')} total={summary.total} items={[...summary.dongs].sort((a, b) => (b.count.suppressed ? 2.5 : b.count.value) - (a.count.suppressed ? 2.5 : a.count.value)).map(({ dong, count }) => ({ key: dong, label: localizedDong(dong, locale), count }))} /></section>
-      <section className="block" aria-labelledby="language-title"><h2 id="language-title" className="block-title">{t('languageTitle')}</h2><BarList label={t('languageCount')} total={summary.total} items={summary.languages.map(({ language, count }) => ({ key: language, label: localizedLanguage(language, t), count }))} /></section>
-      <section className="block" aria-labelledby="level-title"><h2 id="level-title" className="block-title">{t('levelTitle')}</h2><BarList label={t('levelCount')} total={summary.total} items={summary.koreanLevels.map(({ level, count }) => ({ key: level, label: localizedLevel(level, t), count, tone: level === 'none' ? 'muted' : undefined }))} /></section>
+      <section className="card block-card" aria-labelledby="dong-title"><h2 id="dong-title" className="block-title">{t('districtTitle')}</h2><BarList label={t('districtCount')} total={summary.total} items={[...summary.dongs].sort((a, b) => (b.count.suppressed ? 2.5 : b.count.value) - (a.count.suppressed ? 2.5 : a.count.value)).map(({ dong, count }) => ({ key: dong, label: localizedDong(dong, locale), count }))} /></section>
+      <section className="card block-card" aria-labelledby="language-title"><h2 id="language-title" className="block-title">{t('languageTitle')}</h2><BarList label={t('languageCount')} total={summary.total} items={summary.languages.map(({ language, count }) => ({ key: language, label: localizedLanguage(language, t), count }))} /></section>
+      <section className="card block-card" aria-labelledby="level-title"><h2 id="level-title" className="block-title">{t('levelTitle')}</h2><BarList label={t('levelCount')} total={summary.total} items={summary.koreanLevels.map(({ level, count }) => ({ key: level, label: localizedLevel(level, t), count, tone: level === 'none' ? 'muted' : undefined }))} /></section>
+      </div>
     </>}
   </div>
 }

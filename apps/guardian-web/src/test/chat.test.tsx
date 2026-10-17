@@ -43,6 +43,19 @@ async function ask(text: string) {
 beforeEach(() => { serve(() => json(reply())) })
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
+describe('답의 근거', () => {
+  it('공고가 나온 뒤 기관이 덧붙인 안내는 공고 원문과 구별해 알린다', async () => {
+    serve(() => json(reply({ citations: [
+      { program_id: 'p1', title: '운동회', quote: '모집인원: 200명', source: 'notice' },
+      { program_id: 'p1', title: '운동회', quote: '참가비: 무료', source: 'addendum' },
+    ] })))
+    renderChat()
+    await ask('참가비가 있나요?')
+    expect(screen.getByText('“모집인원: 200명”').parentElement!.textContent).not.toContain('기관이 덧붙인 안내')
+    expect(screen.getByText('“참가비: 무료”').parentElement!.textContent).toContain('공고가 나온 뒤 기관이 덧붙인 안내')
+  })
+})
+
 describe('상담 요청 대화 길이', () => {
   it('최근 대화만 보내고, 첫 메시지는 보호자 질문으로 맞추며, 빈 메시지는 뺀다', () => {
     const long: ChatMessage[] = Array.from({ length: 20 }, (_, i) => ({ role: i % 2 ? 'assistant' : 'user', text: `${i} `.padEnd(1200, '가') }))

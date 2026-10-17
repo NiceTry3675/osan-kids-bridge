@@ -9,9 +9,12 @@ export type EffectiveReviewStatus = ReviewStatus | 'stale'
 // 해시는 환경과 무관해야 하므로 로캘 비교 대신 코드 단위로 정렬한다
 const compareText = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
-/** 해시에 넣는 사실: 검수 기록·언어별 요약·추출 시각·모델·경고·근거 확인 표시·시연 표시를 뺀 전부 */
+/**
+ * 해시에 넣는 사실: 검수 기록·언어별 요약·추출 시각·모델·경고·근거 확인 표시·시연 표시를 뺀 전부.
+ * 기관 추가 안내(addenda)는 원문이 아니라 담당자가 이름을 걸고 확정한 문장이라 넣지 않는다 (덧붙여도 원문 검수가 풀리지 않는다)
+ */
 export function factFields(record: ProgramRecord): Record<string, unknown> {
-  const { review, summaries_by_language, extracted_at, model, warnings, evidence, source: { demo, ...source }, ...facts } = record
+  const { review, summaries_by_language, extracted_at, model, warnings, evidence, addenda, source: { demo, ...source }, ...facts } = record
   const quotes = evidence
     .map(({ field, quote }) => ({ field, quote }))
     .sort((a, b) => compareText(a.field, b.field) || compareText(a.quote, b.quote))

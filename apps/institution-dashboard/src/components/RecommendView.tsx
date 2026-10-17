@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Heatmap, InsufficientPanel } from './Charts'
-import { Icon } from './icons'
 import { Sheet } from './Sheet'
 import { ViewHeader } from './ViewHeader'
 import { ENROLLMENT_RATE, MAX_CAPACITY, MIN_CAPACITY } from '../data/assumptions'
@@ -38,7 +37,6 @@ export function RecommendView({ form, setForm }: Props) {
   const { locale, t } = useLanguage()
   const [capacityText, setCapacityText] = useState(String(form.capacity))
   const [selected, setSelected] = useState(0)
-  const [view, setView] = useState<'plan' | 'result'>('plan')
   const [detailsOpen, setDetailsOpen] = useState(false)
   const comboLimit = useMemo(readComboLimit, [])
   const result = useMemo(() => recommend(DEMO_RESPONSES, VENUES, toProgramPlan(form), { comboLimit }), [form, comboLimit])
@@ -70,11 +68,13 @@ export function RecommendView({ form, setForm }: Props) {
     t('classes', { n: form.classCount }),
     t('people', { n: form.capacity }),
   ].join(' · ')
-  const showResult = () => { setView('result'); window.scrollTo({ top: 0 }) }
+  // 좁은 화면에서는 조건 아래에 결과가 있으므로 '추천 보기'가 결과로 내려 줍니다 (넓은 화면은 바로 옆에 결과가 바뀝니다).
+  const showResult = () => document.getElementById('recommend-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
-  if (view === 'plan') return <div className="view">
-    <ViewHeader title={t('recommendTab')} />
-    <form className="plan-form" aria-label={t('planTitle')} onSubmit={(event) => { event.preventDefault(); showResult() }}>
+  return <div className="view">
+    <ViewHeader kicker={t('navPlan')} title={t('recommendTab')} lead={t('recommendLead')} />
+    <div className="recommend-layout">
+    <form className="card plan-form" aria-label={t('planTitle')} onSubmit={(event) => { event.preventDefault(); showResult() }}>
       <fieldset className="field">
         <legend>{t('programQuestion')}</legend>
         <div className="tiles tiles--five" role="radiogroup" aria-label={t('planField')}>
@@ -124,16 +124,10 @@ export function RecommendView({ form, setForm }: Props) {
       </details>
       <div className="form-actions">
         <button className="btn btn--ghost btn--lg" type="button" onClick={reset}>{t('reset')}</button>
-        <button className="btn btn--primary btn--lg" type="submit">{t('showRecommend')}</button>
+        <button className="btn btn--primary btn--lg narrow-only" type="submit">{t('showRecommend')}</button>
       </div>
     </form>
-  </div>
-
-  return <div className="view">
-    <ViewHeader title={t('recommendTab')} />
-    <div className="bar-top">
-      <button type="button" className="btn btn--quiet btn--back" onClick={() => { setView('plan'); window.scrollTo({ top: 0 }) }}><Icon name="back" />{t('filterOpen')}</button>
-    </div>
+    <div className="results-col" id="recommend-results">
     <p className="muted plan-summary">{summary}</p>
     <section aria-live="polite" className="results">
       {result.status === 'insufficient' && <InsufficientPanel onReset={reset} resetLabel={t('reset')} />}
@@ -174,6 +168,8 @@ export function RecommendView({ form, setForm }: Props) {
         </Sheet>
       </>}
     </section>
+    </div>
+    </div>
   </div>
 }
 

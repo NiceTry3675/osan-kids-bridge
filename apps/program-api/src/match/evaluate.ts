@@ -81,7 +81,9 @@ function uncertainItems(record: ProgramRecord, eligibility: MatchStatus, clock: 
     if (unmentioned.length) add(`${ELIGIBILITY_ITEM}: ${unmentioned.join(', ')}`)
   }
   if (record.audience === 'unknown' && !mentions('참여 대상') && !mentions('자녀가 참여')) add(AUDIENCE_ITEM)
-  return items
+  // 기관이 추가 안내로 답한 항목은 더 이상 '기관에 확인할 점'이 아니다
+  const resolved = new Set((record.addenda ?? []).flatMap((addendum) => addendum.resolves_items.map((item) => item.trim())))
+  return items.filter((item) => !resolved.has(item))
 }
 
 /** 원문이 기관의 언어 지원을 '통역'이라고 밝힘 */

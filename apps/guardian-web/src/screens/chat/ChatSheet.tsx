@@ -170,7 +170,10 @@ function AssistantTurn({ reply, viewing, onAsk, onOpenProgram }: { reply: AgentR
       {reply.citations.length > 0 && (
         <div className="chat-card chat-sources">
           <p className="chat-card-title">{t('chatSources')}</p>
-          {reply.citations.map((citation, index) => <blockquote key={index} lang="ko">“{citation.quote}”</blockquote>)}
+          {reply.citations.map((citation, index) => <blockquote key={index}>
+            <span lang="ko">“{citation.quote}”</span>
+            {citation.source === 'addendum' && <small className="chat-source-note">{t('chatAddendum')}</small>}
+          </blockquote>)}
         </div>
       )}
       {reply.inquiry && <InquiryCard inquiry={reply.inquiry} />}

@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { loadQuestions } from './data/questions'
-import { QuestionsView } from './components/QuestionsView'
+import App from './App'
 import { LanguageProvider } from './i18n'
 
 // 서버가 연결된 대시보드처럼: 주소는 모듈을 읽을 때 정해지므로 먼저 바꿉니다.
@@ -11,6 +11,9 @@ vi.hoisted(() => { vi.stubEnv('VITE_API_BASE_URL', 'http://api.test') })
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
 const LIVE = { programs: [{ program_id: 'osan-fc-sports-day', title: '운동회', questions: [{ question_ko: '주차할 곳이 있나요?', topic: 'other', count: 2, last_date: '2026-10-16' }] }] }
 const serve = (respond: (url: string, init?: RequestInit) => Promise<Response>) => vi.stubGlobal('fetch', vi.fn(respond))
+/** 질문 요청만 respond로 답하고, 관리자 API의 공고 목록은 비워 둔다 */
+const serveQuestions = (respond: (url: string, init?: RequestInit) => Promise<Response>) =>
+  serve((url, init) => (url.endsWith('/admin/programs') ? Promise.resolve(json({ now: '2026-10-15T01:00:00Z', programs: [] })) : respond(url, init)))
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
@@ -47,16 +50,20 @@ describe('보호자 질문 불러오기', () => {
 })
 
 describe('보호자 질문 화면', () => {
-  const renderView = () => render(<LanguageProvider><QuestionsView /></LanguageProvider>)
+  const renderView = () => {
+    window.location.hash = '#questions'
+    window.scrollTo = vi.fn() as typeof window.scrollTo
+    return render(<LanguageProvider><App /></LanguageProvider>)
+  }
 
   it('서버에 연결하지 못하면 짧게 알린다', async () => {
-    serve(async () => { throw new TypeError('fetch failed') })
+    serveQuestions(async () => { throw new TypeError('fetch failed') })
     renderView()
     expect(await screen.findByText('질문 서버에 연결하지 못해 시연용 예시만 보여요.')).toBeTruthy()
   })
 
   it('보호자 웹에서 들어온 질문은 점과 함께 글자로도 알린다', async () => {
-    serve(async () => json(LIVE))
+    serveQuestions(async () => json(LIVE))
     renderView()
     expect(await screen.findByText('보호자 웹에서 들어온 질문 2건 포함')).toBeTruthy()
     expect(screen.getByText('(보호자 웹에서 들어온 질문)').className).toBe('visually-hidden')
@@ -66,7 +73,7 @@ describe('보호자 질문 화면', () => {
   it('새로고침으로 취소된 요청이 늦게 끝나도 새 결과를 덮지 않는다', async () => {
     let late!: () => void
     const responses = [new Promise<Response>((resolve) => { late = () => resolve(json({ error: 'down' }, 503)) }), Promise.resolve(json(LIVE))]
-    serve(() => responses.shift()!)
+    serveQuestions(() => responses.shift()!)
     renderView()
     fireEvent.click(screen.getByText('새로고침'))
     expect(await screen.findByText('보호자 웹에서 들어온 질문 2건 포함')).toBeTruthy()
@@ -75,7 +82,7 @@ describe('보호자 질문 화면', () => {
   })
 
   it('화면을 떠나 취소된 요청은 처리되지 않은 오류를 남기지 않는다', async () => {
-    serve((_url, init) => new Promise<Response>((_resolve, reject) => init!.signal!.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')))))
+    serveQuestions((_url, init) => new Promise<Response>((_resolve, reject) => init!.signal!.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')))))
     renderView().unmount()
     await new Promise((resolve) => setTimeout(resolve, 0))
   })
