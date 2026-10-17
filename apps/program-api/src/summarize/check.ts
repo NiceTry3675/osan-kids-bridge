@@ -3,7 +3,7 @@ import { generateJson } from '../llm/gemini'
 import { gradeRangeLabel } from '../match/labels'
 import { factDates, factPhones, factTimes } from './facts'
 import type { DateFact, SummaryFacts } from './facts'
-import { listedRemaining, schoolGrade } from './format'
+import { listedClasses, listedRemaining, schoolGrade, WEEKDAY_NAMES } from './format'
 import { buildVerifyPrompt, VERIFY_SCHEMA, VERIFY_SYSTEM_PROMPT } from './prompt'
 import type { VerifyKind } from './prompt'
 
@@ -12,6 +12,8 @@ import type { VerifyKind } from './prompt'
 interface LanguageRules {
   /** 한 줄 최대 글자 수 (1줄은 제목 길이만큼, 베트남어·중국어는 번역까지 두 배 더 허용) */
   maxLine: number
+  /** 요일마다 따로 운영하는 반을 하나 더 쓸 때 2줄에 더 허용하는 글자 수 ('B반(금요일)은 10월 23일(금)부터 12월 4일(금)까지 6번') */
+  classLine: number
   /** 줄마다 있어야 하는 그 언어의 글자 */
   script: RegExp
   free: RegExp
@@ -19,6 +21,8 @@ interface LanguageRules {
   unknown: RegExp
   /** 원문의 '추후 안내'를 옮긴 말 (대략의 일정이 있을 때만 확인 필요 대신 받는다) */
   later: RegExp
+  /** 신청 기간이 공고 안에서 서로 다르게 적혔다는 말 */
+  conflict: RegExp
   multicultural: RegExp
   /** 초등·중학교·고등학교 (한국 학제) */
   schools: [RegExp, RegExp, RegExp]
@@ -35,6 +39,8 @@ interface LanguageRules {
   /** 숫자를 글자로 쓴 경우 (검사할 수 없어 막는다) */
   wordNumber: RegExp | null
   weekdays: { pattern: RegExp; read: (match: RegExpMatchArray) => Weekday | null }
+  /** 날짜 표기 (횟수를 셀 때 날짜의 수를 빼려고) */
+  datePattern: RegExp
   dates: (text: string) => DateMention[]
 }
 
@@ -97,10 +103,12 @@ function viDates(text: string): DateMention[] {
 const RULES: Record<DisplayLanguage, LanguageRules> = {
   'ko-easy': {
     maxLine: 140,
+    classLine: 40,
     script: /\p{Script=Hangul}/u,
     free: /무료/,
     unknown: /확인|물어|문의|알 수 없|미정|정해지지|나와 있지 않|적혀 있지 않/,
     later: /나중에\s*(?:알려|안내)|추후|따로\s*(?:알려|안내)/,
+    conflict: /다르게|달라|다른|서로\s*다|불일치|맞지\s*않|차이/,
     multicultural: /다문화|결혼\s*이민|이주\s*배경|중도\s*입국/,
     schools: [/초등/, /중학|중등/, /고등학|고교/],
     judgement: /신청\s*중|접수\s*중|모집\s*중|마감(?:됐|되었|했|이에요|입니다|돼)|참여할 수 있|참여 가능/,
@@ -111,14 +119,17 @@ const RULES: Record<DisplayLanguage, LanguageRules> = {
     languageNames: { vi: /베트남어/, zh: /중국어/, en: /영어/ },
     wordNumber: /(?<!\p{Script=Hangul})(?:한|두|세|네|다섯|여섯|일곱|여덟|아홉|열)\s?(?:번|회|명|살|가족|시간)/u,
     weekdays: { pattern: /([월화수목금토일])요일|\(\s*([월화수목금토일])\s*\)/g, read: (match) => KO_WEEKDAYS[match[1] ?? match[2]] ?? null },
+    datePattern: KO_DATE,
     dates: (text) => sequentialDates(text, KO_DATE, KO_WEEKDAYS),
   },
   vi: {
     maxLine: 300,
+    classLine: 70,
     script: /[ăâđêôơưàáạảãằắặẳẵầấậẩẫèéẹẻẽềếệểễìíịỉĩòóọỏõồốộổỗờớợởỡùúụủũừứựửữỳýỵỷỹ]/i,
     free: /miễn phí/i,
     unknown: /chưa rõ|chưa có thông tin|không có thông tin|chưa xác định|không rõ|không ghi|chưa ghi|cần (?:hỏi|xác nhận|kiểm tra)|hãy hỏi|vui lòng hỏi/i,
     later: /(?:thông báo|báo) sau|sẽ (?:được )?thông báo/i,
+    conflict: /khác nhau|không (?:khớp|giống|thống nhất|nhất quán|trùng)|chênh lệch|sai khác|ghi khác/i,
     multicultural: /đa văn h(?:óa|oá)|kết hôn|nhập cư|nhập cảnh giữa chừng|di trú|di cư/i,
     schools: [/tiểu học|cấp 1/i, /trung học cơ sở|THCS|cấp 2/i, /trung học phổ thông|THPT|cấp 3/i],
     judgement: /đang (?:nhận|mở|tiếp nhận) đăng ký|đã (?:hết hạn|đóng|kết thúc)|có thể tham gia|được tham gia/i,
@@ -138,14 +149,17 @@ const RULES: Record<DisplayLanguage, LanguageRules> = {
       ].join('|'), 'gu'),
       read: (match) => viWeekday(match[0]),
     },
+    datePattern: VI_DATE,
     dates: viDates,
   },
   zh: {
     maxLine: 120,
+    classLine: 35,
     script: /\p{Script=Han}/u,
     free: /免费/,
     unknown: /待确认|需确认|需要确认|请向|请咨询|需咨询|未注明|未公布|不详|未确定|尚未|不明/,
     later: /另行通知|稍后通知|后续通知|另行告知/,
+    conflict: /不一致|不同|不符|出入|差异|不一样/,
     multicultural: /多元文化|多文化|移民|中途入[国境]/,
     schools: [/小学/, /初中|初级中学|初高中/, /高中/],
     judgement: /正在报名|报名中|已截止|报名已结束|已结束报名|可以参加|可参加|能参加/,
@@ -156,6 +170,7 @@ const RULES: Record<DisplayLanguage, LanguageRules> = {
     languageNames: { vi: /越南语|越南文/, zh: /中文|汉语|普通话|华语/, en: /英语/ },
     wordNumber: /(?<![星期周礼拜同统唯第每])[一二三四五六七八九十两]+(?=次|个|名|人|岁|年级|韩元|元(?!宵)|月|日|号|点|节|期|天|小时|分钟|层|楼|周)/u,
     weekdays: { pattern: /(?:星期|礼拜|周)([一二三四五六日天])(?!次)/g, read: (match) => ZH_WEEKDAYS[match[1]] ?? null },
+    datePattern: ZH_DATE,
     dates: (text) => sequentialDates(text, ZH_DATE, ZH_WEEKDAYS),
   },
 }
@@ -227,6 +242,8 @@ interface LineScan {
   dates: DateMention[]
   weekdays: Weekday[]
   numbers: number[]
+  /** 날짜 밖의 수 (횟수·정원 등) */
+  counts: number[]
 }
 
 function scanLine(line: string, rules: LanguageRules): LineScan {
@@ -246,8 +263,10 @@ function scanLine(line: string, rules: LanguageRules): LineScan {
     .map((match) => rules.weekdays.read(match))
     .filter((weekday): weekday is Weekday => weekday !== null)
   const dates = rules.dates(stripped)
-  const numbers = numberTokens(stripped.replace(rules.weekdays.pattern, ' '))
-  return { phones, times, dates, weekdays, numbers }
+  const withoutWeekdays = stripped.replace(rules.weekdays.pattern, ' ')
+  const numbers = numberTokens(withoutWeekdays)
+  const counts = numberTokens(withoutWeekdays.replace(rules.datePattern, ' '))
+  return { phones, times, dates, weekdays, numbers, counts }
 }
 
 /** 사실에서 끌어낼 수 있는 수: 날짜·시각 부분, 학년·나이, 횟수, 정원, 비용, 사실 문자열 속 숫자 */
@@ -263,7 +282,7 @@ function allowedNumbers(facts: SummaryFacts): Set<number> {
   }
   for (const grade of facts.grade_range ?? []) add(grade, schoolGrade(grade).grade)
   if (facts.age_range) add(facts.age_range[0] > 0 ? facts.age_range[0] : null, facts.age_range[1] < 99 ? facts.age_range[1] : null)
-  add(facts.session_count, facts.sessions.length, facts.sessions.length + facts.undated_sessions, facts.capacity)
+  add(facts.session_count, facts.sessions.length, facts.sessions.length + facts.undated_sessions, facts.capacity, ...facts.classes.map((item) => item.count))
   if (facts.cost_krw) add(facts.cost_krw)
   const texts = [
     facts.title, facts.institution, facts.target_raw, facts.cost_raw, facts.korean_level_required, facts.venue,
@@ -297,8 +316,9 @@ function lineIssues(line: string, index: number, facts: SummaryFacts, language: 
   if (!line.trim()) return [`${label}이 비어 있음`]
   const issues: string[] = []
   const length = [...line].length
-  // 1줄은 제목이 들어가므로 그만큼 더 허용한다 (베트남어·중국어는 제목 원문과 번역이 함께 들어간다)
-  const max = rules.maxLine + (index === 0 ? facts.title.length * (language === 'ko-easy' ? 1 : 2) : 0)
+  // 1줄은 제목이 들어가므로 그만큼 더 허용한다 (베트남어·중국어는 제목 원문과 번역이 함께 들어간다). 2줄은 반마다 기간을 따로 쓰는 만큼 더 허용한다
+  const classes = listedClasses(facts)?.length ?? 0
+  const max = rules.maxLine + (index === 0 ? facts.title.length * (language === 'ko-easy' ? 1 : 2) : 0) + (index === 1 && classes > 1 ? (classes - 1) * rules.classLine : 0)
   if (length > max) issues.push(`${label}이 너무 김 (${length}자, 최대 ${max}자)`)
   if (length < MIN_LINE) issues.push(`${label}이 너무 짧음 (${length}자)`)
   if (/\n/.test(line)) issues.push(`${label} 안에 줄바꿈이 있음`)
@@ -380,6 +400,12 @@ function requiredIssues(lines: string[], scans: LineScan[], facts: SummaryFacts,
       if (!hasDate(scans, session)) issues.push(`남은 회차 날짜(${md(monthDay(session))})가 없음`)
     }
     for (const fact of facts.skipped_dates) if (!hasDate(scans, fact)) issues.push(`쉬는 날(${md(monthDay(fact))})이 없음`)
+    // 요일마다 따로 운영하는 반은 반마다 기간·횟수를 쓴다 (두 반을 합친 총 횟수의 한 과정으로 쓰지 않게)
+    for (const item of listedClasses(facts) ?? []) {
+      const label = item.name ?? `${WEEKDAY_NAMES['ko-easy'][item.weekday]}요일 반`
+      if (![item.from, item.to].every((fact) => hasDate(scans, fact))) issues.push(`${label}의 기간(${md(monthDay(item.from))}~${md(monthDay(item.to))})이 없음`)
+      if (!scans[1]?.counts.includes(item.count)) issues.push(`2줄에 ${label}의 회차 수(${item.count})가 없음`)
+    }
   } else if (facts.period_start || facts.period_end) {
     for (const fact of [facts.period_start, facts.period_end]) {
       if (fact && !hasDate(scans, fact)) issues.push(`운영 기간 날짜(${md(monthDay(fact))})가 없음`)
@@ -407,6 +433,7 @@ function requiredIssues(lines: string[], scans: LineScan[], facts: SummaryFacts,
   if (end && !hasDate(scans, end)) issues.push(`신청 마감 날짜(${md(monthDay(end))})가 없음`)
   if (start && start.date > facts.today && !hasDate(scans, start)) issues.push(`신청 시작 날짜(${md(monthDay(start))})가 없음`)
   if (!start && !end && !facts.application_note && !rules.unknown.test(third)) issues.push('3줄에 신청 기간 확인 필요라는 말이 없음')
+  if (facts.application_conflict && !rules.conflict.test(third)) issues.push('3줄에 공고 안의 신청 기간이 서로 다르게 적혀 있다는 말이 없음')
   // 온라인 신청은 어디서 신청하는지('오산시가족센터 홈페이지')가 빠지면 '온라인으로 신청'만 남는다
   for (const method of facts.application_methods) {
     if (method.purpose !== 'apply' || method.type !== 'online' || !method.label) continue

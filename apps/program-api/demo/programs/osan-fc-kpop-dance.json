@@ -6,7 +6,7 @@
   "audience": "child",
   "target_type": "multicultural_family",
   "target_raw": "만 5세 ~ 초등학교 6학년 다문화가족 자녀 (성별 무관)",
-  "description": "오산시가족센터에서 만 5세부터 초등학교 6학년 다문화가족 자녀를 대상으로 K-POP 기본 동작과 방송댄스 안무를 배우는 프로그램을 운영합니다.",
+  "description": "오산시가족센터에서 만 5세부터 초등학교 6학년 다문화가족 자녀를 대상으로 K-POP 기본 동작과 방송댄스 안무를 배우는 프로그램을 진행합니다.",
   "grade_range": null,
   "age_range": null,
   "eligibility_requirements": [
@@ -158,13 +158,13 @@
   "application_end": "2026-10-17T00:00",
   "application_methods": [
     {
-      "type": "online",
-      "label": "신청 QR코드"
+      "type": "phone",
+      "label": "문의",
+      "phone": "031-376-3428"
     },
     {
-      "type": "phone",
-      "label": "031-376-3428 (가족사업팀)",
-      "phone": "031-376-3428"
+      "type": "online",
+      "label": "신청 QR코드"
     }
   ],
   "application_note": null,
@@ -172,12 +172,12 @@
     "참가비",
     "대상 학년·나이",
     "보호자·형제자매 동반 가능 여부",
-    "A반과 B반 중복 신청 가능 여부",
-    "온라인 신청 QR코드 세부 접속 주소"
+    "신청 기간 불일치(웹 본문 9.28~10.14와 상단 접수기간 10.01~10.17)"
   ],
   "notices": [
-    "우선순위: 오산시가족센터 신규 다문화 가족",
-    "프로그램 내용: K-POP 기본 동작 배우기, 쉽고 재미있는 방송댄스 안무, 음악에 맞춰 한 곡 완성하기"
+    "A반(월요일)과 B반(금요일)은 따로 운영하는 반으로, 반마다 6회이고 각 반 6명입니다.",
+    "프로그램 내용: K-POP 기본 동작 배우기, 쉽고 재미있는 방송댄스 안무, 음악에 맞춰 한 곡 완성하기",
+    "우선순위: 오산시가족센터 신규 다문화 가족"
   ],
   "evidence": [
     {
@@ -192,7 +192,7 @@
     },
     {
       "field": "target_type",
-      "quote": "대상: 만 5세 ~ 초등학교 6학년 다문화가족 자녀 (성별 무관)",
+      "quote": "만 5세 ~ 초등학교 6학년 다문화가족 자녀 (성별 무관)",
       "verified": true
     },
     {
@@ -202,17 +202,12 @@
     },
     {
       "field": "audience",
-      "quote": "대상: 만 5세 ~ 초등학교 6학년 다문화가족 자녀 (성별 무관)",
+      "quote": "만 5세 ~ 초등학교 6학년 다문화가족 자녀",
       "verified": true
     },
     {
       "field": "eligibility_requirements",
       "quote": "다문화가족 자녀",
-      "verified": true
-    },
-    {
-      "field": "eligibility_requirements",
-      "quote": "오산시가족센터 신규 다문화 가족",
       "verified": true
     },
     {
@@ -223,11 +218,6 @@
     {
       "field": "period",
       "quote": "행사기간 : 2026-10-19 ~ 2026-12-04",
-      "verified": true
-    },
-    {
-      "field": "period",
-      "quote": "운영 기간: 2026. 10. 19.(월) ~ 12. 04.(금)",
       "verified": true
     },
     {
@@ -366,8 +356,8 @@
       "verified": true
     },
     {
-      "field": "application_methods.online",
-      "quote": "신청: 신청 QR코드",
+      "field": "application_period",
+      "quote": "신청 기간: 2026. 9. 28.(월) ~ 10. 14.(수)",
       "verified": true
     },
     {
@@ -376,22 +366,32 @@
       "verified": true
     },
     {
+      "field": "application_methods.online",
+      "quote": "신청: 신청 QR코드",
+      "verified": true
+    },
+    {
       "field": "notices",
-      "quote": "우선순위: 오산시가족센터 신규 다문화 가족",
+      "quote": "A반(월요일)과 B반(금요일)은 따로 운영하는 반으로, 반마다 6회이고 각 반 6명입니다.",
       "verified": true
     },
     {
       "field": "notices",
       "quote": "프로그램 내용: K-POP 기본 동작 배우기, 쉽고 재미있는 방송댄스 안무, 음악에 맞춰 한 곡 완성하기",
       "verified": true
+    },
+    {
+      "field": "notices",
+      "quote": "우선순위: 오산시가족센터 신규 다문화 가족",
+      "verified": true
     }
   ],
   "summaries_by_language": {
     "ko-easy": {
       "lines": [
-        "오산시가족센터가 '다문화가족 자녀성장프로그램 k-pop 방송댄스'를 열어요. 다문화가족 자녀가 대상이에요. 나이와 학년은 기관에 물어보세요.",
-        "10월 19일(월)부터 12월 4일(금)까지 월·금요일에 총 12회 해요. 시간은 15:30~17:30이에요. 11월 6일(금), 11월 30일(월)은 쉬어요. 장소는 오산시가족센터 2층 교류소통공간이에요.",
-        "비용은 기관에 물어보세요. 신청은 10월 1일(목) 00:00부터 10월 16일(금)까지 온라인 신청 (신청 QR코드)으로 해요. 문의는 031-376-3428이에요."
+        "'다문화가족 자녀성장프로그램 k-pop 방송댄스'는 오산시가족센터가 열어요. 만 5세 ~ 초등학교 6학년 다문화가족 자녀가 대상이에요.",
+        "A반(월요일)은 10월 19일(월)부터 11월 23일(월)까지 6번, B반(금요일)은 10월 23일(금)부터 12월 4일(금)까지 6번 해요. 11월 6일(금)은 쉬어요. 시간은 15:30~17:30이고 오산시가족센터 2층 교류소통공간에서 해요.",
+        "비용은 기관에 물어보세요. 10월 1일(목) 00:00부터 10월 16일(금)까지 온라인 신청 (신청 QR코드)으로 신청해요. 공고 안에 신청 기간이 다르게 적힌 곳도 있으니 기관에 확인하고, 문의는 031-376-3428로 해요."
       ],
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
@@ -399,14 +399,14 @@
     },
     "vi": {
       "lines": [
-        "Trung tâm Gia đình thành phố Osan (오산시가족센터) tổ chức chương trình “다문화가족 자녀성장프로그램 k-pop 방송댄스” (Chương trình hỗ trợ con em gia đình đa văn hóa phát triển: nhảy K-pop). Đối tượng là con em gia đình đa văn hóa.",
-        "Chương trình diễn ra từ 19/10 (Thứ Hai) đến 4/12 (Thứ Sáu) vào Thứ Hai và Thứ Sáu, tổng cộng 12 buổi, thời gian là 15:30–17:30 tại 오산시가족센터 2층 교류소통공간 (không gian giao lưu kết nối tầng 2 Trung tâm Gia đình thành phố Osan). Ngày 6/11 (Thứ Sáu) và 30/11 (Thứ Hai) sẽ nghỉ.",
-        "Đăng ký từ 1/10 (Thứ Năm) 00:00 đến 16/10 (Thứ Sáu) qua đăng ký trực tuyến (신청 QR코드 – mã QR đăng ký). Liên hệ hỏi thông tin qua 031-376-3428. Hãy hỏi đơn vị tổ chức về chi phí cùng độ tuổi và khối lớp của đối tượng tham gia."
+        "오산시가족센터 (Trung tâm Gia đình thành phố Osan) mở chương trình “다문화가족 자녀성장프로그램 k-pop 방송댄스” (Chương trình phát triển con em gia đình đa văn hóa: Nhảy K-pop). Đối tượng là con em gia đình đa văn hóa từ 5 tuổi đến lớp 6 tiểu học (không phân biệt giới tính).",
+        "Lớp A (Thứ Hai) học 6 buổi từ 19/10 (Thứ Hai) đến 23/11 (Thứ Hai), lớp B (Thứ Sáu) học 6 buổi từ 23/10 (Thứ Sáu) đến 4/12 (Thứ Sáu). Thời gian là 15:30–17:30 tại 오산시가족센터 2층 교류소통공간 (không gian giao lưu và kết nối tầng 2 Trung tâm Gia đình thành phố Osan), ngày 6/11 (Thứ Sáu) nghỉ.",
+        "Hãy hỏi đơn vị tổ chức về chi phí. Đăng ký từ 1/10 (Thứ Năm) 00:00 đến 16/10 (Thứ Sáu) qua đăng ký trực tuyến (신청 QR코드 – mã QR đăng ký). Trong thông báo có chỗ ghi thời gian đăng ký khác nhau nên hãy xác nhận lại với đơn vị tổ chức, thắc mắc xin liên hệ số 031-376-3428."
       ],
       "heading": {
-        "title": "Chương trình hỗ trợ con em gia đình đa văn hóa phát triển: Nhảy K-pop",
+        "title": "Chương trình phát triển con em gia đình đa văn hóa: Nhảy K-pop",
         "institution": "Trung tâm Gia đình thành phố Osan (오산시가족센터)",
-        "target": "Con em gia đình đa văn hóa từ tròn 5 tuổi đến lớp 6 tiểu học (không phân biệt giới tính)"
+        "target": "Con em gia đình đa văn hóa từ 5 tuổi đến lớp 6 tiểu học (không phân biệt giới tính)"
       },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
@@ -414,14 +414,14 @@
     },
     "zh": {
       "lines": [
-        "“다문화가족 자녀성장프로그램 k-pop 방송댄스”（多元文化家庭子女成长项目：K-POP舞蹈）由오산시가족센터（乌山市家庭中心）举办。对象为多元文化家庭子女，具体年龄与学年请向机构确认。",
-        "活动自10月19日（周一）至12月4日（周五）逢周一和周五进行，共12次，时间为15:30–17:30，11月6日（周五）与11月30日（周一）不上课。地点在오산시가족센터 2층 교류소통공간（乌山市家庭中心2楼交流沟通空间）。",
-        "费用请向机构确认。报名时间为10月1日（周四）00:00至10月16日（周五），通过网上报名 (신청 QR코드，即申请二维码在线报名)。咨询电话为031-376-3428。"
+        "오산시가족센터（乌山市家庭中心）举办“다문화가족 자녀성장프로그램 k-pop 방송댄스”（多元文化家庭子女成长项目：K-POP舞蹈），对象为满5周岁至小学6年级多元文化家庭子女（性别不限）。",
+        "A班（周一）为10月19日（周一）至11月23日（周一）进行6次，B班（周五）为10月23日（周五）至12月4日（周五）进行6次，11月6日（周五）停课，时间均为15:30–17:30，地点为오산시가족센터 2층 교류소통공간（乌山市家庭中心2楼交流沟通空间）。",
+        "费用请向机构确认。报名时间为10月1日（周四） 00:00至10月16日（周五），公告内报名时间标注有不一致之处，请向机构确认。报名方式为网上报名（신청 QR코드，即申请二维码），咨询请联系031-376-3428。"
       ],
       "heading": {
         "title": "多元文化家庭子女成长项目：K-POP舞蹈",
         "institution": "乌山市家庭中心（오산시가족센터）",
-        "target": "满5岁～小学6年级多元文化家庭子女（不限性别）"
+        "target": "满5岁～小学6年级多元文化家庭子女（性别不限）"
       },
       "status": "machine_checked",
       "generated_at": "2026-10-15T01:00:00.000Z",
@@ -434,21 +434,21 @@
     "files": [
       "page.txt"
     ],
-    "content_hash": "a9bab814eaf3c12d3cc224e8caf34d6365f7cde3f6c475d84dc9caf36cdda702"
+    "content_hash": "fdd10ef4000dc2c15daacee219b6090ccca97520c58e2de73ee1783a98e9e5b0"
   },
   "extracted_at": "2026-10-15T01:00:00.000Z",
   "model": "gemini-3.8-flash",
   "warnings": [
     "학년 범위: 값이 근거 인용과 맞지 않아 비웠습니다 (값: '1~6', 인용: '초등학교 6학년')",
     "나이 범위: 값이 근거 인용과 맞지 않아 비웠습니다 (값: '5~99', 인용: '만 5세')",
-    "참석 방식: 값이 근거 인용과 맞지 않아 비웠습니다 (값: 'choose_one', 인용: 'A반(월요일)')",
-    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-10-19, 회차 2026-10-26, 회차 2026-11-02, 회차 2026-11-09, 회차 2026-11-16, 회차 2026-11-23, 회차 2026-10-23, 회차 2026-10-30, 회차 2026-11-13, 회차 2026-11-20, 회차 2026-11-27, 회차 2026-12-04"
+    "참석 방식: 값이 근거 인용과 맞지 않아 비웠습니다 (값: 'choose_one', 인용: 'A반(월요일)과 B반(금요일)은 따로 운영하는 반으로, 반마다 6회이고 각 반 6명입니다.')",
+    "원문 날짜에 연도가 없어 2026년으로 추정했습니다 (원문 확인일 2026-10-15 기준): 회차 2026-10-19, 회차 2026-10-23, 회차 2026-10-26, 회차 2026-10-30, 회차 2026-11-02, 회차 2026-11-09, 회차 2026-11-13, 회차 2026-11-16, 회차 2026-11-20, 회차 2026-11-23, 회차 2026-11-27, 회차 2026-12-04"
   ],
   "review": {
     "status": "approved",
     "reviewed_at": "2026-10-15T01:00:00.000Z",
     "reviewer": "시연 데이터",
     "notes": null,
-    "facts_hash": "f483edb186776eca691366204c2f75b46c53446ab279f499be039e5b4e960078"
+    "facts_hash": "175a0274d11ca044f31c0537a64839ea1fecf06e6ccc3101165aacd38cf3bad6"
   }
 }

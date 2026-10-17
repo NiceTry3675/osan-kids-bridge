@@ -155,6 +155,30 @@ describe('기관에 확인할 점 (보호자 웹 UncertainItem)', () => {
     ])
   })
 
+  it('신청 기간을 묻는 항목은 운영 기간이 아니라 원문의 신청 기간 표현을 붙인다 (두 곳에 다르게 적혔으면 둘 다)', () => {
+    const evidence = [
+      { field: 'period', quote: '행사기간 : 2026-10-19 ~ 2026-12-04', verified: true },
+      { field: 'application_period', quote: '접수기간 : 2026-10-01 00:00 ~ 2026-10-17 00:00', verified: true },
+      { field: 'application_period', quote: '신청 기간: 2026. 9. 28.(월) ~ 10. 14.(수)', verified: true },
+      { field: 'application_period', quote: '찾지 못한 인용', verified: false },
+    ]
+    expect(guardianUncertainItems(record({ evidence }), ['상단 접수기간과 본문 신청 기간의 불일치'])).toEqual([
+      { topic: 'schedule', note_ko: '접수기간 : 2026-10-01 00:00 ~ 2026-10-17 00:00 / 신청 기간: 2026. 9. 28.(월) ~ 10. 14.(수)' },
+    ])
+    expect(guardianUncertainItems(record({ evidence: evidence.slice(0, 2) }), ['접수 마감 일시 불일치'])).toEqual([
+      { topic: 'schedule', note_ko: '접수기간 : 2026-10-01 00:00 ~ 2026-10-17 00:00' },
+    ])
+    // 운영 일정이나 운영 종료일과 견주는 항목은 운영 기간 표현 그대로
+    expect(guardianUncertainItems(record({ evidence }), ['운영 날짜·시간'])).toEqual([{ topic: 'schedule', note_ko: '행사기간 : 2026-10-19 ~ 2026-12-04' }])
+    expect(guardianUncertainItems(record({ evidence }), ['신청 마감(10월 31일)이 운영 종료일(10월 17일)보다 늦은 점'])).toEqual([
+      { topic: 'schedule', note_ko: '행사기간 : 2026-10-19 ~ 2026-12-04' },
+    ])
+    // 신청 기간 인용이 없으면 주제의 원문 표현으로 돌아간다
+    expect(guardianUncertainItems(record({ evidence: evidence.slice(0, 1) }), ['신청 기간 불일치'])).toEqual([
+      { topic: 'schedule', note_ko: '행사기간 : 2026-10-19 ~ 2026-12-04' },
+    ])
+  })
+
   it('응답에는 주제로 묶은 항목과 한국어 항목을 함께 담는다', () => {
     const program = evaluateProgram(record({ uncertain_items: ['형제자매 동반 가능 여부'] }), null, NOW)
     expect(program.uncertain_items_ko).toEqual(['형제자매 동반 가능 여부', '참여 자격 확인 필요: 다문화가족'])
