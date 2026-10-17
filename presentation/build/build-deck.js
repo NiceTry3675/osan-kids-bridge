@@ -214,7 +214,7 @@ pres.addSection({ title: '문제' })
 }
 {
   const slide = content('문제 ④ 양쪽의 단절', '보호자는 포스터에서 막히고, 기관은 어디서 막히는지 모른다',
-    '출처: 대구광역시 「2026년 민원행정 및 제도개선 추진계획」 7쪽(120 음성 AI 상담 2025.4~12, 11,932건 중 AI 완료 4,503건). 챗봇 화면은 팀이 직접 사용해 캡처', '문제')
+    '출처: 대구광역시 「2026년 민원행정 및 제도개선 추진계획」 7쪽(120 음성 AI 상담, 2025.4~12, AI 완료 4,503건/11,932건). 챗봇 화면: 경기도 이주민 포털(팀 캡처)', '문제')
   const columns = [
     // 근거 없는 경향('믿기 쉽다')으로 단정하지 않고 위험으로 쓴다
     ['보호자', ['한국어 포스터만으로는 대상·일정을 판단하기 어렵다', '공고에 없는 것(준비물·비용)도 한국어로 물어야 한다', '자격을 단정한 안내를 그대로 믿을 위험이 있다']],
@@ -235,7 +235,7 @@ pres.addSection({ title: '문제' })
     { text: '차량등록·여권 등 3개 분야, 2025.4~12, 11,932건. 나머지는 상담원 연결(13%)이나 중도 포기(49%)로 끝났다', options: {} },
   ], { x: 2.85, y: 5.5, w: 5.45, h: 1.15, fontSize: 14, color: C.background1, valign: 'middle' })
   picture(slide, img('problem-chatbot.png'), { x: 9.4, y: 1.6, w: 2.86, h: 4.9 })
-  text(slide, '기존 공공 AI 챗봇 (팀이 직접 사용)', { x: 8.85, y: 6.6, w: 3.95, h: 0.3, fontSize: 11, color: MUTED, align: 'center' })
+  text(slide, '경기도 이주민 포털 챗봇 (팀이 직접 사용)', { x: 8.85, y: 6.6, w: 3.95, h: 0.3, fontSize: 11, color: MUTED, align: 'center' })
 }
 
 // =========================================================
@@ -485,7 +485,7 @@ pres.addSection({ title: '라이프케어와 실행' })
 pres.addSection({ title: '마무리' })
 {
   const slide = pres.addSlide({ masterName: 'COVER', sectionTitle: '마무리' })
-  slide.addText('2분 시연 영상과 함께 제출합니다', { placeholder: 'kicker' })
+  slide.addText('2분 시연영상은 별도 파일로 제출합니다', { placeholder: 'kicker' })
   slide.addText([
     { text: '읽기 · 연결 · 편성', options: { breakLine: true } },
     { text: '아이가 자라는 동안 계속 도는', options: { fontSize: 32, breakLine: true } },
