@@ -51,7 +51,8 @@ pres.defineSlideMaster({
   objects: [
     { placeholder: { options: { name: 'kicker', type: 'body', x: 0.6, y: 0.32, w: 9.5, h: 0.36, fontSize: 13, bold: true, color: C.accent1, margin: 0, align: 'left' }, text: '' } },
     { placeholder: { options: { name: 'title', type: 'title', x: 0.6, y: 0.68, w: 12.1, h: 0.75, fontSize: 28, bold: true, color: C.text1, valign: 'top', margin: 0, align: 'left' }, text: '' } },
-    { placeholder: { options: { name: 'source', type: 'body', x: 0.6, y: 6.98, w: 11.2, h: 0.32, fontSize: 10, color: MUTED, margin: 0, valign: 'middle', align: 'left' }, text: '' } },
+    // 출처는 한 줄(맑은 고딕 10pt 기준 상자 폭의 95% 안쪽). 쪽 번호(x 12.25) 앞까지 쓴다
+    { placeholder: { options: { name: 'source', type: 'body', x: 0.6, y: 6.98, w: 11.5, h: 0.32, fontSize: 10, color: MUTED, margin: 0, valign: 'middle', align: 'left' }, text: '' } },
   ],
   slideNumber: { x: 12.25, y: 6.98, w: 0.5, h: 0.32, fontSize: 10, color: MUTED, align: 'right' },
 })
@@ -102,8 +103,8 @@ function arrow(slide, { x, y, w = 0, h = 0, color = C.accent1, width = 2.25 }) {
 }
 
 function stat(slide, { x, y, w, value, label, color = C.accent1, valueSize = 40 }) {
-  // 큰 숫자는 아래에 맞춰 두고, 글자 크기만큼 상자를 위로 키운다
-  const h = Math.max(0.75, (valueSize * 1.3) / 72)
+  // 큰 숫자는 아래에 맞춰 두고, 글자 크기만큼 상자를 위로 키운다(맑은 고딕 한 줄 높이 ≈ 글자 크기의 1.33배)
+  const h = Math.max(0.75, (valueSize * 1.35) / 72)
   text(slide, value, { x, y: y + 0.75 - h, w, h, fontSize: valueSize, bold: true, color, valign: 'bottom' })
   text(slide, label, { x, y: y + 0.82, w, h: 0.7, fontSize: 14, color: C.text1 })
 }
@@ -144,7 +145,8 @@ pres.addSection({ title: '시작' })
 pres.addSection({ title: '문제' })
 {
   const slide = content('문제 ① 오산이라는 지역', '오산은 주민 11명 중 1명이 외국인주민인 도시다',
-    '출처: 행정안전부 「2024 지방자치단체 외국인주민 현황」(2024.11.1 기준) 설명자료 9·11·22·36·86쪽. 비율의 분모는 인구주택총조사 총인구', '문제')
+    // 2022·2023년 외국인주민 수(21,046·22,523명)는 2023년판 원문에서 확인했다
+    '출처: 행정안전부 「지방자치단체 외국인주민 현황」 2024년판(2024.11.1 기준) 보도자료·설명자료, 2022·2023년 값은 2023년판. 분모는 인구주택총조사 총인구', '문제')
   stat(slide, { x: 0.6, y: 1.65, w: 4.2, value: '9.3%', label: '오산 총인구 대비 외국인주민 (23,550명)\n전국 5.0%의 1.9배, 경기 6.1%의 1.5배', valueSize: 54 })
   stat(slide, { x: 0.6, y: 3.45, w: 4.2, value: '4,024가구', label: '오산의 다문화가구 (가구원 10,557명)', valueSize: 36 })
   stat(slide, { x: 0.6, y: 5.0, w: 4.2, value: '+23.8%', label: '오산 결혼이민자 2년간 증가 (2022 → 2024)', valueSize: 36 })
@@ -164,11 +166,12 @@ pres.addSection({ title: '문제' })
   })
 }
 {
-  const slide = content('문제 ② 보호자의 어려움', '보호자 10명 중 7~8명이 양육에 어려움을 겪고, 큰 벽은 \'정보\'다',
-    '출처: 성평등가족부 「2024 전국다문화가족실태조사」 별첨 7·9·11·14쪽(2025.7.31), 교육부 「2026 교육기본통계」(2026.4.1 기준). 양육 어려움은 2021년보다 낮아졌다', '문제')
+  const slide = content('문제 ② 보호자의 어려움', '보호자 10명 중 7~8명이 양육이 어렵고, 비용과 정보가 벽이다',
+    '출처: 여성가족부(현 성평등가족부) 「2024 전국다문화가족실태조사」 별첨 7·9·11·14쪽, 교육부 「2026 교육기본통계」(2026.4.1 기준). 양육 어려움은 2021년보다 줄었다', '문제')
+  // 21.8%는 1순위 어려움 중 비용 부담(24.9%) 다음 2위다. '가장 큰'으로 쓰지 않는다
   const items = [
     ['78.2%', '6~24세 자녀를 둔\n보호자의 양육 어려움'],
-    ['21.8%', '그중 1순위 어려움\n\'학업·진학·진로 정보 부족\''],
+    ['21.8%', '1순위 어려움 중 비용 다음\n\'학업·진학·진로 정보 부족\''],
     ['31.2%', '모임·활동 참여가 어려운\n이유 \'정보 부족\''],
     ['17.2%', '지난 1년 가족센터를\n이용한 비율'],
   ]
@@ -176,7 +179,7 @@ pres.addSection({ title: '문제' })
     const x = 0.6 + index * 3.07
     card(slide, { x, y: 1.6, w: 2.85, h: 2.05, fill: index === 1 || index === 2 ? C.accent5 : C.background2 })
     text(slide, value, { x: x + 0.25, y: 1.78, w: 2.4, h: 0.75, fontSize: 36, bold: true, color: C.accent1 })
-    text(slide, label, { x: x + 0.25, y: 2.6, w: 2.45, h: 0.95, fontSize: 14 })
+    text(slide, label, { x: x + 0.25, y: 2.6, w: 2.5, h: 0.95, fontSize: 14 })
   })
   slide.addChart(pres.charts.BAR, [{ name: '1순위 어려움(%)', labels: ['비용 부담', '학업·진학·진로 정보 부족', '학습지도'], values: [24.9, 21.8, 19.7] }], {
     x: 0.6, y: 3.95, w: 7.0, h: 2.85, barDir: 'bar', chartColors: ['A6D3BD', '1F7A5C', 'A6D3BD'], ...chartText,
@@ -194,7 +197,7 @@ pres.addSection({ title: '문제' })
   ], { x: 8.35, y: 5.25, w: 4.2, h: 1.45, fontSize: 14, color: C.accent5, paraSpaceAfter: 6 })
 }
 {
-  const slide = content('문제 ③ 현장 관찰', '사이트는 번역돼도, 정보가 담긴 포스터는 한국어 이미지 그대로다',
+  const slide = content('문제 ③ 현장 관찰', '사이트는 번역돼도, 포스터 이미지 속 정보는 한국어 그대로다',
     '출처: 오산시가족센터 누리집 프로그램 신청 화면(팀 캡처, 2026.10), 한국건강가정진흥원 「전국 다문화가족지원센터 통번역 지원사 배치현황」(2025.9.24 데이터)', '문제')
   picture(slide, img('problem-kpop-listing.png'), { x: 0.65, y: 1.65, w: 6.6, h: 3.5 })
   text(slide, '공고 상세: 일정·대상·신청 QR이 모두 포스터 이미지 안에 있다', { x: 0.65, y: 5.28, w: 6.6, h: 0.35, fontSize: 13, color: MUTED })
@@ -210,11 +213,12 @@ pres.addSection({ title: '문제' })
   text(slide, '보호자는 공고마다 포스터 속 한국어를 직접 읽어야 한다', { x: 0.9, y: 5.85, w: 6.2, h: 0.8, fontSize: 16, bold: true, valign: 'middle' })
 }
 {
-  const slide = content('문제 ④ 양쪽의 단절', '보호자는 못 읽고, 기관은 보호자가 무엇을 모르는지 모른다',
-    '출처: 대구광역시 「2026년 민원행정 및 제도개선 추진계획」 7쪽(120 AI 상담 2025.4~12, 11,932건 중 AI 완료 4,503건). 챗봇 화면은 팀이 직접 사용해 캡처', '문제')
+  const slide = content('문제 ④ 양쪽의 단절', '보호자는 포스터에서 막히고, 기관은 어디서 막히는지 모른다',
+    '출처: 대구광역시 「2026년 민원행정 및 제도개선 추진계획」 7쪽(120 음성 AI 상담 2025.4~12, 11,932건 중 AI 완료 4,503건). 챗봇 화면은 팀이 직접 사용해 캡처', '문제')
   const columns = [
-    ['보호자', ['포스터를 읽지 못해 대상·일정을 판단하기 어렵다', '공고에 없는 것(준비물·비용)을 물으려 해도 한국어로 물어야 한다', '자격을 단정한 안내를 그대로 믿을 위험이 있다']],
-    ['기관', ['같은 질문이 전화로 반복된다', '공고에서 무엇이 빠졌는지 모른다', '언제·어디서 열어야 많이 올 수 있는지 모른다']],
+    // 근거 없는 경향('믿기 쉽다')으로 단정하지 않고 위험으로 쓴다
+    ['보호자', ['한국어 포스터만으로는 대상·일정을 판단하기 어렵다', '공고에 없는 것(준비물·비용)도 한국어로 물어야 한다', '자격을 단정한 안내를 그대로 믿을 위험이 있다']],
+    ['기관', ['같은 질문이 전화로 반복된다', '공고에 무엇이 빠졌는지 모른다', '언제·어디서 열어야 많이 올 수 있는지 모른다']],
   ]
   columns.forEach(([title, lines], index) => {
     const x = 0.6 + index * 4.1
@@ -225,7 +229,11 @@ pres.addSection({ title: '문제' })
   arrow(slide, { x: 4.47, y: 3.35, w: 0.22, h: 0, color: C.text2 })
   card(slide, { x: 0.6, y: 5.35, w: 7.95, h: 1.45, fill: C.text2 })
   text(slide, '38%', { x: 0.9, y: 5.45, w: 1.9, h: 1.2, fontSize: 40, bold: true, color: C.accent2, valign: 'middle' })
-  text(slide, '공공 AI 상담이 스스로 끝낸 비율(대구 120 AI 상담, 2025). 나머지는 상담원 연결(13%)이나 중도 포기(49%)로 끝났다', { x: 2.85, y: 5.5, w: 5.45, h: 1.15, fontSize: 14, color: C.background1, valign: 'middle' })
+  // 챗봇 전반이 아니라 대구 120 '음성' AI 상담(3개 분야) 한 사례로 좁혀 쓴다
+  text(slide, [
+    { text: '대구 120콜센터 음성 AI 상담이 스스로 끝낸 비율', options: { bold: true, breakLine: true } },
+    { text: '차량등록·여권 등 3개 분야, 2025.4~12, 11,932건. 나머지는 상담원 연결(13%)이나 중도 포기(49%)로 끝났다', options: {} },
+  ], { x: 2.85, y: 5.5, w: 5.45, h: 1.15, fontSize: 14, color: C.background1, valign: 'middle' })
   picture(slide, img('problem-chatbot.png'), { x: 9.4, y: 1.6, w: 2.86, h: 4.9 })
   text(slide, '기존 공공 AI 챗봇 (팀이 직접 사용)', { x: 8.85, y: 6.6, w: 3.95, h: 0.3, fontSize: 11, color: MUTED, align: 'center' })
 }
@@ -238,9 +246,10 @@ pres.addSection({ title: '해결' })
   const slide = content('해결 개요', '세 에이전트가 \'읽기 → 연결 → 편성\'의 순환을 만든다',
     '코드: apps/program-api(src/poster, src/agent), apps/guardian-web, apps/institution-dashboard', '해결')
   const nodes = [
-    ['1', '읽기', '포스터 통번역 에이전트', '기관이 올린 한국어 포스터를 디자인 그대로 보호자 언어로. 다른 AI가 다시 읽어 검증하고 틀린 곳만 다시 만든다'],
-    ['2', '연결', '상담 에이전트', '공고 사실만으로 보호자 언어로 답하고, 아이 조건을 비교하고, 공고에 없는 건 기관에 보낼 한국어 문장으로'],
-    ['3', '편성', '기관 대시보드', '보호자가 공고에서 못 찾은 질문과 익명 수요를 모아, 다음 공고에 적을 것과 요일·시간·장소를 제안'],
+    // 한글이 낱자 단위로 줄바꿈되지 않게 줄을 직접 나눈다(맑은 고딕 기준 줄마다 상자 폭의 95% 안쪽)
+    ['1', '읽기', '포스터 통번역 에이전트', '기관이 올린 한국어 포스터를\n디자인 그대로 보호자 언어로.\n다른 AI가 다시 읽어 검증하고\n틀린 곳만 다시 만든다'],
+    ['2', '연결', '상담 에이전트', '공고 사실만으로 보호자 언어로\n답하고, 아이 조건을 비교하고,\n공고에 없는 건 기관에 보낼\n한국어 문장으로'],
+    ['3', '편성', '기관 대시보드', '보호자가 공고에서 못 찾은 질문과\n익명 수요를 모아, 다음 공고에\n적을 것과 요일·시간·장소를 제안'],
   ]
   nodes.forEach(([no, verb, title, body], index) => {
     const x = 0.6 + index * 4.2
@@ -255,13 +264,15 @@ pres.addSection({ title: '해결' })
   slide.addShape(pres.shapes.LINE, { x: 10.47, y: 4.65, w: 0, h: 0.55, line: { color: C.accent1, width: 2.25 }, objectName: name('loop') })
   slide.addShape(pres.shapes.LINE, { x: 2.47, y: 5.2, w: 8.0, h: 0, line: { color: C.accent1, width: 2.25 }, objectName: name('loop') })
   slide.addShape(pres.shapes.LINE, { x: 2.47, y: 4.65, w: 0, h: 0.55, line: { color: C.accent1, width: 2.25, beginArrowType: 'triangle' }, objectName: name('loop') })
-  card(slide, { x: 3.2, y: 4.88, w: 6.5, h: 0.64, fill: 'FFFFFF', line: HEX.accent1 })
-  text(slide, '라이프케어: 다음 공고가 나아지고, 아이가 자라는 동안 계속된다', { x: 3.3, y: 4.88, w: 6.3, h: 0.64, fontSize: 15, bold: true, color: C.accent1, align: 'center', valign: 'middle' })
+  card(slide, { x: 2.97, y: 4.88, w: 7.0, h: 0.64, fill: 'FFFFFF', line: HEX.accent1 })
+  text(slide, '라이프케어: 다음 공고가 나아지고, 아이가 자라는 동안 계속된다', { x: 3.07, y: 4.88, w: 6.8, h: 0.64, fontSize: 15, bold: true, color: C.accent1, align: 'center', valign: 'middle' })
   card(slide, { x: 0.6, y: 5.85, w: 12.13, h: 0.9, fill: C.text2 })
+  // 한 줄에 다 넣으면 맑은 고딕에서 '남긴다'만 다음 줄로 넘어가므로, 머리말 옆에 두 줄로 나눠 쓴다
+  text(slide, '공통 바탕', { x: 0.9, y: 5.85, w: 1.3, h: 0.9, fontSize: 15, bold: true, color: C.accent2, valign: 'middle' })
   text(slide, [
-    { text: '공통 바탕  ', options: { bold: true, color: C.accent2 } },
-    { text: '검수된 공고 사실 + 원문 근거 인용 + 기존 판정 규칙. 세 에이전트 모두 이것만 쓰고, 없는 것은 \'확인 필요\'로 남긴다', options: { color: C.background1 } },
-  ], { x: 0.9, y: 5.85, w: 11.6, h: 0.9, fontSize: 15, valign: 'middle' })
+    { text: '검수된 공고 사실 + 원문 근거 인용 + 기존 판정 규칙', options: { breakLine: true } },
+    { text: '세 에이전트 모두 이것만 쓰고, 없는 것은 \'확인 필요\'로 남긴다', options: {} },
+  ], { x: 2.2, y: 5.85, w: 10.3, h: 0.9, fontSize: 15, color: C.background1, valign: 'middle' })
 }
 {
   const slide = content('① 읽기 · 포스터 통번역 에이전트', '디자인은 그대로, 글만 보호자 언어로 옮긴다',
@@ -277,9 +288,9 @@ pres.addSection({ title: '해결' })
   arrow(slide, { x: 3.4, y: 5.0, w: 0.55, h: 0, width: 3 })
   picture(slide, img('poster-kpop-vi.jpg'), { x: 4.1, y: 3.25, w: 2.35, h: 3.53 })
   const points = [
-    ['원본을 입력으로', '기관 담당자가 만든 포스터의 그림·배치·색은 그대로 두고 글만 바꾼다. 로고는 바꾸지 않는다'],
-    ['번역표가 정답지', '문구별 한국어 ↔ 베트남어 대응표를 먼저 만들고 전화번호·날짜·인원을 코드로 대조한다 (10/19 → 19/10)'],
-    ['통과한 것만 게시', '3회 안에 검증을 통과하지 못하면 내보내지 않고 원본과 검수된 다국어 안내를 보여 준다'],
+    ['원본을 입력으로', '기관 담당자가 만든 포스터의 그림·배치·색은 그대로 두고\n글만 바꾼다. 로고는 바꾸지 않는다'],
+    ['번역표가 정답지', '문구별 한국어 ↔ 베트남어 대응표를 먼저 만들고\n전화번호·날짜·인원을 코드로 대조한다 (10/19 → 19/10)'],
+    ['통과한 것만 게시', '3회 안에 검증을 통과하지 못하면 내보내지 않고\n원본과 검수된 다국어 안내를 보여 준다'],
   ]
   points.forEach(([title, body], index) => {
     const y = 3.25 + index * 1.2
@@ -297,21 +308,23 @@ pres.addSection({ title: '해결' })
   card(slide, { x: 0.6, y: 2.9, w: 7.1, h: 1.65, fill: C.text1 })
   text(slide, [
     { text: '⑤ 검증 (gemini가 결과를 처음부터 다시 읽고 대조)', options: { breakLine: true, color: 'A6D3BD' } },
-    { text: '✗ 빠진 날짜 10-31 · 원래 없던 날짜 invalid:10/31/2026', options: { breakLine: true, color: 'FFD84D' } },
-    { text: '✗ 다르게 적힘: 기대 "31/10/2026 (T7)" / 보이는 글 "10/31/2026 (T7)"', options: { breakLine: true, color: 'FFD84D' } },
+    { text: '× 빠진 날짜 10-31 · 원래 없던 날짜 invalid:10/31/2026', options: { breakLine: true, color: 'FFD84D' } },
+    { text: '× 다르게 적힘: 기대 "31/10/2026 (T7)" / 보이는 글 "10/31/2026 (T7)"', options: { breakLine: true, color: 'FFD84D' } },
     { text: '③ 이미지 편집 2회차 (직전 결과 + 원본 + 지적 2건)', options: { color: 'FFFFFF' } },
   ], { x: 0.85, y: 3.02, w: 6.7, h: 1.45, fontSize: 12, valign: 'middle' })
   text(slide, '2회차', { x: 0.6, y: 4.8, w: 1.0, h: 0.35, fontSize: 13, bold: true, color: C.accent1 })
   picture(slide, img('crop-date-a2.png'), { x: 1.6, y: 4.78, w: 6.1, h: 0.57 })
   text(slide, '베트남에서 10/31은 \'10일 31월\'로 읽힌다. 코드는 없는 달을 잡아내고, 모델은 문구가 다르게 적힌 것을 잡았다. 2회차에서 31/10으로 고쳐 통과했다', { x: 0.6, y: 5.6, w: 7.1, h: 1.1, fontSize: 14 })
   card(slide, { x: 8.15, y: 1.6, w: 4.6, h: 5.15, fill: C.accent5 })
-  text(slide, '6 / 6', { x: 8.45, y: 1.8, w: 4.0, h: 0.85, fontSize: 48, bold: true, color: C.accent1 })
-  text(slide, '실제 포스터 3장 × 2개 언어, 모두 검증 통과', { x: 8.45, y: 2.7, w: 4.0, h: 0.4, fontSize: 14, bold: true })
+  text(slide, '6 / 6', { x: 8.45, y: 1.8, w: 4.0, h: 0.9, fontSize: 48, bold: true, color: C.accent1 })
+  text(slide, '실제 포스터 3장 × 2개 언어 모두 검증 통과', { x: 8.45, y: 2.7, w: 4.1, h: 0.4, fontSize: 14, bold: true })
+  // 검증 기록(chosen_attempt) 기준: 1회차 4건, 운동회 베트남어 2회차(일부러 넣은 날짜 오류), 진학설명회 베트남어 3회차(로고 오독)
   text(slide, [
-    { text: '5건은 1회차에 통과 (한 번에 약 1분)', options: { bullet: { indent: 14 }, breakLine: true } },
-    { text: '1건은 3회차 통과: 검증 AI가 그대로 둔 로고 글자(성평등가족부)를 옛 이름으로 잘못 읽어 다시 만들었다. 로고 오독은 막지 않도록 규칙을 고쳤다', options: { bullet: { indent: 14 }, breakLine: true } },
+    { text: '4건은 1회차에 통과 (한 번에 약 1분)', options: { bullet: { indent: 14 }, breakLine: true } },
+    { text: '운동회 베트남어는 2회차 통과: 왼쪽처럼 일부러 넣은 날짜 오류를 잡아 고쳤다', options: { bullet: { indent: 14 }, breakLine: true } },
+    { text: '진학설명회 베트남어는 3회차 통과: 검증 AI가 그대로 둔 로고 글자(성평등가족부)를 옛 이름으로 잘못 읽어 다시 만들었다. 로고 오독은 막지 않도록 규칙을 고쳤다', options: { bullet: { indent: 14 }, breakLine: true } },
     { text: 'QR이 있는 포스터 2장: 원본 QR을 옮겨 붙이고 다시 스캔해 주소가 같은지 확인', options: { bullet: { indent: 14 }, breakLine: true } },
-    { text: '자동 검증만 통과한 결과는 화면에 \'담당자 확인 전\'으로 표시한다', options: { bullet: { indent: 14 } } },
+    { text: '승인 전까지는 \'담당자 확인 전\'으로 표시', options: { bullet: { indent: 14 } } },
   ], { x: 8.45, y: 3.25, w: 4.05, h: 3.4, fontSize: 13, paraSpaceAfter: 7 })
 }
 {
@@ -338,17 +351,18 @@ pres.addSection({ title: '해결' })
   text(slide, '모델이 단 원문 인용은 코드가 그 공고의 검증된 근거에서 다시 찾아 확인하고, 없으면 버린다', { x: 6.7, y: 5.85, w: 5.85, h: 0.85, fontSize: 14, bold: true, color: C.background1, valign: 'middle' })
 }
 {
-  const slide = content('② 연결 · 차이', '기존 챗봇은 \'문의하세요\'로 끝나고, 우리는 거기서 시작한다',
+  const slide = content('② 연결 · 차이', '기존 챗봇과 달리, 공고에 없는 것은 물어볼 문장으로 바꾼다',
     '팀 비교: 공공 민원 챗봇의 일반적인 서비스 범위와 이 서비스의 설계를 비교한 것이며 통계가 아니다', '해결')
   const head = (value) => ({ text: value, options: { bold: true, color: C.background1, fill: { color: C.text2 }, fontSize: 15 } })
   const rows = [
     ['답의 근거', '미리 만든 FAQ·안내 문서', '검수된 공고 사실 + 원문 인용 (코드가 다시 확인)'],
-    ['공고에 없을 때', '"담당 기관에 문의하세요"', '무엇이 없는지 말하고, 한국어 문의문 + 확인된 연락처'],
+    ['공고에 없을 때', '다른 기관·전화번호로 안내', '무엇이 없는지 말하고, 한국어 문의문 + 확인된 연락처'],
     ['언어', '한국어 위주', '보호자가 고른 언어(베트남어·중국어·쉬운 한국어)'],
     ['우리 아이에게 맞는지', '판단하지 않음', '학년·시간은 기존 규칙으로 판정, 자격은 단정하지 않음'],
     ['포스터', '이미지 속 글은 읽지 못함', '포스터를 보호자 언어로 옮기고 검증'],
     ['기관에 돌아가는 것', '없음', '공고에서 답을 못 찾은 질문을 주제별로 집계'],
   ]
+  // 오른쪽 열의 긴 문구가 맑은 고딕에서 한 줄에 들어가도록 가운데 열을 줄였다(colW)
   slide.addTable([
     [head(''), head('기존 공공 챗봇'), head('오산 아이 프로그램 상담 에이전트')],
     ...rows.map(([label, before, after], index) => [
@@ -356,7 +370,7 @@ pres.addSection({ title: '해결' })
       { text: before, options: { color: MUTED, fill: { color: index % 2 ? 'FFFFFF' : 'F3F4EF' } } },
       { text: after, options: { bold: true, color: C.accent1, fill: { color: index % 2 ? 'E4F2EC' : 'D6ECE2' } } },
     ]),
-  ], { x: 0.6, y: 1.65, w: 12.13, colW: [2.6, 3.9, 5.63], fontSize: 15, rowH: 0.7, valign: 'middle', border: { type: 'solid', color: 'FFFFFF', pt: 2 }, margin: [0.06, 0.15, 0.06, 0.15], objectName: name('compare-table') })
+  ], { x: 0.6, y: 1.65, w: 12.13, colW: [2.6, 3.6, 5.93], fontSize: 15, rowH: 0.7, valign: 'middle', border: { type: 'solid', color: 'FFFFFF', pt: 2 }, margin: [0.06, 0.15, 0.06, 0.15], objectName: name('compare-table') })
 }
 {
   const slide = content('③ 편성 · 기관 대시보드', '기관은 보호자가 무엇을 모르는지 보고 다음 공고를 고친다',
@@ -364,9 +378,9 @@ pres.addSection({ title: '해결' })
   phone(slide, img('dash-questions.png'), { x: 0.75, y: 1.6, h: 5.15 })
   phone(slide, img('dash-recommend.png'), { x: 3.45, y: 1.6, h: 5.15 })
   const blocks = [
-    ['보호자 질문', '보호자가 AI 상담에서 공고로 답을 찾지 못해 \'기관에 알리기\'를 누른 질문을 공고별·주제별로 센다'],
-    ['공고에 적을 것', '많이 나온 주제를 \'참가비, 준비물·복장, 형제 동반\'처럼 다음 공고에 적을 항목으로 바꿔 보여 준다'],
-    ['일정·장소 추천', '보호자가 익명으로 남긴 가능 요일·시간·동을 모아, 가장 많은 가정이 올 수 있는 조합을 추천한다'],
+    ['보호자 질문', '보호자가 AI 상담에서 공고로 답을 찾지 못해\n\'기관에 알리기\'를 누른 질문을 공고별·주제별로 센다'],
+    ['공고에 적을 것', '많이 나온 주제를 \'참가비, 준비물·복장, 형제 동반\'처럼\n다음 공고에 적을 항목으로 바꿔 보여 준다'],
+    ['일정·장소 추천', '보호자가 익명으로 남긴 가능 요일·시간·동을 모아,\n가장 많은 가정이 올 수 있는 조합을 추천한다'],
   ]
   blocks.forEach(([title, body], index) => {
     const y = 1.6 + index * 1.45
@@ -374,7 +388,7 @@ pres.addSection({ title: '해결' })
     text(slide, title, { x: 6.75, y: y + 0.13, w: 5.8, h: 0.4, fontSize: 17, bold: true, color: C.accent1 })
     text(slide, body, { x: 6.75, y: y + 0.55, w: 5.8, h: 0.68, fontSize: 13 })
   })
-  text(slide, '이름·연락처·대화 내용은 받지 않는다. 공고·주제·일반화한 질문·날짜만 받고, 적은 수의 집계는 가린다', { x: 6.45, y: 6.0, w: 6.3, h: 0.7, fontSize: 13, color: MUTED })
+  text(slide, '이름·연락처·대화 내용은 받지 않는다.\n공고·주제·일반화한 질문·날짜만 받고, 적은 수의 집계는 가린다', { x: 6.45, y: 6.0, w: 6.3, h: 0.7, fontSize: 13, color: MUTED })
 }
 
 // =========================================================
@@ -383,7 +397,7 @@ pres.addSection({ title: '해결' })
 pres.addSection({ title: '라이프케어와 실행' })
 {
   const slide = content('라이프케어', '아이가 자라는 동안, 필요한 공고가 바뀌어도 같은 순환이 돈다',
-    '6~24세 자녀 보호자의 1순위 어려움 \'학업·진학·진로 정보 부족\' 21.8%(2024 전국다문화가족실태조사). 사진은 실제 오산시가족센터 포스터의 베트남어판', '라이프케어와 실행')
+    '6~24세 양육 1순위 어려움: 비용 부담 24.9%, 학업·진학·진로 정보 부족 21.8%(2024 전국다문화가족실태조사). 사진은 실제 오산시가족센터 포스터의 베트남어판', '라이프케어와 실행')
   const stages = [
     ['영유아', '돌봄·어린이집·예방접종 안내', null, '다음 단계'],
     ['초등', '방과후·체험·체육 프로그램', 'poster-sports-vi.jpg', '우리 zip. 운동회'],
@@ -417,9 +431,9 @@ pres.addSection({ title: '라이프케어와 실행' })
     ['사람이 마지막에 확인', '자동 검증만 통과한 포스터·안내는 \'담당자 확인 전\'으로 표시하고, 승인하면 바뀐다'],
     ['모르는 것은 노란 형광펜', '비용·자격·상담 언어처럼 공고에 없는 것은 확인되지 않았다고 표시한다'],
     ['원본이 바뀌면 내린다', '공고 원문이나 포스터가 바뀌면 승인이 풀려 자동으로 게시가 멈춘다'],
-    ['인용은 코드가 다시 확인', '모델이 단 근거 문장이 원문에 없으면 버린다'],
+    ['인용은 코드가 다시 확인', '모델이 단 근거가\n원문에 없으면 버린다'],
     ['묻지 않는다', '이름·국적·체류 자격·연락처를 묻지 않는다. 아이 학년과 가능한 시간만'],
-    ['동의할 때만 전달', '질문은 보호자가 \'기관에 알리기\'를 누를 때만, 이름 없이 일반화해 보낸다'],
+    ['동의할 때만 전달', '\'기관에 알리기\'를 누를 때만\n질문을 이름 없이 일반화해 보낸다'],
   ]
   items.forEach(([title, body], index) => {
     const col = index % 3
@@ -428,7 +442,7 @@ pres.addSection({ title: '라이프케어와 실행' })
     const y = 1.65 + row * 2.1
     card(slide, { x, y, w: 3.85, h: 1.9, fill: row === 0 ? C.background2 : C.accent5 })
     badge(slide, String(index + 1), { x: x + 0.3, y: y + 0.28, size: 0.5, fontSize: 16 })
-    text(slide, title, { x: x + 0.95, y: y + 0.28, w: 2.75, h: 0.5, fontSize: 17, bold: true, valign: 'middle' })
+    text(slide, title, { x: x + 0.95, y: y + 0.28, w: 2.8, h: 0.5, fontSize: 17, bold: true, valign: 'middle' })
     text(slide, body, { x: x + 0.3, y: y + 0.95, w: 3.3, h: 0.85, fontSize: 14 })
   })
   card(slide, { x: 0.6, y: 6.0, w: 12.13, h: 0.8, fill: C.text2 })
@@ -438,9 +452,9 @@ pres.addSection({ title: '라이프케어와 실행' })
   const slide = content('실행 계획', '오산에서 바로 시작할 수 있다',
     '효과를 미리 숫자로 약속하지 않고, 아래 지표로 시범 운영에서 측정한다', '라이프케어와 실행')
   const phases = [
-    ['1단계 · 지금', '오산시가족센터', '시연 공고 25건, 실제 포스터 3장 × 2개 언어 검증 완료. 담당자는 지금처럼 포스터를 올리기만 하면 된다'],
-    ['2단계', '학교 가정통신문', '진학·진로 정보가 가장 부족한 시기. 화성오산교육지원청과 연계'],
-    ['3단계', '시 공공채널', '도서관·청소년센터·시청 공지까지 같은 순환으로'],
+    ['1단계 · 지금', '오산시가족센터', '시연 공고 25건, 실제 포스터\n3장 × 2개 언어 검증 완료.\n담당자는 지금처럼 포스터를\n올리기만 하면 된다'],
+    ['2단계', '학교 가정통신문', '진학·진로 정보가 많이 필요한 시기.\n화성오산교육지원청과 연계'],
+    ['3단계', '시 공공채널', '도서관·청소년센터·시청 공지까지\n같은 순환으로'],
   ]
   phases.forEach(([step, title, body], index) => {
     const x = 0.6 + index * 4.2
@@ -452,10 +466,10 @@ pres.addSection({ title: '라이프케어와 실행' })
   })
   text(slide, '시범 운영에서 잴 것', { x: 0.6, y: 4.55, w: 6, h: 0.45, fontSize: 18, bold: true, color: C.accent1 })
   const kpis = [
-    ['과업 성공률', '보호자가 공고를 읽고 대상·일정·다음 행동을 스스로 설명하는 비율'],
-    ['문의 전환', '공고에 없는 질문이 문의문·전화로 이어진 비율'],
-    ['미해결 질문 감소', '공고 보완 뒤 같은 주제의 질문이 줄어든 정도'],
-    ['충원율', '추천한 요일·시간·장소로 연 프로그램의 신청 대비 정원'],
+    ['과업 성공률', '보호자가 공고를 읽고\n대상·일정·다음 행동을\n스스로 설명하는 비율'],
+    ['문의 전환', '공고에 없는 질문이\n문의문·전화로 이어진 비율'],
+    ['미해결 질문 감소', '공고 보완 뒤 같은 주제의\n질문이 줄어든 정도'],
+    ['충원율', '추천한 요일·시간·장소로\n연 프로그램의 신청 대비 정원'],
   ]
   kpis.forEach(([title, body], index) => {
     const x = 0.6 + index * 3.07
@@ -485,12 +499,25 @@ pres.addSection({ title: '마무리' })
   team.forEach(([who, role], index) => {
     const y = 1.45 + index * 1.15
     slide.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 8.6, y, w: 4.1, h: 0.95, rectRadius: 0.12, fill: { color: '1F4D3D' }, line: { type: 'none' }, objectName: name('team') })
-    text(slide, who, { x: 8.9, y, w: 1.0, h: 0.95, fontSize: 20, bold: true, color: C.background1, valign: 'middle' })
-    text(slide, role, { x: 9.9, y, w: 2.7, h: 0.95, fontSize: 14, color: C.accent5, valign: 'middle' })
+    text(slide, who, { x: 8.9, y, w: 0.85, h: 0.95, fontSize: 20, bold: true, color: C.background1, valign: 'middle' })
+    text(slide, role, { x: 9.75, y, w: 2.85, h: 0.95, fontSize: 14, color: C.accent5, valign: 'middle' })
   })
 }
 
-// ---------- 저장 + 테마 색 ----------
+// ---------- 저장 + 테마 색 + 한글 줄바꿈 ----------
+// 한글을 낱자가 아니라 띄어쓰기 단위로 줄바꿈한다. OOXML a:pPr@eaLnBrk는 '동아시아 단어를 중간에서 끊어도 되는가'(기본값 참)이고,
+// pptxgenjs는 이를 eaLnBrk="1"로 적어 두므로 "0"으로 바꾼다(영문은 이미 latinLnBrk="0").
+// - lvl1~9pPr에는 모두 넣는다: 덱 기본값(presentation.xml defaultTextStyle), 마스터 txStyles(title·body·other), 개체별 lstStyle
+// - 슬라이드 단락(a:pPr)은 위 값을 물려받으므로 직접 켠 곳만 끈다
+// - 차트 글(제목·축·값)은 차트 파트 안에서 따로 정하므로 차트의 a:pPr마다 넣는다
+const EA_PARTS = /^ppt\/(?:presentation|slideMasters\/slideMaster\d+|slideLayouts\/slideLayout\d+|slides\/slide\d+|charts\/chart\d+)\.xml$/
+function koreanWordWrap(xml, { everyParagraph }) {
+  const off = (tag) => (/\beaLnBrk="/.test(tag) ? tag.replace(/\beaLnBrk="[^"]*"/, 'eaLnBrk="0"') : tag.replace(/^<a:\w+/, '$& eaLnBrk="0"'))
+  return xml
+    .replace(/<a:lvl[1-9]pPr\b[^>]*>/g, off)
+    .replace(/<a:pPr\b[^>]*>/g, (tag) => (everyParagraph || /\beaLnBrk="/.test(tag) ? off(tag) : tag))
+}
+
 async function applyTheme(file) {
   const zip = await JSZip.loadAsync(fs.readFileSync(file))
   const part = 'ppt/theme/theme1.xml'
@@ -499,8 +526,14 @@ async function applyTheme(file) {
     xml = xml.replace(new RegExp(`<a:${slot}>[\\s\\S]*?</a:${slot}>`), `<a:${slot}><a:srgbClr val="${hex}"/></a:${slot}>`)
   }
   xml = xml.replace(/<a:clrScheme name="[^"]*">/, `<a:clrScheme name="${THEME.name}">`).replace(/<a:theme ([^>]*?)name="[^"]*"/, `<a:theme $1name="${THEME.name}"`)
-  if (QA) xml = xml.replace(/typeface="(?:Malgun Gothic|맑은 고딕)"/g, 'typeface="Apple SD Gothic Neo"').replace(/<a:ea typeface=""\/>/g, '<a:ea typeface="Apple SD Gothic Neo"/>')
+  // 한글이 대체 글꼴로 바뀌지 않게 동아시아 글꼴 칸(ea)도 맑은 고딕으로 고정한다 (QA 사본은 맥에 있는 글꼴로)
+  xml = xml.replace(/<a:ea typeface=""\/>/g, '<a:ea typeface="Malgun Gothic"/>')
+  if (QA) xml = xml.replace(/typeface="(?:Malgun Gothic|맑은 고딕)"/g, 'typeface="Apple SD Gothic Neo"')
   zip.file(part, xml)
+  for (const name of Object.keys(zip.files).filter((n) => EA_PARTS.test(n))) {
+    const original = await zip.file(name).async('string')
+    zip.file(name, koreanWordWrap(original, { everyParagraph: name.startsWith('ppt/charts/') }))
+  }
   fs.writeFileSync(file, await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }))
 }
 

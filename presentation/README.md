@@ -31,3 +31,9 @@ DECK_QA=1 node build-deck.js   # 맥 Quick Look 미리 보기용 사본(render/d
 - 서버 띄우기는 `demo-script.md`의 '준비'를 따릅니다.
 - 글꼴은 맑은 고딕(Malgun Gothic)입니다. 맥에서 글꼴이 없으면 PowerPoint가 다른 한글 글꼴로 바꿔 보여 줍니다.
 - 수치는 `research/통계_1차출처_확인_2026-10-17.md`의 확정 수치만 씁니다. 10/19 아침에 행안부 2025.11.1 기준판이 나왔는지 다시 확인합니다.
+
+## 검수 한계
+
+- 이 맥에서는 macOS 권한 때문에 PowerPoint·Keynote 자동화가 막혀 있었습니다. 그래서 `DECK_QA=1` 사본(`build/render/deck-qa.pptx`)을 슬라이드별로 나눠 Quick Look(`qlmanage -t`)으로 그린 그림을 보고 검수했습니다.
+- Quick Look은 네이티브 차트(2·3번 슬라이드)를 그리지 않습니다. 표 행 높이(10번)와 한글 줄바꿈 위치도 PowerPoint와 다를 수 있습니다. **제출 전에 PowerPoint로 열어** 차트·표·줄바꿈을 한 번 확인합니다.
+- 덱과 영상은 `research/`(추적하지 않음), `apps/program-api/data/local`(`.gitignore`), API 키가 모두 있는 컴퓨터에서만 다시 만들 수 있습니다.
