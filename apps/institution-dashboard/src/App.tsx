@@ -31,10 +31,15 @@ export type ProgramsState =
 
 interface Route { view: View; id: string | null }
 
-/** 주소 #programs/<공고 ID>처럼 화면과 고른 공고를 주소에 남겨, 새로고침·링크로 같은 화면을 엽니다. */
-function readRoute(): Route {
-  const [view, id] = window.location.hash.replace(/^#\/?/, '').split('/')
-  return { view: VIEWS.includes(view as View) ? view as View : 'programs', id: id ? decodeURIComponent(id) : null }
+/** 주소 #programs/<공고 ID>처럼 화면과 고른 공고를 주소에 남겨, 새로고침·링크로 같은 화면을 엽니다. 화면 주소가 아니면 null */
+function parseRoute(hash: string): Route | null {
+  const [view, id] = hash.replace(/^#\/?/, '').split('/')
+  if (!VIEWS.includes(view as View)) return null
+  try {
+    return { view: view as View, id: id ? decodeURIComponent(id) : null }
+  } catch {
+    return { view: view as View, id: null }
+  }
 }
 
 const REVIEWER_KEY = 'osan-dashboard-reviewer'
@@ -56,7 +61,7 @@ const ICONS: Record<View, IconName> = { programs: 'programs', questions: 'questi
  */
 export default function App() {
   const { locale, setLocale, t } = useLanguage()
-  const [route, setRoute] = useState<Route>(readRoute)
+  const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash) ?? { view: 'programs', id: null })
   const [filters, setFilters] = useState<DemandFilters>(defaultFilters)
   const [planForm, setPlanForm] = useState<PlanForm>(initialPlanForm)
   const [programs, setPrograms] = useState<ProgramsState>(apiBaseUrl ? { status: 'loading' } : { status: 'no-api' })
@@ -66,7 +71,8 @@ export default function App() {
   const options = useMemo(() => languageOptions(), [])
 
   useEffect(() => {
-    const onHash = () => setRoute(readRoute())
+    // 화면 주소가 아닌 #(본문으로 건너뛰기 등)는 화면을 바꾸지 않는다
+    const onHash = () => { const next = parseRoute(window.location.hash); if (next) setRoute(next) }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
@@ -105,7 +111,7 @@ export default function App() {
 
   return (
     <div className="admin">
-      <a className="skip" href="#main">{t('skip')}</a>
+      <a className="skip" href="#main" onClick={(event) => { event.preventDefault(); document.getElementById('main')?.focus() }}>{t('skip')}</a>
       <aside className="side">
         <div className="side-brand">
           <span className="brand-mark" aria-hidden="true">AX</span>

@@ -5,7 +5,7 @@ import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { checkDraft, checkItem, newClaims, newTokens, parseDraftItems, sourceTexts } from '../src/admin/check'
+import { checkDraft, checkItem, claimsIn, newTokens, parseDraftItems, sourceTexts } from '../src/admin/check'
 import type { CheckContext, DraftItem } from '../src/admin/check'
 import { parseImproveRequest, runImprover } from '../src/admin/improve'
 import type { ImproveInput, ImproveResult } from '../src/admin/improve'
@@ -104,12 +104,31 @@ describe('공고 보완 초안의 코드 검사', () => {
     expect(checkItem(item({ draft: '참가비: {{1인 5,000원 또는 무료}}' }), context(record))).toEqual([])
   })
 
-  it('공고에 없는 금액·날짜·전화와 무료 같은 단정을 빈칸 밖에 쓰면 잡는다', () => {
+  it('공고에 없는 금액·날짜·전화·수량을 빈칸 밖에 쓰면 잡는다', () => {
     expect(newTokens('참가비는 1인 5,000원이고 11월 2일까지 010-1234-5678로 문의하세요. {{기타}}', sourceTexts(record)).map((entry) => entry.kind).sort())
-      .toEqual(['dates', 'numbers', 'phones'])
-    expect(newClaims('참가비는 무료입니다. {{기타}}', sourceTexts(record))).toEqual(['무료'])
-    const problems = checkItem(item({ draft: '참가비는 무료입니다. 문의: {{문의 시간}}' }), context(record))
-    expect(problems.some((problem) => problem.includes("'무료'"))).toBe(true)
+      .toEqual(['dates', 'numbers', 'phones', 'quantities'])
+    // 숫자만 같고 단위가 다른 값('3층'을 근거로 '3명')도 잡는다
+    expect(newTokens('형제자매 3명까지: {{가능 여부}}', ['행사장은 3층입니다'])).toEqual([{ kind: 'quantities', values: ['3명'] }])
+  })
+
+  it('공고에 덧붙일 안내는 빈칸 밖에 답을 단정하지 못한다 (합쇼체·해요체, 공고 다른 곳에 같은 말이 있어도)', () => {
+    const sources = [...sourceTexts(record), '주차는 무료입니다', '간식을 제공합니다']
+    const ctx = { ...context(record), sources }
+    for (const draft of ['참가비는 무료입니다. 문의: {{문의 시간}}', '통역을 제공합니다. {{통역 언어}}', '형제자매도 참여할 수 있어요. {{조건}}', '참가비는 없어요. {{기타}}', '동생은 와도 돼요. {{조건}}', '준비물은 따로 없습니다. {{기타}}', '참여가 가능합니다. {{조건}}']) {
+      expect(checkItem(item({ draft }), ctx).some((problem) => problem.startsWith('공고에 없는 답을 단정함')), draft).toBe(true)
+    }
+    // 묻는 꼴('가능 여부', '올 수 있는지')은 단정이 아니다
+    expect(claimsIn('형제자매 동반 가능 여부: {{가능 여부}} · 함께 올 수 있는지: {{조건}}')).toEqual([])
+  })
+
+  it('공고에 이미 있는 답은 인용한 문장의 사실·단정만 다시 쓸 수 있다', () => {
+    const sources = [...sourceTexts(record), '주차는 무료입니다']
+    const ctx = { ...context(record), sources }
+    const already = (draft: string, quote = '주차는 무료입니다') => item({ kind: 'already_in_notice', quote, draft, resolves_items: [] })
+    expect(checkItem(already('주차는 무료예요.'), ctx)).toEqual([])
+    expect(checkItem(already('참가비는 무료입니다.'), ctx)).toContain("'참가비'에 대한 단정 '무료'은 인용한 원문에 없음")
+    // 다른 문장(정원 200명)의 사실을 섞으면 잡는다
+    expect(checkItem(already('주차는 무료이고 정원은 200명입니다.'), ctx).some((problem) => problem.includes('인용한 원문에 없는 수량 200명'))).toBe(true)
   })
 
   it('공고에 있는 숫자·전화는 다시 써도 된다', () => {
@@ -167,7 +186,7 @@ describe('공고 보완 도우미 (에이전트)', () => {
     expect(result.uncovered).toEqual([])
     // 코드 검사의 문제 목록이 모델에 돌아갔다
     const feedback = JSON.stringify(mockedTurn.mock.calls[2][0].contents)
-    expect(feedback).toContain("공고에 없는 단정 '무료'")
+    expect(feedback).toContain("공고에 없는 답을 단정함 '무료'")
     expect(mockedTurn.mock.calls[0][0].system).toContain('{{빈칸 이름}}')
   })
 
@@ -235,10 +254,10 @@ describe('검수 화면 데이터', () => {
 
 interface Reply { status: number; body: any; type: string | undefined }
 
-function call(port: number, method: string, path: string, body?: unknown): Promise<Reply> {
+function call(port: number, method: string, path: string, body?: unknown, extra: Record<string, string> = {}): Promise<Reply> {
   return new Promise((done, fail) => {
     const text = body === undefined ? undefined : JSON.stringify(body)
-    const headers = text === undefined ? {} : { 'Content-Type': 'application/json', 'Content-Length': String(Buffer.byteLength(text)) }
+    const headers = { ...(text === undefined ? {} : { 'Content-Type': 'application/json', 'Content-Length': String(Buffer.byteLength(text)) }), ...extra }
     const req = httpRequest({ host: '127.0.0.1', port, method, path, headers }, (res) => {
       const chunks: Buffer[] = []
       res.on('data', (chunk: Buffer) => chunks.push(chunk))
@@ -286,6 +305,14 @@ describe('관리자 API', () => {
     await new Promise((done) => closed.server.close(done))
     rmSync(dir, { recursive: true, force: true })
     rmSync(posters, { recursive: true, force: true })
+  })
+
+  it('다른 사이트의 페이지가 보낸 요청(허용하지 않은 출처, JSON이 아닌 본문)은 저장하지 않는다', async () => {
+    const body = { author: '누군가', items: [{ topic: 'other', text: '참가비는 10만원입니다.' }] }
+    expect((await call(port, 'POST', '/admin/programs/sports/addenda', body, { Origin: 'https://evil.example' })).status).toBe(403)
+    expect((await call(port, 'POST', '/admin/programs/sports/addenda', body, { 'Content-Type': 'text/plain' })).status).toBe(415)
+    expect((await call(port, 'GET', '/admin/programs/sports')).body.addenda).toEqual([])
+    expect((await call(port, 'DELETE', '/admin/programs/sports/addenda/%E0')).status).toBe(404)
   })
 
   it('ADMIN_API를 켜지 않으면 관리자 주소는 없다', async () => {

@@ -307,6 +307,14 @@ export function createServer(options: ServerOptions = {}): Server {
 
   /** 기관 대시보드의 관리자 API. 게시 여부와 상관없이 모든 공고를 보고, 검수·추가 안내를 저장한다 */
   async function adminRoute(request: IncomingMessage, response: ServerResponse, path: string, method: string): Promise<void> {
+    // 로그인이 없으므로 다른 사이트의 페이지가 보낸 요청(미리 묻지 않는 text/plain POST 등)을 막는다:
+    // 허용하지 않은 출처는 거절하고, 본문이 있는 요청은 JSON만 받는다(JSON은 브라우저가 출처를 미리 묻는다)
+    const origin = request.headers.origin
+    if (origin !== undefined && !origins.includes('*') && !origins.includes(origin)) throw new HttpError(403, '허용되지 않은 출처입니다.')
+    if (method === 'POST' && !/^application\/json\b/i.test(String(request.headers['content-type'] ?? ''))) {
+      request.resume()
+      throw new HttpError(415, '요청 본문은 application/json이어야 합니다.')
+    }
     const anyRecord = (rawId: string): ProgramRecord => {
       let id: string
       try {
@@ -355,16 +363,24 @@ export function createServer(options: ServerOptions = {}): Server {
 
     const addenda = path.match(/^\/admin\/programs\/([^/]+)\/addenda(?:\/([^/]+))?$/)
     if (addenda) {
-      const record = anyRecord(addenda[1])
       if (addenda[2]) {
         if (method !== 'DELETE') throw methodNotAllowed('DELETE')
-        const next = removeAddendum(record, decodeURIComponent(addenda[2]))
+        let addendumId: string
+        try {
+          addendumId = decodeURIComponent(addenda[2])
+        } catch {
+          throw new HttpError(404, '추가 안내를 찾을 수 없습니다.')
+        }
+        const next = removeAddendum(anyRecord(addenda[1]), addendumId)
         if (!next) throw new HttpError(404, '추가 안내를 찾을 수 없습니다.')
         return save(next)
       }
       if (method !== 'POST') throw methodNotAllowed('POST')
+      // 본문을 다 받은 뒤 공고를 읽는다 (동시에 들어온 다른 저장을 덮어쓰지 않게)
+      const body = parseJson(await readBody(request))
+      const record = anyRecord(addenda[1])
       const toConfirm = evaluateProgram(record, null, now()).uncertain_items_ko
-      const parsed = parseAddenda(parseJson(await readBody(request)), toConfirm)
+      const parsed = parseAddenda(body, toConfirm)
       if (!parsed.ok) throw new HttpError(400, '추가 안내를 확인해 주세요.', parsed.errors)
       try {
         return save(addAddenda(record, parsed.input, now()))

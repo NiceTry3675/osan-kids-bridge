@@ -168,6 +168,25 @@ describe('공고 보완 도우미', () => {
     await waitFor(() => expect(screen.getAllByText(/추가 안내로 답함/).length).toBeGreaterThan(0))
   })
 
+  it('공고에 이미 있는 답은 미리 고르지 않고, 본문으로 건너뛰기는 화면을 바꾸지 않는다', async () => {
+    const already = { ...IMPROVE.items[0], id: 'item-2', kind: 'already_in_notice' as const, topic: 'schedule' as const, questions: ['언제 알려 주나요?'], quote: '참여 확정 여부는 문자로 안내드립니다.', draft: '참여 확정 여부는 문자로 알려 드려요.', blanks: [], resolves_items: [] }
+    serve({
+      'GET /admin/programs': () => json({ now: '', programs: [SPORTS] }),
+      'POST /admin/programs/osan-fc-sports-day/improve': () => json({ ...IMPROVE, items: [IMPROVE.items[0], already] }),
+    })
+    open('#questions/osan-fc-sports-day')
+    fireEvent.click(await screen.findByRole('button', { name: /보완 초안 만들기/ }))
+    await screen.findByText('공고에 이미 있음')
+    const boxes = [...document.querySelectorAll<HTMLInputElement>('.draft-include input')]
+    expect(boxes.map((box) => box.checked)).toEqual([true, false])
+    fireEvent.click(screen.getByText('본문으로 건너뛰기'))
+    expect(document.activeElement?.id).toBe('main')
+    // 화면 주소가 아닌 #main으로 바뀌어도 보던 화면에 머문다
+    window.location.hash = '#main'
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+    expect(screen.getByRole('heading', { level: 1, name: '보호자 질문' })).toBeTruthy()
+  })
+
   it('도우미가 실패하면 서버의 오류 문장을 보여 준다', async () => {
     serve({
       'GET /admin/programs': () => json({ now: '', programs: [SPORTS] }),

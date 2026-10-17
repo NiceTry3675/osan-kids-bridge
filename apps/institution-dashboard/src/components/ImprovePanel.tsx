@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ProgramsState } from '../App'
-import { AdminError, addAddenda, fillBlanks, hasBlank, improveProgram } from '../data/admin'
+import { AdminError, addAddenda, fillBlanks, improveProgram } from '../data/admin'
 import type { ImproveItem, ImproveResult, ProgramRow } from '../data/admin'
 import type { QuestionEntry } from '../data/questions'
 import { useLanguage } from '../i18n'
@@ -27,6 +27,9 @@ interface Edit {
 const blankNames = (draft: string) => [...new Set([...draft.matchAll(/\{\{\s*([^{}]*?)\s*\}\}/g)].map((match) => match[1].trim()))]
 
 const STEP_KEYS = { read_notice: 'stepReadNotice', read_questions: 'stepReadQuestions', check_draft: 'stepCheck', submit: 'stepSubmit' } as const
+/** 서버가 한 번에 받는 질문 수. 많이 물은 질문부터 보낸다 */
+const MAX_QUESTIONS = 20
+const countBlanks = (text: string) => text.match(/\{\{[^{}]*\}\}/g)?.length ?? 0
 
 /**
  * 공고 보완 도우미: 아직 답하지 않은 보호자 질문으로 AI가 '기관 추가 안내' 초안을 쓰고(코드 검사를 통과해야 제출),
@@ -47,6 +50,7 @@ export function ImprovePanel({ entry, row, programs, reviewer, onSaved }: Props)
   useEffect(() => () => controller.current?.abort(), [])
 
   const open = row ? openQuestions(entry, programs.status === 'ready' ? programs.rows : []) : entry.questions
+  const sendable = [...open].sort((a, b) => b.count - a.count).slice(0, MAX_QUESTIONS)
   const available = programs.status === 'ready' && row !== null
 
   const start = async () => {
@@ -57,9 +61,10 @@ export function ImprovePanel({ entry, row, programs, reviewer, onSaved }: Props)
     setSaved(null)
     setResult(null)
     try {
-      const next = await improveProgram(entry.program_id, open.map(({ question_ko, topic, count }) => ({ question_ko, topic, count })), controller.current.signal)
+      const next = await improveProgram(entry.program_id, sendable.map(({ question_ko, topic, count }) => ({ question_ko, topic, count })), controller.current.signal)
       setResult(next)
-      setEdits(next.items.map((item) => ({ include: item.problems.length === 0, draft: item.draft ?? '', values: {}, resolves: item.resolves_items })))
+      // 공고에 덧붙일 안내 중 검사를 통과한 것만 미리 고른다. 공고에 이미 있는 답은 담당자가 골라야 덧붙인다
+      setEdits(next.items.map((item) => ({ include: item.kind === 'add_notice' && item.problems.length === 0, draft: item.draft ?? '', values: {}, resolves: item.resolves_items })))
     } catch (failure) {
       if (controller.current?.signal.aborted) return
       setError({ text: failure instanceof AdminError ? failure.message : t('apiErrorTitle'), details: failure instanceof AdminError ? failure.details : [] })
@@ -71,7 +76,7 @@ export function ImprovePanel({ entry, row, programs, reviewer, onSaved }: Props)
   const update = (index: number, patch: Partial<Edit>) => setEdits(edits.map((edit, at) => (at === index ? { ...edit, ...patch } : edit)))
   const finalText = (edit: Edit) => fillBlanks(edit.draft, edit.values).trim()
   const chosen = result ? result.items.map((item, index) => ({ item, edit: edits[index] })).filter(({ edit }) => edit?.include) : []
-  const unfilled = chosen.filter(({ edit }) => !finalText(edit) || hasBlank(finalText(edit))).length
+  const unfilled = chosen.reduce((sum, { edit }) => sum + (finalText(edit) ? countBlanks(finalText(edit)) : 1), 0)
   const canSave = chosen.length > 0 && unfilled === 0 && author.trim() !== '' && !saving
 
   const save = async () => {
@@ -108,7 +113,7 @@ export function ImprovePanel({ entry, row, programs, reviewer, onSaved }: Props)
 
       {!available && <p className="muted">{programs.status === 'ready' ? t('improveNoProgram') : t('improveNeedsApi')}</p>}
       {available && !result && !running && (open.length
-        ? <button type="button" className="btn btn--primary" onClick={start}><Icon name="sparkle" />{t('improveStart', { n: open.length })}</button>
+        ? <button type="button" className="btn btn--primary" onClick={start}><Icon name="sparkle" />{t('improveStart', { n: sendable.length })}</button>
         : <p className="muted">{t('improveAllAnswered')}</p>)}
       {running && <div className="agent-running" role="status"><span className="spinner" aria-hidden="true" />{t('improveRunning')}</div>}
 
@@ -116,7 +121,7 @@ export function ImprovePanel({ entry, row, programs, reviewer, onSaved }: Props)
         <ol className="agent-steps" aria-label={t('agentSteps')}>
           {result.steps.map((step, index) => <li key={index} className={`agent-step${step.ok ? '' : ' agent-step--failed'}`}>
             <Icon name={step.ok ? 'check' : 'alert'} />
-            {t(STEP_KEYS[step.tool], { n: step.tool === 'read_questions' ? open.length : step.problems ?? 0 })}
+            {t(STEP_KEYS[step.tool], { n: step.tool === 'read_questions' ? sendable.length : step.problems ?? 0 })}
             {!step.ok && step.problems ? ` · ${t('stepProblems', { n: step.problems })}` : ''}
           </li>)}
         </ol>

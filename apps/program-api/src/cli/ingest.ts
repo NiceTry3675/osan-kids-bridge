@@ -139,7 +139,10 @@ async function ingestOne(id: string, args: IngestArgs, now: Date): Promise<Outco
   }
 
   const review = carriedReview(previous, extracted)
-  const record: ProgramRecord = { ...extracted, summaries_by_language: summaries, review }
+  // 기관 추가 안내는 원문에서 오지 않으므로 다시 추출해도 그대로 둔다 (원문이 바뀌었으면 담당자가 검수 화면에서 다시 본다)
+  const addenda = previous?.addenda?.length ? { addenda: previous.addenda } : {}
+  const record: ProgramRecord = { ...extracted, summaries_by_language: summaries, review, ...addenda }
+  if (addenda.addenda) step(`기관 추가 안내 ${addenda.addenda.length}건을 그대로 둡니다`)
   if (previous?.review.status === 'approved') {
     step(review.status === 'approved' ? '검수: 사실이 같아 이전 승인을 유지합니다' : '검수: 사실이 바뀌어 검수 대기로 되돌렸습니다')
   } else {
