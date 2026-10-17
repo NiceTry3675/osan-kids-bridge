@@ -44,6 +44,18 @@ async function main() {
     const input = entry ? await entry.async('nodebuffer') : path.join(research, fallback)
     await sharp(input).png().toFile(path.join(OUT, to))
   }
+  // 기관 화면 캡처(capture.js, 2880px 폭)에서 발표자료에 쓸 부분만 잘라 둔다: 검수 화면의 세 칸, 공고 보완 도우미, AI 편성 제안
+  for (const [from, to, box] of [
+    ['dash-improve-drafts.png', 'dash-improve-crop.png', { left: 1195, top: 36, width: 1620, height: 1325 }],
+    ['dash-review.png', 'dash-review-crop.png', { left: 562, top: 266, width: 2253, height: 1397 }],
+    // AI 편성 제안(capture.js plan, 1440×1300): 왼쪽 익명 통계 카드, 오른쪽 편성안 카드(제목~근거)
+    ['dash-plan-full.png', 'dash-plan-data-crop.png', { left: 564, top: 308, width: 919, height: 1060 }],
+    ['dash-plan-full.png', 'dash-plan-card-crop.png', { left: 1555, top: 1000, width: 1224, height: 1425 }],
+  ]) {
+    const file = path.join(OUT, from)
+    if (fs.existsSync(file)) await sharp(file).extract(box).png().toFile(path.join(OUT, to))
+    else console.warn(`${from}이 없어 ${to}를 만들지 않았습니다. node capture.js 다음에 이 스크립트를 한 번 더 실행하세요.`)
+  }
   for (const name of fs.readdirSync(OUT).sort()) {
     const { width, height } = await sharp(path.join(OUT, name)).metadata()
     console.log(name.padEnd(30), `${width}x${height}`)

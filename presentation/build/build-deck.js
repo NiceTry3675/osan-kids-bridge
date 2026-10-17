@@ -1,6 +1,7 @@
 // 발표자료(1차 심사: 발표 없이 읽히는 덱) 생성. 내용 기준은 ../outline.md, 수치 기준은 ../../research/통계_1차출처_확인_2026-10-17.md
-// 실행: npm install && node prepare-assets.js && node build-deck.js  → ../osan-kids-bridge-deck.pptx
+// 실행: npm install && node prepare-assets.js && node capture.js && node prepare-assets.js && node build-deck.js  → ../osan-kids-bridge-deck.pptx (순서와 서버 준비는 ../README.md)
 // 그림(../assets)에는 실제 기관 포스터와 번역본이 들어가므로 공개 저장소에 올리지 않는다.
+// 문체: 제목은 명사로 끝나는 짧은 구절, 본문은 한 줄에 정보 하나인 개조식. '~다'로 끝내지 않는다.
 const path = require('node:path')
 const fs = require('node:fs')
 const pptxgen = require('pptxgenjs')
@@ -11,20 +12,29 @@ const ASSETS = path.resolve(__dirname, '../assets')
 const QA = process.env.DECK_QA === '1'
 const OUT = QA ? path.resolve(__dirname, 'render/deck-qa.pptx') : path.resolve(__dirname, '../osan-kids-bridge-deck.pptx')
 const img = (name) => path.join(ASSETS, name)
+/** 편성 도우미의 실제 결과(capture.js plan이 받아 둔 것). 14번의 숫자를 캡처와 같은 결과에서 읽는다 */
+const PLAN = (() => {
+  try { return JSON.parse(fs.readFileSync(path.resolve(__dirname, 'render/plan-result.json'), 'utf8')).proposals[0] ?? null } catch { return null }
+})()
 
-// 보호자 웹·대시보드와 같은 색: 짙은 숲색(바탕), 행동 초록(강조), 형광펜 노랑은 '확인 필요'에만
+// 따뜻한 색: 크림 바탕에 흰 카드, 짙은 숲색(결론 상자), 행동 초록(해결), 테라코타(문제·오류), 햇살 노랑(실제 사례)
+// 보호자 웹·대시보드의 초록과 같은 계열이고, 시연영상(record-demo.js)의 크림·코랄과 맞춘다
 const THEME = {
-  name: 'Osan Kids Bridge',
+  name: 'Osan Kids Bridge Warm',
   headFontFace: 'Malgun Gothic',
   bodyFontFace: 'Malgun Gothic',
   colors: {
-    dk1: '1D2A24', lt1: 'FFFFFF', dk2: '12382B', lt2: 'F3F4EF',
-    accent1: '1F7A5C', accent2: 'FFD84D', accent3: '2E8B63', accent4: 'A6D3BD', accent5: 'E4F2EC', accent6: 'B42318',
-    hlink: '1F7A5C', folHlink: '18654B',
+    dk1: '3A2F2A', lt1: 'FFFFFF', dk2: '2F5446', lt2: 'FFFFFF',
+    accent1: '2E7D5B', accent2: 'F7D27A', accent3: '5BA37E', accent4: 'C9E3D2', accent5: 'E7F1E8', accent6: 'D2643C',
+    hlink: '2E7D5B', folHlink: '25664A',
   },
 }
 const HEX = THEME.colors
-const MUTED = '5C6862'
+const MUTED = '7A6B62'
+const CREAM = 'FBF6EE'
+const PEACH = 'FBE3D3'
+const SAND = 'F3E8DA'
+const LINE = 'E6D8C6'
 
 const pres = new pptxgen()
 pres.layout = 'LAYOUT_WIDE' // 13.333 × 7.5 in
@@ -37,16 +47,16 @@ const W = 13.333
 // ---------- 레이아웃 ----------
 pres.defineSlideMaster({
   title: 'COVER',
-  background: { color: HEX.dk2 },
+  background: { color: CREAM },
   objects: [
-    { placeholder: { options: { name: 'kicker', type: 'body', x: 0.7, y: 0.75, w: 7.2, h: 0.45, fontSize: 14, bold: true, color: C.accent4, margin: 0, align: 'left' }, text: '' } },
-    { placeholder: { options: { name: 'title', type: 'title', x: 0.7, y: 1.4, w: 7.2, h: 2.6, fontSize: 38, bold: true, color: C.background1, valign: 'top', margin: 0, lineSpacingMultiple: 1.1, align: 'left' }, text: '' } },
-    { placeholder: { options: { name: 'body', type: 'body', x: 0.7, y: 4.25, w: 7.0, h: 1.3, fontSize: 18, color: C.accent5, valign: 'top', margin: 0, align: 'left' }, text: '' } },
+    { placeholder: { options: { name: 'kicker', type: 'body', x: 0.7, y: 0.8, w: 7.2, h: 0.45, fontSize: 15, bold: true, color: C.accent6, margin: 0, align: 'left' }, text: '' } },
+    { placeholder: { options: { name: 'title', type: 'title', x: 0.7, y: 1.45, w: 7.2, h: 2.6, fontSize: 40, bold: true, color: C.text1, valign: 'top', margin: 0, lineSpacingMultiple: 1.1, align: 'left' }, text: '' } },
+    { placeholder: { options: { name: 'body', type: 'body', x: 0.7, y: 4.3, w: 7.0, h: 1.3, fontSize: 18, color: MUTED, valign: 'top', margin: 0, align: 'left' }, text: '' } },
   ],
 })
 pres.defineSlideMaster({
   title: 'CONTENT',
-  background: { color: 'FFFFFF' },
+  background: { color: CREAM },
   margin: [0.5, 0.6, 0.6, 0.6],
   objects: [
     { placeholder: { options: { name: 'kicker', type: 'body', x: 0.6, y: 0.32, w: 9.5, h: 0.36, fontSize: 13, bold: true, color: C.accent1, margin: 0, align: 'left' }, text: '' } },
@@ -60,16 +70,18 @@ pres.defineSlideMaster({
 // ---------- 그리기 도구 ----------
 let objectCount = 0
 const name = (label) => `${label}-${++objectCount}`
+const softShadow = Object.freeze({ type: 'outer', color: '3A2F2A', opacity: 0.08, blur: 10, offset: 2, angle: 90 })
 
 function text(slide, value, opts) {
   slide.addText(value, { isTextBox: true, margin: 0, fontSize: 14, color: C.text1, valign: 'top', objectName: name('text'), ...opts })
 }
 
-function card(slide, { x, y, w, h, fill = C.background2, line, shadow = false }) {
+/** 둥근 카드. 기본은 크림 바탕 위의 흰 카드(옅은 그림자) */
+function card(slide, { x, y, w, h, fill = C.background2, line, shadow = true }) {
   slide.addShape(pres.shapes.ROUNDED_RECTANGLE, {
-    x, y, w, h, rectRadius: 0.12, fill: { color: fill }, line: line ? { color: line, width: 1 } : { type: 'none' },
-    shadow: shadow ? { type: 'outer', color: '1D2A24', opacity: 0.12, blur: 8, offset: 2, angle: 90 } : undefined,
-    objectName: name('card'),
+    x, y, w, h, rectRadius: 0.16, fill: { color: fill }, line: line ? { color: line, width: 1 } : { type: 'none' },
+    // pptxgenjs가 shadow 객체의 값을 그 자리에서 EMU로 바꿔 쓰므로 카드마다 새 객체를 넘긴다 (같은 객체를 다시 쓰면 값이 계속 곱해져 파일이 깨짐)
+    shadow: shadow ? { ...softShadow } : undefined, objectName: name('card'),
   })
 }
 
@@ -80,7 +92,7 @@ function phone(slide, file, { x, y, h }) {
   const pad = 0.07
   slide.addShape(pres.shapes.ROUNDED_RECTANGLE, {
     x: x - pad, y: y - pad, w: w + pad * 2, h: h + pad * 2, rectRadius: 0.22, fill: { color: C.text1 }, line: { type: 'none' },
-    shadow: { type: 'outer', color: '1D2A24', opacity: 0.2, blur: 10, offset: 3, angle: 90 }, objectName: name('phone-frame'),
+    shadow: { type: 'outer', color: '3A2F2A', opacity: 0.2, blur: 10, offset: 3, angle: 90 }, objectName: name('phone-frame'),
   })
   slide.addImage({ path: file, x, y, w, h, objectName: name('phone-screen') })
   return w
@@ -88,7 +100,7 @@ function phone(slide, file, { x, y, h }) {
 
 function picture(slide, file, { x, y, w, h, border = true }) {
   if (border) {
-    slide.addShape(pres.shapes.RECTANGLE, { x: x - 0.04, y: y - 0.04, w: w + 0.08, h: h + 0.08, fill: { color: 'FFFFFF' }, line: { color: 'CDD3CC', width: 0.75 }, shadow: { type: 'outer', color: '1D2A24', opacity: 0.14, blur: 8, offset: 2, angle: 90 }, objectName: name('pic-frame') })
+    slide.addShape(pres.shapes.RECTANGLE, { x: x - 0.05, y: y - 0.05, w: w + 0.1, h: h + 0.1, fill: { color: 'FFFFFF' }, line: { color: LINE, width: 0.75 }, shadow: { type: 'outer', color: '3A2F2A', opacity: 0.12, blur: 10, offset: 2, angle: 90 }, objectName: name('pic-frame') })
   }
   slide.addImage({ path: file, x, y, w, h, objectName: name('picture') })
 }
@@ -102,6 +114,16 @@ function arrow(slide, { x, y, w = 0, h = 0, color = C.accent1, width = 2.25 }) {
   slide.addShape(pres.shapes.LINE, { x, y, w, h, line: { color, width, endArrowType: 'triangle' }, objectName: name('arrow') })
 }
 
+/** 그림 위에 겹쳐 그리는 강조 테두리 */
+function outline(slide, { x, y, w, h, color = C.accent6 }) {
+  slide.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w, h, rectRadius: 0.06, fill: { type: 'none' }, line: { color, width: 2.25 }, objectName: name('outline') })
+}
+
+/** 배경의 큰 원 (따뜻한 장식) */
+function blob(slide, { x, y, size, color = PEACH }) {
+  slide.addShape(pres.shapes.OVAL, { x, y, w: size, h: size, fill: { color }, line: { type: 'none' }, objectName: name('blob') })
+}
+
 function stat(slide, { x, y, w, value, label, color = C.accent1, valueSize = 40 }) {
   // 큰 숫자는 아래에 맞춰 두고, 글자 크기만큼 상자를 위로 키운다(맑은 고딕 한 줄 높이 ≈ 글자 크기의 1.33배)
   const h = Math.max(0.75, (valueSize * 1.35) / 72)
@@ -109,15 +131,22 @@ function stat(slide, { x, y, w, value, label, color = C.accent1, valueSize = 40 
   text(slide, label, { x, y: y + 0.82, w, h: 0.7, fontSize: 14, color: C.text1 })
 }
 
-function content(kicker, title, source, section) {
+/** 문제 파트는 테라코타, 해결 파트는 초록으로 머리말 색을 나눈다 */
+function content(kicker, title, source, section, { problem = false } = {}) {
   const slide = pres.addSlide({ masterName: 'CONTENT', sectionTitle: section })
-  slide.addText(kicker, { placeholder: 'kicker' })
+  // 자리 표시자의 서식(초록)이 addText 옵션을 덮어쓰므로, 문제 파트의 색은 글자(run)에 준다
+  slide.addText([{ text: kicker, options: problem ? { color: C.accent6 } : {} }], { placeholder: 'kicker' })
   slide.addText(title, { placeholder: 'title' })
   if (source) slide.addText(source, { placeholder: 'source' })
   return slide
 }
 
 const chartText = { catAxisLabelFontFace: '+mn-lt', valAxisLabelFontFace: '+mn-lt', dataLabelFontFace: '+mn-lt', titleFontFace: '+mn-lt' }
+const chartBase = {
+  ...chartText, titleFontSize: 13, titleColor: HEX.dk1, showValue: true, dataLabelPosition: 'outEnd', dataLabelFontSize: 13, dataLabelColor: HEX.dk1,
+  catAxisLabelColor: HEX.dk1, catAxisLabelFontSize: 13, valAxisHidden: true, valGridLine: { style: 'none' }, catGridLine: { style: 'none' }, showLegend: false,
+  catAxisLineShow: false, plotArea: { fill: { color: 'FFFFFF' } },
+}
 
 // =========================================================
 // 1. 표지
@@ -125,18 +154,20 @@ const chartText = { catAxisLabelFontFace: '+mn-lt', valAxisLabelFontFace: '+mn-l
 pres.addSection({ title: '시작' })
 {
   const slide = pres.addSlide({ masterName: 'COVER', sectionTitle: '시작' })
+  blob(slide, { x: 7.75, y: -0.6, size: 6.4 })
+  blob(slide, { x: -1.2, y: 5.6, size: 2.6, color: 'E7F1E8' })
   slide.addText('오산시 사회문제 해결을 위한 AX 라이프케어', { placeholder: 'kicker' })
-  slide.addText('한국어 포스터에 갇힌\n아이의 기회를\nAI 에이전트가 엽니다', { placeholder: 'title' })
+  slide.addText('한국어 포스터에 갇힌\n아이의 기회를 여는\nAI 에이전트', { placeholder: 'title' })
   slide.addText([
-    { text: '오산 아이 프로그램', options: { bold: true, color: C.background1, breakLine: true } },
+    { text: '오산 아이 프로그램', options: { bold: true, color: C.accent1, breakLine: true } },
     { text: '다문화가족 보호자를 위한 읽기 → 연결 → 편성', options: {} },
   ], { placeholder: 'body' })
-  text(slide, '선우 · 채현 · 소영 · 준현', { x: 0.7, y: 6.55, w: 6, h: 0.4, fontSize: 14, color: C.accent4 })
+  text(slide, '선우 · 채현 · 소영 · 준현', { x: 0.7, y: 6.55, w: 6, h: 0.4, fontSize: 14, color: MUTED })
   // 같은 포스터의 한국어 원본과 AI가 옮긴 베트남어판
-  picture(slide, img('poster-kpop-ko.jpg'), { x: 8.35, y: 0.75, w: 2.4, h: 3.39, border: false })
-  picture(slide, img('poster-kpop-vi.jpg'), { x: 10.25, y: 2.45, w: 2.55, h: 3.83, border: false })
-  text(slide, '한국어 원본', { x: 8.35, y: 4.22, w: 1.85, h: 0.3, fontSize: 12, color: C.accent4 })
-  text(slide, 'AI가 옮긴 베트남어판 (디자인 그대로)', { x: 9.0, y: 6.4, w: 3.8, h: 0.3, fontSize: 12, color: C.accent4, align: 'right' })
+  picture(slide, img('poster-kpop-ko.jpg'), { x: 8.35, y: 0.75, w: 2.4, h: 3.39 })
+  picture(slide, img('poster-kpop-vi.jpg'), { x: 10.25, y: 2.45, w: 2.55, h: 3.83 })
+  text(slide, '한국어 원본', { x: 8.35, y: 4.25, w: 1.85, h: 0.3, fontSize: 12, color: MUTED })
+  text(slide, 'AI가 옮긴 베트남어판 (디자인 그대로)', { x: 9.0, y: 6.42, w: 3.8, h: 0.3, fontSize: 12, color: MUTED, align: 'right' })
 }
 
 // =========================================================
@@ -144,31 +175,26 @@ pres.addSection({ title: '시작' })
 // =========================================================
 pres.addSection({ title: '문제' })
 {
-  const slide = content('문제 ① 오산이라는 지역', '오산은 주민 11명 중 1명이 외국인주민인 도시다',
-    // 2022·2023년 외국인주민 수(21,046·22,523명)는 2023년판 원문에서 확인했다
-    '출처: 행정안전부 「지방자치단체 외국인주민 현황」 2024년판(2024.11.1 기준) 보도자료·설명자료, 2022·2023년 값은 2023년판. 분모는 인구주택총조사 총인구', '문제')
-  stat(slide, { x: 0.6, y: 1.65, w: 4.2, value: '9.3%', label: '오산 총인구 대비 외국인주민 (23,550명)\n전국 5.0%의 1.9배, 경기 6.1%의 1.5배', valueSize: 54 })
-  stat(slide, { x: 0.6, y: 3.45, w: 4.2, value: '4,024가구', label: '오산의 다문화가구 (가구원 10,557명)', valueSize: 36 })
-  stat(slide, { x: 0.6, y: 5.0, w: 4.2, value: '+23.8%', label: '오산 결혼이민자 2년간 증가 (2022 → 2024)', valueSize: 36 })
+  const slide = content('문제 ① 오산이라는 지역', '주민 11명 중 1명이 외국인주민인 도시, 오산',
+    // 2022·2023년 외국인주민 수(21,046·22,523명)는 2023년판 원문에서 확인
+    '출처: 행정안전부 「지방자치단체 외국인주민 현황」 2024년판(2024.11.1 기준) 보도자료·설명자료, 2022·2023년 값은 2023년판. 분모는 인구주택총조사 총인구', '문제', { problem: true })
+  stat(slide, { x: 0.6, y: 1.65, w: 4.2, value: '9.3%', label: '오산 총인구 대비 외국인주민 (23,550명)\n전국 5.0%의 1.9배, 경기 6.1%의 1.5배', valueSize: 54, color: C.accent6 })
+  stat(slide, { x: 0.6, y: 3.45, w: 4.2, value: '4,024가구', label: '오산의 다문화가구 (가구원 10,557명)', valueSize: 36, color: C.accent6 })
+  stat(slide, { x: 0.6, y: 5.0, w: 4.2, value: '+23.8%', label: '오산 결혼이민자 2년간 증가 (2022 → 2024)', valueSize: 36, color: C.accent6 })
+  card(slide, { x: 5.2, y: 1.5, w: 7.55, h: 5.35 })
   slide.addChart(pres.charts.BAR, [{ name: '외국인주민 비율(%)', labels: ['전국', '경기', '오산'], values: [5.0, 6.1, 9.3] }], {
-    x: 5.3, y: 1.55, w: 7.4, h: 2.55, barDir: 'bar', chartColors: ['A6D3BD', 'A6D3BD', '1F7A5C'], ...chartText,
-    showTitle: true, title: '총인구 대비 외국인주민 비율(%)', titleFontSize: 13, titleColor: '1D2A24',
-    showValue: true, dataLabelPosition: 'outEnd', dataLabelFontSize: 13, dataLabelColor: '1D2A24', dataLabelFormatCode: '0.0',
-    catAxisLabelColor: '1D2A24', catAxisLabelFontSize: 13, valAxisHidden: true, valGridLine: { style: 'none' }, catGridLine: { style: 'none' },
-    showLegend: false, valAxisMinVal: 0, valAxisMaxVal: 11, barGapWidthPct: 60,
+    x: 5.35, y: 1.6, w: 7.25, h: 2.5, barDir: 'bar', chartColors: [SAND, SAND, HEX.accent6], ...chartBase,
+    showTitle: true, title: '총인구 대비 외국인주민 비율(%)', dataLabelFormatCode: '0.0', valAxisMinVal: 0, valAxisMaxVal: 11, barGapWidthPct: 60,
   })
   slide.addChart(pres.charts.BAR, [{ name: '오산 외국인주민(명)', labels: ['2022', '2023', '2024'], values: [21046, 22523, 23550] }], {
-    x: 5.3, y: 4.25, w: 7.4, h: 2.55, barDir: 'col', chartColors: ['2E8B63'], ...chartText,
-    showTitle: true, title: '오산 외국인주민 수 (각 연도 11.1 기준, 명)', titleFontSize: 13, titleColor: '1D2A24',
-    showValue: true, dataLabelPosition: 'outEnd', dataLabelFontSize: 13, dataLabelColor: '1D2A24', dataLabelFormatCode: '#,##0',
-    catAxisLabelColor: '1D2A24', catAxisLabelFontSize: 13, valAxisHidden: true, valGridLine: { style: 'none' }, catGridLine: { style: 'none' },
-    showLegend: false, valAxisMinVal: 0, valAxisMaxVal: 27000, barGapWidthPct: 90,
+    x: 5.35, y: 4.2, w: 7.25, h: 2.55, barDir: 'col', chartColors: ['E59A78'], ...chartBase,
+    showTitle: true, title: '오산 외국인주민 수 (각 연도 11.1 기준, 명)', dataLabelFormatCode: '#,##0', valAxisMinVal: 0, valAxisMaxVal: 27000, barGapWidthPct: 90,
   })
 }
 {
-  const slide = content('문제 ② 보호자의 어려움', '보호자 10명 중 7~8명이 양육이 어렵고, 비용과 정보가 벽이다',
-    '출처: 여성가족부(현 성평등가족부) 「2024 전국다문화가족실태조사」 별첨 7·9·11·14쪽, 교육부 「2026 교육기본통계」(2026.4.1 기준). 양육 어려움은 2021년보다 줄었다', '문제')
-  // 21.8%는 1순위 어려움 중 비용 부담(24.9%) 다음 2위다. '가장 큰'으로 쓰지 않는다
+  const slide = content('문제 ② 보호자의 어려움', '양육이 어려운 보호자 78.2%, 벽은 비용과 정보',
+    '출처: 여성가족부(현 성평등가족부) 「2024 전국다문화가족실태조사」 별첨 7·9·11·14쪽, 교육부 「2026 교육기본통계」(2026.4.1 기준). 양육 어려움은 2021년보다 감소', '문제', { problem: true })
+  // 21.8%는 1순위 어려움 중 비용 부담(24.9%) 다음 2위. 제목의 '비용과 정보'는 1·2위를 함께 가리킨다
   const items = [
     ['78.2%', '6~24세 자녀를 둔\n보호자의 양육 어려움'],
     ['21.8%', '1순위 어려움 중 비용 다음\n\'학업·진학·진로 정보 부족\''],
@@ -177,163 +203,211 @@ pres.addSection({ title: '문제' })
   ]
   items.forEach(([value, label], index) => {
     const x = 0.6 + index * 3.07
-    card(slide, { x, y: 1.6, w: 2.85, h: 2.05, fill: index === 1 || index === 2 ? C.accent5 : C.background2 })
-    text(slide, value, { x: x + 0.25, y: 1.78, w: 2.4, h: 0.75, fontSize: 36, bold: true, color: C.accent1 })
+    card(slide, { x, y: 1.6, w: 2.85, h: 2.05, fill: index === 1 || index === 2 ? PEACH : C.background2 })
+    text(slide, value, { x: x + 0.25, y: 1.78, w: 2.4, h: 0.75, fontSize: 36, bold: true, color: C.accent6 })
     text(slide, label, { x: x + 0.25, y: 2.6, w: 2.5, h: 0.95, fontSize: 14 })
   })
+  card(slide, { x: 0.6, y: 3.95, w: 7.0, h: 2.85 })
   slide.addChart(pres.charts.BAR, [{ name: '1순위 어려움(%)', labels: ['비용 부담', '학업·진학·진로 정보 부족', '학습지도'], values: [24.9, 21.8, 19.7] }], {
-    x: 0.6, y: 3.95, w: 7.0, h: 2.85, barDir: 'bar', chartColors: ['A6D3BD', '1F7A5C', 'A6D3BD'], ...chartText,
-    showTitle: true, title: '6~24세 자녀 양육의 1순위 어려움 (상위 3개, %)', titleFontSize: 13, titleColor: '1D2A24',
-    showValue: true, dataLabelPosition: 'outEnd', dataLabelFontSize: 13, dataLabelColor: '1D2A24', dataLabelFormatCode: '0.0',
-    catAxisLabelColor: '1D2A24', catAxisLabelFontSize: 13, valAxisHidden: true, valGridLine: { style: 'none' }, catGridLine: { style: 'none' },
-    showLegend: false, valAxisMinVal: 0, valAxisMaxVal: 30, catAxisOrientation: 'maxMin', barGapWidthPct: 55,
+    x: 0.75, y: 4.05, w: 6.75, h: 2.65, barDir: 'bar', chartColors: [SAND, HEX.accent6, SAND], ...chartBase,
+    showTitle: true, title: '6~24세 자녀 양육의 1순위 어려움 (상위 3개, %)', dataLabelFormatCode: '0.0',
+    valAxisMinVal: 0, valAxisMaxVal: 30, catAxisOrientation: 'maxMin', barGapWidthPct: 55,
   })
   card(slide, { x: 8.0, y: 3.95, w: 4.73, h: 2.85, fill: C.text2 })
-  text(slide, '프로그램은 있는데,\n정보가 닿지 않는다', { x: 8.35, y: 4.2, w: 4.1, h: 1.0, fontSize: 22, bold: true, color: C.background1 })
+  text(slide, '프로그램은 있는데,\n닿지 않는 정보', { x: 8.35, y: 4.2, w: 4.1, h: 1.0, fontSize: 22, bold: true, color: C.background1 })
   text(slide, [
     { text: '이주배경학생(구 다문화학생) 21만 838명', options: { breakLine: true } },
     { text: '전체 학생의 4.3%, 초등학생은 5.3%', options: { breakLine: true } },
-    { text: '진학·진로 정보가 필요한 아이가 늘고 있다', options: {} },
+    { text: '진학·진로 정보가 필요한 아이도 함께 증가', options: {} },
   ], { x: 8.35, y: 5.25, w: 4.2, h: 1.45, fontSize: 14, color: C.accent5, paraSpaceAfter: 6 })
 }
 {
-  const slide = content('문제 ③ 현장 관찰', '사이트는 번역돼도, 포스터 이미지 속 정보는 한국어 그대로다',
-    '출처: 오산시가족센터 누리집 화면(팀 캡처, 2026.10), 다누리 오산시가족센터 게시판(2026.10.17 확인), 한국건강가정진흥원 통번역 지원사 배치현황(2025.9.24)', '문제')
+  const slide = content('문제 ③ 현장 관찰', '화면은 번역돼도, 포스터는 한국어 그대로',
+    '출처: 오산시가족센터 누리집 화면(팀 캡처, 2026.10), 다누리 오산시가족센터 게시판(2026.10.17 확인), 한국건강가정진흥원 통번역 지원사 배치현황(2025.9.24)', '문제', { problem: true })
   picture(slide, img('problem-kpop-listing.png'), { x: 0.65, y: 1.65, w: 6.6, h: 3.5 })
-  text(slide, '공고 상세: 일정·대상·신청 QR이 모두 포스터 이미지 안에 있다', { x: 0.65, y: 5.28, w: 6.6, h: 0.35, fontSize: 13, color: MUTED })
+  text(slide, '공고 상세: 일정·대상·신청 QR이 모두 포스터 이미지 안', { x: 0.65, y: 5.28, w: 6.6, h: 0.35, fontSize: 13, color: MUTED })
   picture(slide, img('problem-translated-site.png'), { x: 7.75, y: 1.65, w: 2.9, h: 4.6 })
   text(slide, '화면을 영어로 바꿔도\n포스터는 한국어 그대로', { x: 7.75, y: 6.32, w: 2.9, h: 0.6, fontSize: 13, color: MUTED })
-  card(slide, { x: 10.95, y: 1.65, w: 1.8, h: 2.2, fill: C.accent5 })
-  text(slide, '1명', { x: 11.1, y: 1.8, w: 1.5, h: 0.65, fontSize: 32, bold: true, color: C.accent1 })
+  card(slide, { x: 10.95, y: 1.65, w: 1.8, h: 2.2, fill: PEACH })
+  text(slide, '1명', { x: 11.1, y: 1.8, w: 1.5, h: 0.65, fontSize: 32, bold: true, color: C.accent6 })
   text(slide, [{ text: '오산시가족센터', options: { breakLine: true } }, { text: '통번역지원사', options: { breakLine: true } }, { text: '베트남어만 지원', options: {} }], { x: 11.1, y: 2.5, w: 1.6, h: 1.25, fontSize: 12 })
-  card(slide, { x: 10.95, y: 4.05, w: 1.8, h: 2.2, fill: C.background2 })
-  text(slide, '129곳', { x: 11.1, y: 4.2, w: 1.55, h: 0.65, fontSize: 30, bold: true, color: C.accent1 })
+  card(slide, { x: 10.95, y: 4.05, w: 1.8, h: 2.2 })
+  text(slide, '129곳', { x: 11.1, y: 4.2, w: 1.55, h: 0.65, fontSize: 30, bold: true, color: C.accent6 })
   text(slide, [{ text: '전국 가족센터', options: { breakLine: true } }, { text: '221곳 중', options: { breakLine: true } }, { text: '1개 언어만', options: { breakLine: true } }, { text: '통번역하는 곳', options: {} }], { x: 11.1, y: 4.9, w: 1.6, h: 1.25, fontSize: 12 })
-  card(slide, { x: 0.65, y: 5.75, w: 6.6, h: 1.0, fill: C.accent2 })
-  // 다누리 사실은 '프로그램안내 게시판'으로 좁혀 쓴다 (공지사항에는 10·11월 계획 이미지가 있다). 검증: research/기존서비스문제/검증_기존서비스분석_2026-10-17.md
+  card(slide, { x: 0.65, y: 5.75, w: 6.6, h: 1.0, fill: C.accent2, shadow: false })
+  // 다누리 사실은 '프로그램안내 게시판'으로 좁혀 쓴다 (공지사항에는 10·11월 계획 이미지가 있음). 검증: research/기존서비스문제/검증_기존서비스분석_2026-10-17.md
   text(slide, [
-    { text: '보호자는 공고마다 포스터 속 한국어를 직접 읽어야 한다', options: { bold: true, fontSize: 16, breakLine: true } },
+    { text: '공고마다 포스터 속 한국어를 직접 읽어야 하는 보호자', options: { bold: true, fontSize: 16, breakLine: true } },
     { text: '다누리의 오산 센터 프로그램안내는 8.12 글이 마지막, 다국어게시판은 0건', options: { fontSize: 12.5 } },
   ], { x: 0.9, y: 5.8, w: 6.2, h: 0.9, valign: 'middle' })
 }
 {
-  const slide = content('문제 ④ 양쪽의 단절', '보호자는 포스터에서 막히고, 기관은 어디서 막히는지 모른다',
-    '출처: 대구광역시 「2026년 민원행정 및 제도개선 추진계획」 7쪽(120 음성 AI 상담, 2025.4~12, AI 완료 4,503건/11,932건). 챗봇 화면: 경기도 이주민 포털(팀 캡처)', '문제')
+  const slide = content('문제 ④ 양쪽의 단절', '포스터 앞에서 멈추는 보호자, 이유를 모르는 기관',
+    '출처: 대구광역시 「2026년 민원행정 및 제도개선 추진계획」 7쪽(120 음성 AI 상담, 2025.4~12, AI 완료 4,503건/11,932건). 챗봇 화면: 경기도 이주민 포털(팀 캡처)', '문제', { problem: true })
   const columns = [
     // 근거 없는 경향('믿기 쉽다')으로 단정하지 않고 위험으로 쓴다
-    ['보호자', ['한국어 포스터만으로는 대상·일정을 판단하기 어렵다', '공고에 없는 것(준비물·비용)도 한국어로 물어야 한다', '자격을 단정한 안내를 그대로 믿을 위험이 있다']],
-    ['기관', ['같은 질문이 전화로 반복된다', '공고에 무엇이 빠졌는지 모른다', '언제·어디서 열어야 많이 올 수 있는지 모른다']],
+    ['보호자', ['한국어 포스터만으로는 대상·일정 판단이 어려움', '공고에 없는 것(준비물·비용)도 한국어로 물어야 함', '자격을 단정한 안내를 그대로 믿을 위험']],
+    ['기관', ['같은 질문이 전화로 반복', '공고에 무엇이 빠졌는지 알기 어려움', '언제·어디서 열어야 많이 올지 알기 어려움']],
   ]
   columns.forEach(([title, lines], index) => {
     const x = 0.6 + index * 4.1
-    card(slide, { x, y: 1.6, w: 3.85, h: 3.55, fill: index === 0 ? C.accent5 : C.background2 })
-    text(slide, title, { x: x + 0.3, y: 1.8, w: 3.3, h: 0.5, fontSize: 20, bold: true, color: C.accent1 })
+    card(slide, { x, y: 1.6, w: 3.85, h: 3.55, fill: index === 0 ? PEACH : C.background2 })
+    text(slide, title, { x: x + 0.3, y: 1.8, w: 3.3, h: 0.5, fontSize: 20, bold: true, color: C.accent6 })
     text(slide, lines.map((line, i) => ({ text: line, options: { bullet: { indent: 14 }, breakLine: i < lines.length - 1 } })), { x: x + 0.3, y: 2.4, w: 3.35, h: 2.6, fontSize: 15, paraSpaceAfter: 8 })
   })
-  arrow(slide, { x: 4.47, y: 3.35, w: 0.22, h: 0, color: C.text2 })
+  arrow(slide, { x: 4.47, y: 3.35, w: 0.22, h: 0, color: C.accent6 })
   card(slide, { x: 0.6, y: 5.35, w: 7.95, h: 1.45, fill: C.text2 })
   text(slide, '38%', { x: 0.9, y: 5.45, w: 1.9, h: 1.2, fontSize: 40, bold: true, color: C.accent2, valign: 'middle' })
   // 챗봇 전반이 아니라 대구 120 '음성' AI 상담(3개 분야) 한 사례로 좁혀 쓴다
   text(slide, [
     { text: '대구 120콜센터 음성 AI 상담이 스스로 끝낸 비율', options: { bold: true, breakLine: true } },
-    { text: '차량등록·여권 등 3개 분야, 2025.4~12, 11,932건. 나머지는 상담원 연결(13%)이나 중도 포기(49%)로 끝났다', options: {} },
+    { text: '차량등록·여권 등 3개 분야, 2025.4~12, 11,932건. 나머지는 상담원 연결(13%) 또는 중도 포기(49%)', options: {} },
   ], { x: 2.85, y: 5.5, w: 5.45, h: 1.15, fontSize: 14, color: C.background1, valign: 'middle' })
   picture(slide, img('problem-chatbot.png'), { x: 9.4, y: 1.6, w: 2.86, h: 4.9 })
   text(slide, '경기도 이주민 포털 챗봇 (팀이 직접 사용)', { x: 8.85, y: 6.6, w: 3.95, h: 0.3, fontSize: 11, color: MUTED, align: 'center' })
 }
 
 // =========================================================
-// 6~12. 해결: 세 에이전트
+// 6~14. 해결: 네 에이전트와 보호자·기관 화면
 // =========================================================
 pres.addSection({ title: '해결' })
 {
-  const slide = content('해결 개요', '세 에이전트가 \'읽기 → 연결 → 편성\'의 순환을 만든다',
-    '코드: apps/program-api(src/poster, src/agent, src/admin), apps/guardian-web, apps/institution-dashboard', '해결')
+  const slide = content('해결 개요 · AI 에이전트 4개', '세 단계 순환: 읽기 → 연결 → 편성',
+    '코드: apps/program-api(src/poster, src/agent, src/admin), packages/planning(편성 계산), apps/guardian-web, apps/institution-dashboard', '해결')
   const nodes = [
     // 한글이 낱자 단위로 줄바꿈되지 않게 줄을 직접 나눈다(맑은 고딕 기준 줄마다 상자 폭의 95% 안쪽)
-    ['1', '읽기', '포스터 통번역 에이전트', '기관이 올린 한국어 포스터를\n디자인 그대로 보호자 언어로.\n다른 AI가 다시 읽어 검증하고\n틀린 곳만 다시 만든다'],
-    ['2', '연결', '상담 에이전트', '공고 사실만으로 보호자 언어로\n답하고, 아이 조건을 비교하고,\n공고에 없는 건 기관에 보낼\n한국어 문장으로'],
-    ['3', '편성', '공고 보완 에이전트', '보호자가 못 찾은 질문으로 공고에\n덧붙일 안내 초안을 쓰고, 담당자가\n확정하면 상담에 바로 반영한다.\n익명 수요로 요일·시간·장소 제안'],
+    ['1', '읽기', '포스터 통번역 에이전트', '기관이 올린 한국어 포스터를\n디자인 그대로 보호자 언어로\n다른 AI가 다시 읽어 검증\n틀린 곳만 다시 생성'],
+    ['2', '연결', '상담 에이전트', '공고 사실만으로 보호자 언어 답변\n아이 조건과 비교\n공고에 없는 건 기관에 보낼\n한국어 문장으로'],
+    ['3', '편성', '공고 보완 · 편성 에이전트', '못 찾은 질문 → 공고 보완 초안\n익명 통계 → 다음 프로그램 편성안\n언제·어디서와 숫자는 코드가 계산\n담당자가 확정'],
   ]
   nodes.forEach(([no, verb, title, body], index) => {
     const x = 0.6 + index * 4.2
-    card(slide, { x, y: 1.65, w: 3.75, h: 2.95, fill: index === 1 ? C.accent5 : C.background2, shadow: true })
+    card(slide, { x, y: 1.65, w: 3.75, h: 2.95, fill: index === 1 ? C.accent5 : C.background2 })
     badge(slide, no, { x: x + 0.3, y: 1.9, size: 0.62, fontSize: 20 })
     text(slide, verb, { x: x + 1.1, y: 1.9, w: 2.4, h: 0.62, fontSize: 28, bold: true, color: C.accent1, valign: 'middle' })
     text(slide, title, { x: x + 0.3, y: 2.75, w: 3.2, h: 0.45, fontSize: 18, bold: true })
-    text(slide, body, { x: x + 0.3, y: 3.3, w: 3.2, h: 1.2, fontSize: 14, color: C.text1 })
+    text(slide, body, { x: x + 0.3, y: 3.3, w: 3.25, h: 1.2, fontSize: 14, color: C.text1 })
     if (index < 2) arrow(slide, { x: x + 3.82, y: 3.12, w: 0.32, h: 0 })
   })
   // 돌아오는 화살표: 편성 → 다음 공고 → 읽기
-  slide.addShape(pres.shapes.LINE, { x: 10.47, y: 4.65, w: 0, h: 0.55, line: { color: C.accent1, width: 2.25 }, objectName: name('loop') })
-  slide.addShape(pres.shapes.LINE, { x: 2.47, y: 5.2, w: 8.0, h: 0, line: { color: C.accent1, width: 2.25 }, objectName: name('loop') })
-  slide.addShape(pres.shapes.LINE, { x: 2.47, y: 4.65, w: 0, h: 0.55, line: { color: C.accent1, width: 2.25, beginArrowType: 'triangle' }, objectName: name('loop') })
-  card(slide, { x: 2.97, y: 4.88, w: 7.0, h: 0.64, fill: 'FFFFFF', line: HEX.accent1 })
-  text(slide, '라이프케어: 다음 공고가 나아지고, 아이가 자라는 동안 계속된다', { x: 3.07, y: 4.88, w: 6.8, h: 0.64, fontSize: 15, bold: true, color: C.accent1, align: 'center', valign: 'middle' })
+  slide.addShape(pres.shapes.LINE, { x: 10.47, y: 4.65, w: 0, h: 0.55, line: { color: C.accent6, width: 2.25 }, objectName: name('loop') })
+  slide.addShape(pres.shapes.LINE, { x: 2.47, y: 5.2, w: 8.0, h: 0, line: { color: C.accent6, width: 2.25 }, objectName: name('loop') })
+  slide.addShape(pres.shapes.LINE, { x: 2.47, y: 4.65, w: 0, h: 0.55, line: { color: C.accent6, width: 2.25, beginArrowType: 'triangle' }, objectName: name('loop') })
+  card(slide, { x: 2.97, y: 4.88, w: 7.0, h: 0.64, fill: PEACH, shadow: false })
+  text(slide, '라이프케어: 공고는 점점 나아지고, 아이가 자라는 동안 계속', { x: 3.07, y: 4.88, w: 6.8, h: 0.64, fontSize: 15, bold: true, color: C.accent6, align: 'center', valign: 'middle' })
   card(slide, { x: 0.6, y: 5.85, w: 12.13, h: 0.9, fill: C.text2 })
-  // 한 줄에 다 넣으면 맑은 고딕에서 '남긴다'만 다음 줄로 넘어가므로, 머리말 옆에 두 줄로 나눠 쓴다
+  // 한 줄에 다 넣으면 맑은 고딕에서 끝말만 다음 줄로 넘어가므로, 머리말 옆에 두 줄로 나눠 쓴다
   text(slide, '공통 바탕', { x: 0.9, y: 5.85, w: 1.3, h: 0.9, fontSize: 15, bold: true, color: C.accent2, valign: 'middle' })
   text(slide, [
     { text: '검수된 공고 사실 + 원문 근거 인용 + 기존 판정 규칙', options: { breakLine: true } },
-    { text: '세 에이전트 모두 이것만 쓰고, 없는 것은 \'확인 필요\'로 남긴다', options: {} },
+    { text: '모든 에이전트가 이것만 사용, 없는 것은 \'확인 필요\'로', options: {} },
   ], { x: 2.2, y: 5.85, w: 10.3, h: 0.9, fontSize: 15, color: C.background1, valign: 'middle' })
 }
 {
-  const slide = content('① 읽기 · 포스터 통번역 에이전트', '디자인은 그대로, 글만 보호자 언어로 옮긴다',
-    '이미지 편집 gpt-image-2.5-sunburst(OpenAI), 판독·검증 gemini-3.8-flash(Google). 생성과 검증에 서로 다른 모델을 쓴다. 포스터 원본: 오산시가족센터', '해결')
-  const steps = ['원본 판독', '문구별 번역표\n+ 숫자 코드 검사', '원본을 넣어\n이미지 편집', 'QR 원본 이식\n+ 재스캔', '다른 AI가 다시\n읽어 검증', '틀린 곳만 재생성\n통과분만 게시']
-  steps.forEach((label, index) => {
-    const x = 0.6 + index * 2.04
-    badge(slide, String(index + 1), { x: x + 0.62, y: 1.6, size: 0.55, fontSize: 18, fill: index === 4 || index === 5 ? C.accent1 : C.accent3 })
-    text(slide, label, { x, y: 2.22, w: 1.8, h: 0.75, fontSize: 13, align: 'center', bold: index >= 4 })
-    if (index < steps.length - 1) arrow(slide, { x: x + 1.3, y: 1.875, w: 0.65, h: 0, color: C.accent4 })
-  })
-  picture(slide, img('poster-kpop-ko.jpg'), { x: 0.75, y: 3.25, w: 2.5, h: 3.53 })
-  arrow(slide, { x: 3.4, y: 5.0, w: 0.55, h: 0, width: 3 })
-  picture(slide, img('poster-kpop-vi.jpg'), { x: 4.1, y: 3.25, w: 2.35, h: 3.53 })
-  const points = [
-    ['원본을 입력으로', '기관 담당자가 만든 포스터의 그림·배치·색은 그대로 두고\n글만 바꾼다. 로고는 바꾸지 않는다'],
-    ['번역표가 정답지', '문구별 한국어 ↔ 베트남어 대응표를 먼저 만들고\n전화번호·날짜·인원을 코드로 대조한다 (10/19 → 19/10)'],
-    ['통과한 것만 게시', '3회 안에 검증을 통과하지 못하면 내보내지 않고\n원본과 검수된 다국어 안내를 보여 준다'],
+  const slide = content('보호자 화면', '아는 것만 넣으면, 우리 아이에게 맞는 공고까지',
+    '보호자 웹 실제 화면(쉬운 한국어, 시연 데이터). 베트남어·중국어 화면도 같음. 넣는 조건(학년·가능 시간·동·관심 분야)은 기관 편성 통계와 같은 항목', '해결')
+  blob(slide, { x: 3.9, y: 1.1, size: 5.8, color: 'E7F1E8' })
+  const steps = [
+    ['app-ko-intro.png', '언어부터 고르기', '이름·주소·국적은 묻지 않음'],
+    ['app-ko-condition.png', '아는 것만 입력', '아이 나이, 가능한 요일·시간'],
+    ['app-ko-results-top.png', '맞는 공고만', '맞는 이유 ✓, 모르는 건 형광펜'],
+    ['app-ko-detail.png', '우리 아이와 비교', '기관에 확인할 점, AI에게 물어보기'],
   ]
-  points.forEach(([title, body], index) => {
-    const y = 3.25 + index * 1.2
-    card(slide, { x: 6.95, y, w: 5.8, h: 1.07, fill: index === 1 ? C.accent5 : C.background2 })
-    text(slide, title, { x: 7.2, y: y + 0.1, w: 5.3, h: 0.38, fontSize: 15, bold: true, color: C.accent1 })
-    text(slide, body, { x: 7.2, y: y + 0.47, w: 5.35, h: 0.58, fontSize: 12 })
+  const h = 4.45
+  const w = h * (750 / 1624)
+  const gap = 1.05
+  const left = (W - (w * steps.length + gap * (steps.length - 1))) / 2
+  steps.forEach(([file, title, note], index) => {
+    const x = left + index * (w + gap)
+    phone(slide, img(file), { x, y: 1.6, h })
+    badge(slide, String(index + 1), { x: x - 0.22, y: 1.42, size: 0.44, fontSize: 14, fill: C.accent6 })
+    text(slide, title, { x: x - 0.3, y: 6.17, w: w + 0.6, h: 0.32, fontSize: 14, bold: true, color: C.accent1, align: 'center' })
+    text(slide, note, { x: x - 0.45, y: 6.5, w: w + 0.9, h: 0.3, fontSize: 11, color: MUTED, align: 'center' })
+    if (index < steps.length - 1) arrow(slide, { x: x + w + 0.2, y: 1.6 + h / 2, w: gap - 0.4, h: 0, color: C.accent6 })
   })
 }
 {
-  const slide = content('① 읽기 · 검증 결과', '검증 루프는 실제로 오류를 잡아 고친다',
+  const slide = content('① 읽기 · 포스터 통번역 에이전트', '디자인은 그대로, 글만 보호자 언어로',
+    '이미지 편집 gpt-image-2.5-sunburst(OpenAI), 판독·검증 gemini-3.8-flash(Google). 생성과 검증에 서로 다른 모델 사용. 포스터 원본: 오산시가족센터', '해결')
+  // 이 장의 주인공은 포스터 두 장: 크게 나란히 두고, 과정은 오른쪽에 세로로
+  blob(slide, { x: 1.2, y: 1.2, size: 5.6 })
+  picture(slide, img('poster-kpop-ko.jpg'), { x: 0.75, y: 1.6, w: 3.5, h: 4.95 })
+  arrow(slide, { x: 4.38, y: 4.07, w: 0.42, h: 0, width: 3, color: C.accent6 })
+  picture(slide, img('poster-kpop-vi.jpg'), { x: 4.95, y: 1.6, w: 3.3, h: 4.95 })
+  text(slide, '한국어 원본', { x: 0.75, y: 6.62, w: 3.5, h: 0.3, fontSize: 12, color: MUTED, align: 'center' })
+  text(slide, 'AI가 옮긴 베트남어판', { x: 4.95, y: 6.62, w: 3.3, h: 0.3, fontSize: 12, bold: true, color: C.accent1, align: 'center' })
+  const steps = [
+    ['원본 판독', '포스터 속 글을 문구 단위로 읽기'],
+    ['문구별 번역표', '숫자·날짜·전화번호는 코드로 대조'],
+    ['원본을 넣어 글만 편집', '그림·배치·색·로고는 그대로'],
+    ['QR 원본 이식', '다시 스캔해 같은 주소인지 확인'],
+    ['다른 AI가 다시 읽어 검증', '생성과 검증에 서로 다른 모델'],
+    ['틀린 곳만 다시 생성', '3회 안에 통과한 것만 게시'],
+  ]
+  card(slide, { x: 8.6, y: 1.55, w: 4.15, h: 5.15 })
+  steps.forEach(([title, body], index) => {
+    const y = 1.75 + index * 0.82
+    badge(slide, String(index + 1), { x: 8.85, y: y + 0.02, size: 0.42, fontSize: 14, fill: index >= 4 ? C.accent1 : C.accent3 })
+    text(slide, title, { x: 9.42, y, w: 3.2, h: 0.36, fontSize: 15, bold: true, color: index >= 4 ? C.accent1 : C.text1 })
+    text(slide, body, { x: 9.42, y: y + 0.36, w: 3.25, h: 0.36, fontSize: 11, color: MUTED })
+  })
+}
+{
+  const slide = content('① 읽기 · 검증 결과', '일부러 넣은 날짜 오류, 검증 루프가 잡아 고친 기록',
     '실제 포스터 3장(K-pop 방송댄스, 우리 zip. 운동회, 고등학교 진학설명회) × 베트남어·중국어. 검증 기록: apps/program-api/data/local/translated/*.json (2026-10-17)', '해결')
-  text(slide, '시연을 위해 1회차 편집 지시에 날짜 오류를 일부러 넣었다', { x: 0.6, y: 1.6, w: 7.2, h: 0.4, fontSize: 15, bold: true })
+  text(slide, '시연용: 1회차 편집 지시에 날짜 오류를 일부러 넣음', { x: 0.6, y: 1.6, w: 7.2, h: 0.4, fontSize: 15, bold: true })
   text(slide, '1회차', { x: 0.6, y: 2.12, w: 1.0, h: 0.35, fontSize: 13, bold: true, color: C.accent6 })
   picture(slide, img('crop-date-a1.png'), { x: 1.6, y: 2.1, w: 6.1, h: 0.57 })
   card(slide, { x: 0.6, y: 2.9, w: 7.1, h: 1.65, fill: C.text1 })
   text(slide, [
-    { text: '⑤ 검증 (gemini가 결과를 처음부터 다시 읽고 대조)', options: { breakLine: true, color: 'A6D3BD' } },
-    { text: '× 빠진 날짜 10-31 · 원래 없던 날짜 invalid:10/31/2026', options: { breakLine: true, color: 'FFD84D' } },
-    { text: '× 다르게 적힘: 기대 "31/10/2026 (T7)" / 보이는 글 "10/31/2026 (T7)"', options: { breakLine: true, color: 'FFD84D' } },
+    { text: '⑤ 검증 (gemini가 결과를 처음부터 다시 읽고 대조)', options: { breakLine: true, color: HEX.accent4 } },
+    { text: '× 빠진 날짜 10-31 · 원래 없던 날짜 invalid:10/31/2026', options: { breakLine: true, color: HEX.accent2 } },
+    { text: '× 다르게 적힘: 기대 "31/10/2026 (T7)" / 보이는 글 "10/31/2026 (T7)"', options: { breakLine: true, color: HEX.accent2 } },
     { text: '③ 이미지 편집 2회차 (직전 결과 + 원본 + 지적 2건)', options: { color: 'FFFFFF' } },
   ], { x: 0.85, y: 3.02, w: 6.7, h: 1.45, fontSize: 12, valign: 'middle' })
   text(slide, '2회차', { x: 0.6, y: 4.8, w: 1.0, h: 0.35, fontSize: 13, bold: true, color: C.accent1 })
   picture(slide, img('crop-date-a2.png'), { x: 1.6, y: 4.78, w: 6.1, h: 0.57 })
-  text(slide, '베트남에서 10/31은 \'10일 31월\'로 읽힌다. 코드는 없는 달을 잡아내고, 모델은 문구가 다르게 적힌 것을 잡았다. 2회차에서 31/10으로 고쳐 통과했다', { x: 0.6, y: 5.6, w: 7.1, h: 1.1, fontSize: 14 })
+  text(slide, [
+    { text: '베트남어에서 10/31은 \'10일 31월\'', options: { bold: true, breakLine: true } },
+    { text: '코드는 없는 달을, 모델은 다르게 적힌 문구를 잡아냄 → 2회차에 31/10으로 고쳐 통과', options: {} },
+  ], { x: 0.6, y: 5.6, w: 7.1, h: 1.1, fontSize: 14 })
   card(slide, { x: 8.15, y: 1.6, w: 4.6, h: 5.15, fill: C.accent5 })
   text(slide, '6 / 6', { x: 8.45, y: 1.8, w: 4.0, h: 0.9, fontSize: 48, bold: true, color: C.accent1 })
   text(slide, '실제 포스터 3장 × 2개 언어 모두 검증 통과', { x: 8.45, y: 2.7, w: 4.1, h: 0.4, fontSize: 14, bold: true })
   // 검증 기록(chosen_attempt) 기준: 1회차 4건, 운동회 베트남어 2회차(일부러 넣은 날짜 오류), 진학설명회 베트남어 3회차(로고 오독)
   text(slide, [
     { text: '4건은 1회차에 통과 (한 번에 약 1분)', options: { bullet: { indent: 14 }, breakLine: true } },
-    { text: '운동회 베트남어는 2회차 통과: 왼쪽처럼 일부러 넣은 날짜 오류를 잡아 고쳤다', options: { bullet: { indent: 14 }, breakLine: true } },
-    { text: '진학설명회 베트남어는 3회차 통과: 검증 AI가 그대로 둔 로고 글자(성평등가족부)를 옛 이름으로 잘못 읽어 다시 만들었다. 로고 오독은 막지 않도록 규칙을 고쳤다', options: { bullet: { indent: 14 }, breakLine: true } },
-    { text: 'QR이 있는 포스터 2장: 원본 QR을 옮겨 붙이고 다시 스캔해 주소가 같은지 확인', options: { bullet: { indent: 14 }, breakLine: true } },
-    { text: '승인 전까지는 \'담당자 확인 전\'으로 표시', options: { bullet: { indent: 14 } } },
+    { text: '운동회 베트남어는 2회차 통과: 왼쪽의 일부러 넣은 날짜 오류를 잡아 수정', options: { bullet: { indent: 14 }, breakLine: true } },
+    { text: '진학설명회 베트남어는 3회차 통과: 검증 AI가 로고 글자(성평등가족부)를 옛 이름으로 잘못 읽어 재생성. 로고 오독은 막지 않도록 규칙 수정', options: { bullet: { indent: 14 }, breakLine: true } },
+    { text: 'QR이 있는 포스터 2장: 원본 QR을 옮겨 붙이고 다시 스캔해 같은 주소인지 확인', options: { bullet: { indent: 14 }, breakLine: true } },
+    { text: '승인 전까지는 \'담당자 확인 전\' 표시', options: { bullet: { indent: 14 } } },
   ], { x: 8.45, y: 3.25, w: 4.05, h: 3.4, fontSize: 13, paraSpaceAfter: 7 })
 }
 {
-  const slide = content('② 연결 · 상담 에이전트', '답은 공고에서만, 모르면 기관에 물어볼 한국어 문장까지 만든다',
+  const slide = content('① 읽기 · 기관 검수 화면', '원문과 나란히 놓고 승인하는 기관 화면',
+    '기관 대시보드 실제 화면(데스크톱). 포스터 원본: 오산시가족센터. 승인 규칙은 사람 검수 CLI(npm run review)와 같음', '해결')
+  // 사이드바·제목을 뺀 세 칸만 잘라 크게(prepare-assets.js의 dash-review-crop.png, 2253×1397)
+  const shot = { x: 0.75, y: 1.75, w: 7.7, h: 7.7 * (1397 / 2253) }
+  picture(slide, img('dash-review-crop.png'), shot)
+  ;[0.0, 0.33, 0.695].forEach((fx, index) => badge(slide, String(index + 1), { x: shot.x + shot.w * fx - 0.12, y: shot.y - 0.2, size: 0.42, fontSize: 14, fill: C.accent6 }))
+  const blocks = [
+    ['원본 그대로', '기관이 올린 포스터와 원문 글'],
+    ['AI가 읽은 사실 + 근거', '원문 인용으로 확인되지 않은 사실은 노랗게\n직접 대조 표시가 있어야 승인'],
+    ['번역 포스터 검증 기록', '회차마다 무엇을 잡고 고쳤는지\n승인 전까지 보호자 화면에 \'담당자 확인 전\''],
+  ]
+  blocks.forEach(([title, body], index) => {
+    const y = 1.6 + index * 1.45
+    card(slide, { x: 8.8, y, w: 3.95, h: 1.3, fill: index === 1 ? C.accent5 : C.background2 })
+    badge(slide, String(index + 1), { x: 9.0, y: y + 0.15, size: 0.38, fontSize: 13, fill: C.accent6 })
+    text(slide, title, { x: 9.5, y: y + 0.12, w: 3.15, h: 0.42, fontSize: 16, bold: true, color: C.accent1, valign: 'middle' })
+    text(slide, body, { x: 9.0, y: y + 0.6, w: 3.65, h: 0.65, fontSize: 12 })
+  })
+  text(slide, '로그인이 없는 시연이라 관리자 기능은 시연·내부망 전용', { x: 0.75, y: 6.62, w: 7.7, h: 0.3, fontSize: 12, color: MUTED })
+}
+{
+  const slide = content('② 연결 · 상담 에이전트', '답은 공고에서만, 모르면 물어볼 한국어 문장까지',
     '보호자 웹 실제 화면(베트남어, 시연 데이터). 질문: "아이가 8살이에요. 저와 아이가 갈 수 있나요? 준비물이 있나요?" 응답 10~25초', '해결')
+  blob(slide, { x: 0.4, y: 1.4, size: 5.4, color: 'E7F1E8' })
   phone(slide, img('app-chat-answer-vi.png'), { x: 0.75, y: 1.6, h: 5.15 })
   phone(slide, img('app-chat-inquiry-vi.png'), { x: 3.45, y: 1.6, h: 5.15 })
   const tools = [
@@ -352,15 +426,15 @@ pres.addSection({ title: '해결' })
     text(slide, body, { x: 8.9, y, w: 3.85, h: 0.5, fontSize: 12, valign: 'middle' })
   })
   card(slide, { x: 6.45, y: 5.8, w: 6.3, h: 0.95, fill: C.text2 })
-  text(slide, '모델이 단 원문 인용은 코드가 그 공고의 검증된 근거에서 다시 찾아 확인하고, 없으면 버린다', { x: 6.7, y: 5.85, w: 5.85, h: 0.85, fontSize: 14, bold: true, color: C.background1, valign: 'middle' })
+  text(slide, '모델이 단 원문 인용은 코드가 검증된 근거에서 다시 확인, 없으면 버림', { x: 6.7, y: 5.85, w: 5.85, h: 0.85, fontSize: 14, bold: true, color: C.background1, valign: 'middle' })
 }
 {
-  const slide = content('② 연결 · 차이', '기존 챗봇과 달리, 공고에 없는 것은 물어볼 문장으로 바꾼다',
-    '팀 비교: 공공 민원 챗봇의 일반적인 서비스 범위와 이 서비스의 설계를 비교한 것이며 통계가 아니다', '해결')
-  const head = (value) => ({ text: value, options: { bold: true, color: C.background1, fill: { color: C.text2 }, fontSize: 15 } })
+  const slide = content('② 연결 · 차이', '기존 공공 챗봇과 무엇이 다른가',
+    '팀 비교: 공공 민원 챗봇의 일반적인 서비스 범위와 이 서비스의 설계 비교(통계 아님)', '해결')
+  const head = (value) => ({ text: value, options: { bold: true, color: C.background1, fill: { color: HEX.dk2 }, fontSize: 15 } })
   const rows = [
     ['답의 근거', '미리 만든 FAQ·안내 문서', '검수된 공고 사실 + 원문 인용 (코드가 다시 확인)'],
-    ['공고에 없을 때', '다른 기관·전화번호로 안내', '무엇이 없는지 말하고, 한국어 문의문 + 확인된 연락처'],
+    ['공고에 없을 때', '다른 기관·전화번호로 안내', '무엇이 없는지 밝히고, 한국어 문의문 + 확인된 연락처'],
     ['언어', '한국어 위주', '보호자가 고른 언어(베트남어·중국어·쉬운 한국어)'],
     ['우리 아이에게 맞는지', '판단하지 않음', '학년·시간은 기존 규칙으로 판정, 자격은 단정하지 않음'],
     ['포스터', '이미지 속 글은 읽지 못함', '포스터를 보호자 언어로 옮기고 검증'],
@@ -370,52 +444,79 @@ pres.addSection({ title: '해결' })
   slide.addTable([
     [head(''), head('기존 공공 챗봇'), head('오산 아이 프로그램 상담 에이전트')],
     ...rows.map(([label, before, after], index) => [
-      { text: label, options: { bold: true, fill: { color: index % 2 ? 'FFFFFF' : 'F3F4EF' } } },
-      { text: before, options: { color: MUTED, fill: { color: index % 2 ? 'FFFFFF' : 'F3F4EF' } } },
-      { text: after, options: { bold: true, color: C.accent1, fill: { color: index % 2 ? 'E4F2EC' : 'D6ECE2' } } },
+      { text: label, options: { bold: true, fill: { color: index % 2 ? 'FFFFFF' : SAND } } },
+      { text: before, options: { color: MUTED, fill: { color: index % 2 ? 'FFFFFF' : SAND } } },
+      { text: after, options: { bold: true, color: C.accent1, fill: { color: index % 2 ? 'E7F1E8' : 'D9EADD' } } },
     ]),
-  ], { x: 0.6, y: 1.65, w: 12.13, colW: [2.6, 3.6, 5.93], fontSize: 15, rowH: 0.7, valign: 'middle', border: { type: 'solid', color: 'FFFFFF', pt: 2 }, margin: [0.06, 0.15, 0.06, 0.15], objectName: name('compare-table') })
+  ], { x: 0.6, y: 1.65, w: 12.13, colW: [2.6, 3.6, 5.93], fontSize: 15, rowH: 0.7, valign: 'middle', border: { type: 'solid', color: CREAM, pt: 2 }, margin: [0.06, 0.15, 0.06, 0.15], objectName: name('compare-table') })
 }
 {
-  const slide = content('③ 편성 · 공고 보완 에이전트', '보호자가 못 찾은 답은 AI가 초안을 쓰고, 기관이 확정해 채운다',
-    '기관 대시보드 실제 화면(시연 데이터, 보호자 질문은 시연용 예시). 초안은 gemini-3.8-flash가 도구로 쓰고, 검사는 코드가 한다(apps/program-api/src/admin)', '해결')
-  picture(slide, img('dash-improve-drafts.png'), { x: 0.65, y: 1.6, w: 6.5, h: 5.15 })
+  const slide = content('③ 편성 · 공고 보완 에이전트', '못 찾은 답은 AI가 초안, 기관이 확정',
+    '기관 대시보드 실제 화면(시연 데이터, 보호자 질문은 시연용 예시). 초안은 gemini-3.8-flash가 도구로 쓰고, 검사는 코드가 담당(apps/program-api/src/admin)', '해결')
+  // 화면 전체 대신 보완 도우미 부분만 잘라 크게(prepare-assets.js의 dash-improve-crop.png, 1620×1325)
+  const shot = { x: 0.75, y: 1.6, w: 6.3, h: 6.3 * (1325 / 1620) }
+  picture(slide, img('dash-improve-crop.png'), shot)
+  const at = (fy) => shot.y + shot.h * fy - 0.21
+  // 그림 속 위치: ① 에이전트가 한 일(0.21), ② 기관만 아는 빈칸(0.67), ③ 보호자 화면에서 뺄 항목(0.89)
+  outline(slide, { x: shot.x + shot.w * 0.035, y: shot.y + shot.h * 0.6, w: shot.w * 0.93, h: shot.h * 0.12 })
+  ;[0.212, 0.668, 0.886].forEach((fy, index) => badge(slide, String(index + 1), { x: shot.x - 0.24, y: at(fy), size: 0.42, fontSize: 14, fill: C.accent6 }))
   const blocks = [
     ['에이전트가 하는 일', '공고 읽기 → 질문 읽기 → 초안 → 코드 검사\n→ 걸리면 고쳐 쓰기 → 통과해야 제출'],
-    ['값은 지어내지 않는다', '참가비·가능 여부처럼 기관만 아는 값은 빈칸으로 남긴다.\n빈칸 밖의 \'무료·가능해요\' 같은 단정은 막고, 숫자·날짜·\n수량은 공고 원문과 코드로 대조한다'],
-    ['확정하면 순환이 닫힌다', '담당자가 빈칸을 채워 덧붙이면 보호자 AI 상담이\n바로 그 안내를 근거로 답하고(\'기관이 덧붙인 안내\' 표시),\n보호자 화면의 \'기관에 확인할 점\'에서 빠진다'],
+    ['값은 지어내지 않음', '참가비·가능 여부처럼 기관만 아는 값은 빈칸으로\n빈칸 밖의 \'무료·가능해요\' 같은 단정은 차단\n숫자·날짜·수량은 공고 원문과 코드로 대조'],
+    ['확정하면 바로 상담에 반영', '담당자가 빈칸을 채워 덧붙이면 보호자 AI 상담이\n그 안내를 근거로 답변(\'기관이 덧붙인 안내\' 표시)\n보호자 화면의 \'기관에 확인할 점\'에서도 제외'],
   ]
   blocks.forEach(([title, body], index) => {
-    const y = 1.6 + index * 1.72
-    card(slide, { x: 7.5, y, w: 5.25, h: 1.55, fill: index === 1 ? C.accent5 : C.background2 })
-    text(slide, title, { x: 7.75, y: y + 0.13, w: 4.85, h: 0.4, fontSize: 17, bold: true, color: C.accent1 })
-    text(slide, body, { x: 7.75, y: y + 0.55, w: 4.9, h: 0.95, fontSize: 12.5 })
+    const y = 1.6 + index * 1.75
+    card(slide, { x: 7.5, y, w: 5.25, h: 1.58, fill: index === 1 ? C.accent5 : C.background2 })
+    badge(slide, String(index + 1), { x: 7.72, y: y + 0.16, size: 0.38, fontSize: 13, fill: C.accent6 })
+    text(slide, title, { x: 8.22, y: y + 0.13, w: 4.4, h: 0.42, fontSize: 17, bold: true, color: C.accent1, valign: 'middle' })
+    text(slide, body, { x: 7.75, y: y + 0.62, w: 4.9, h: 0.92, fontSize: 12.5 })
   })
-}
-{
-  const slide = content('③ 편성 · 기관 관리자 화면', 'AI가 읽고 옮긴 공고는 담당자가 원문과 나란히 보고 승인한다',
-    '기관 대시보드 실제 화면(데스크톱). 포스터 원본: 오산시가족센터. 승인 규칙은 사람 검수 CLI(npm run review)와 같다. 수요·추천은 합성 데이터', '해결')
-  picture(slide, img('dash-review.png'), { x: 0.65, y: 1.6, w: 7.6, h: 4.75 })
-  const blocks = [
-    ['한 화면에 세 칸', '원본 포스터·원문 | AI가 읽은 사실과\n원문 근거 | 번역 포스터와 회차별 검증 기록'],
-    ['근거가 없으면 형광펜', '원문 인용으로 확인되지 않은 사실은 노랗게.\n직접 대조했다고 표시해야 승인된다'],
-    ['편성도 같은 화면에서', '익명 수요 히트맵과 요일·시간·장소 추천\n(가장 많은 가정이 올 수 있는 조합)'],
-  ]
-  blocks.forEach(([title, body], index) => {
-    const y = 1.6 + index * 1.62
-    card(slide, { x: 8.6, y, w: 4.15, h: 1.45, fill: index === 1 ? C.accent5 : C.background2 })
-    text(slide, title, { x: 8.85, y: y + 0.13, w: 3.75, h: 0.4, fontSize: 16, bold: true, color: C.accent1 })
-    text(slide, body, { x: 8.85, y: y + 0.53, w: 3.8, h: 0.85, fontSize: 12 })
-  })
-  text(slide, '로그인이 없는 시연이라 관리자 기능은 시연·내부망에서만 켠다', { x: 0.65, y: 6.45, w: 7.6, h: 0.35, fontSize: 12, color: MUTED })
 }
 
+{
+  const slide = content('③ 편성 · 편성 에이전트', '익명 통계로 짜는 다음 프로그램, 숫자는 코드가 계산',
+    '기관 대시보드 실제 화면. 통계는 시연용 가상 응답 400가정·가상 장소 9곳(실제 통계 아님). 편성 계산 packages/planning, 에이전트·검사 apps/program-api/src/admin', '해결')
+  // 왼쪽: 보호자 익명 통계(편성안 대상으로 좁힌 히트맵, 반 번호), 가운데: AI 편성안 카드(prepare-assets.js의 dash-plan-*-crop.png)
+  const data = { x: 0.65, y: 1.6, w: 3.45, h: 3.45 * (1060 / 919) }
+  picture(slide, img('dash-plan-data-crop.png'), data)
+  text(slide, [
+    { text: '익명 통계 항목', options: { bold: true, color: C.accent1, breakLine: true } },
+    { text: '아이 학년 · 가능 요일·시간 · 사는 동', options: { breakLine: true } },
+    { text: '관심 분야 · 화면 언어', options: { breakLine: true } },
+    { text: '5가정 미만 칸은 가림', options: {} },
+  ], { x: 0.65, y: 5.72, w: 3.45, h: 1.1, fontSize: 11.5 })
+  const proposal = { x: 4.4, y: 1.6, w: 4.5, h: 4.5 * (1425 / 1224) }
+  picture(slide, img('dash-plan-card-crop.png'), proposal)
+  // 오른쪽: 결과 한 줄과 에이전트가 하는 일
+  card(slide, { x: 9.25, y: 1.55, w: 3.5, h: 1.55, fill: PEACH, shadow: false })
+  // 숫자는 캡처와 같은 편성안 결과에서 읽는다 (없으면 숫자 없이)
+  const facts = PLAN ? PLAN.reasons.flatMap((reason) => reason.facts) : []
+  const factValue = (pattern) => facts.find((fact) => pattern.test(fact.id))?.value
+  const interestCount = factValue(/^d\d+\.interest\./)
+  const programCount = factValue(/^p\.interest\./)
+  const compare = PLAN && PLAN.baseline && PLAN.baseline.coverage_pct !== null && PLAN.coverage_pct !== null
+  text(slide, compare ? `${PLAN.baseline.coverage_pct}% → ${PLAN.coverage_pct}%` : '토요일 오전 몰림 → 분산', { x: 9.45, y: 1.65, w: 3.2, h: 0.7, fontSize: 30, bold: true, color: C.accent6 })
+  text(slide, PLAN ? `같은 반 ${PLAN.class_count}개, 시간·장소만 바꿔서\n(초${PLAN.grade_range[0]}~${PLAN.grade_range[1]} ${PLAN.interest_label} 대상 ${PLAN.eligible}가정 중)` : '같은 반 수, 시간·장소만 바꿔서', { x: 9.45, y: 2.35, w: 3.2, h: 0.65, fontSize: 11.5 })
+  const blocks = [
+    ['도구로 읽기', `익명 통계·못 찾은 질문·지금 공고${interestCount && programCount ? `\n${PLAN.interest_label} 관심 ${interestCount}, ${PLAN.interest_label} 공고 ${programCount}` : ''}`],
+    ['편성 계산은 코드', '요일·시간·장소 조합을 모두 비교\n언제·어디서·닿는 가정 수는 계산 결과'],
+    ['근거 숫자 대조', '근거 문장의 숫자는 도구 결과와 같아야\n통과, 결정은 담당자'],
+  ]
+  blocks.forEach(([title, body], index) => {
+    const y = 3.3 + index * 1.18
+    card(slide, { x: 9.25, y, w: 3.5, h: 1.06, fill: index === 1 ? C.accent5 : C.background2 })
+    badge(slide, String(index + 1), { x: 9.43, y: y + 0.13, size: 0.36, fontSize: 12, fill: C.accent6 })
+    text(slide, title, { x: 9.9, y: y + 0.1, w: 2.75, h: 0.4, fontSize: 14.5, bold: true, color: C.accent1, valign: 'middle' })
+    text(slide, body, { x: 9.43, y: y + 0.52, w: 3.25, h: 0.5, fontSize: 10.5 })
+  })
+}
 // =========================================================
-// 13~15. 라이프케어·신뢰·실행
+// 15~17. 라이프케어·신뢰·실행
 // =========================================================
 pres.addSection({ title: '라이프케어와 실행' })
 {
-  const slide = content('라이프케어', '아이가 자라는 동안, 필요한 공고가 바뀌어도 같은 순환이 돈다',
+  const slide = content('라이프케어', '영유아부터 고등학생까지, 같은 순환으로',
     '6~24세 양육 1순위 어려움: 비용 부담 24.9%, 학업·진학·진로 정보 부족 21.8%(2024 전국다문화가족실태조사). 사진은 실제 오산시가족센터 포스터의 베트남어판', '라이프케어와 실행')
   const stages = [
     ['영유아', '돌봄·어린이집·예방접종 안내', null, '다음 단계'],
@@ -423,10 +524,10 @@ pres.addSection({ title: '라이프케어와 실행' })
     ['초등', '자녀성장 프로그램', 'poster-kpop-vi.jpg', 'K-pop 방송댄스'],
     ['중·고등', '진학설명회·진로 프로그램', 'poster-hs-vi.jpg', '고등학교 진학설명회'],
   ]
-  slide.addShape(pres.shapes.LINE, { x: 0.9, y: 1.85, w: 11.6, h: 0, line: { color: C.accent4, width: 3 }, objectName: name('timeline') })
+  slide.addShape(pres.shapes.LINE, { x: 0.9, y: 1.85, w: 11.6, h: 0, line: { color: 'E8C9B5', width: 3, dashType: 'dash' }, objectName: name('timeline') })
   stages.forEach(([age, need, file, caption], index) => {
     const x = 0.6 + index * 3.07
-    badge(slide, '', { x: x + 0.2, y: 1.65, size: 0.4, fill: file ? C.accent1 : C.accent4 })
+    badge(slide, '', { x: x + 0.2, y: 1.65, size: 0.4, fill: file ? C.accent6 : 'E8C9B5' })
     text(slide, age, { x: x + 0.2, y: 2.15, w: 2.65, h: 0.45, fontSize: 18, bold: true, color: C.accent1, valign: 'middle' })
     text(slide, need, { x: x + 0.2, y: 2.6, w: 2.7, h: 0.4, fontSize: 13 })
     if (file) {
@@ -436,59 +537,53 @@ pres.addSection({ title: '라이프케어와 실행' })
       picture(slide, img(file), { x: x + 0.2 + (2.65 - w) / 2, y: 3.15, w, h })
       text(slide, caption, { x: x + 0.2, y: 5.76, w: 2.65, h: 0.3, fontSize: 12, color: MUTED, align: 'center' })
     } else {
-      card(slide, { x: x + 0.2, y: 3.15, w: 2.65, h: 2.55, fill: C.background2, line: 'CDD3CC' })
+      card(slide, { x: x + 0.2, y: 3.15, w: 2.65, h: 2.55, fill: SAND, shadow: false })
       text(slide, '같은 방식으로\n확장할 안내', { x: x + 0.3, y: 4.05, w: 2.45, h: 0.8, fontSize: 14, color: MUTED, align: 'center', valign: 'middle' })
     }
   })
-  card(slide, { x: 0.6, y: 6.1, w: 12.13, h: 0.7, fill: C.accent5 })
+  card(slide, { x: 0.6, y: 6.1, w: 12.13, h: 0.7, fill: C.accent5, shadow: false })
   text(slide, '공급처 확장: 가족센터 공고 → 학교 가정통신문 → 도서관·청소년센터 → 시청 공지', { x: 0.9, y: 6.1, w: 11.6, h: 0.7, fontSize: 15, bold: true, color: C.accent1, valign: 'middle' })
 }
 {
-  const slide = content('신뢰 설계', 'AI가 틀려도 보호자가 잘못 판단하지 않게 설계했다',
+  const slide = content('신뢰 설계', 'AI가 틀려도, 보호자가 잘못 판단하지 않도록',
     '기준: 보호자 서비스 명세 v2.2, 구현: apps/program-api·apps/guardian-web. 실제 사례: 오산시가족센터 K-pop 방송댄스 공고 화면(팀 캡처, 2026.10)', '라이프케어와 실행')
-  const items = [
-    ['사람이 마지막에 확인', '자동 검증만 통과한 포스터·안내는 \'담당자 확인 전\'으로 표시하고, 승인하면 바뀐다'],
-    ['모르는 것은 노란 형광펜', '비용·자격·상담 언어처럼 공고에 없는 것은 확인되지 않았다고 표시한다'],
-    ['원본이 바뀌면 내린다', '공고 원문이나 포스터가 바뀌면 승인이 풀려 자동으로 게시가 멈춘다'],
-    ['인용은 코드가 다시 확인', '모델이 단 근거가\n원문에 없으면 버린다'],
-    ['묻지 않는다', '이름·국적·체류 자격·연락처를 묻지 않는다. 아이 학년과 가능한 시간만'],
-    ['동의할 때만 전달', '\'기관에 알리기\'를 누를 때만\n질문을 이름 없이 일반화해 보낸다'],
+  // 여섯 가지 장치를 세 묶음으로: 장마다 메시지 하나, 카드 세 장
+  const groups = [
+    ['사람이 마지막에 확인', ['자동 검증만 통과한 포스터·안내는 \'담당자 확인 전\' 표시', '원문이나 포스터가 바뀌면 승인이 풀리고 게시 중단']],
+    ['모르는 건 모른다고', ['공고에 없는 비용·자격·상담 언어는 노란 형광펜', '모델이 단 근거가 원문에 없으면 코드가 버림']],
+    ['묻지 않고, 동의할 때만', ['이름·국적·체류 자격·연락처는 묻지 않음, 아이 학년과 가능한 시간만', '\'기관에 알리기\'를 누를 때만 질문을 이름 없이 전달']],
   ]
-  items.forEach(([title, body], index) => {
-    const col = index % 3
-    const row = Math.floor(index / 3)
-    const x = 0.6 + col * 4.1
-    const y = 1.6 + row * 1.86
-    card(slide, { x, y, w: 3.85, h: 1.72, fill: row === 0 ? C.background2 : C.accent5 })
-    badge(slide, String(index + 1), { x: x + 0.3, y: y + 0.22, size: 0.5, fontSize: 16 })
-    text(slide, title, { x: x + 0.95, y: y + 0.22, w: 2.8, h: 0.5, fontSize: 17, bold: true, valign: 'middle' })
-    text(slide, body, { x: x + 0.3, y: y + 0.85, w: 3.3, h: 0.8, fontSize: 14 })
+  groups.forEach(([title, lines], index) => {
+    const x = 0.6 + index * 4.1
+    card(slide, { x, y: 1.6, w: 3.85, h: 2.75, fill: index === 1 ? C.accent5 : C.background2 })
+    badge(slide, String(index + 1), { x: x + 0.3, y: 1.85, size: 0.52, fontSize: 17 })
+    text(slide, title, { x: x + 0.95, y: 1.85, w: 2.8, h: 0.52, fontSize: 18, bold: true, valign: 'middle' })
+    text(slide, lines.map((line, i) => ({ text: line, options: { bullet: { indent: 14 }, breakLine: i < lines.length - 1 } })), { x: x + 0.3, y: 2.6, w: 3.3, h: 1.65, fontSize: 15, paraSpaceAfter: 10 })
   })
   // 실제 공고에서 AI가 잡은 사례. 코드가 따로 처리하는 것은 신청(접수) 기간 불일치뿐이라 그것만 말한다
-  card(slide, { x: 0.6, y: 5.38, w: 12.13, h: 0.78, fill: C.accent2 })
-  text(slide, '실제 사례', { x: 0.85, y: 5.38, w: 1.3, h: 0.78, fontSize: 15, bold: true, valign: 'middle' })
+  card(slide, { x: 0.6, y: 4.65, w: 12.13, h: 1.3, fill: C.accent2, shadow: false })
+  text(slide, '실제 사례', { x: 0.9, y: 4.65, w: 1.3, h: 1.3, fontSize: 16, bold: true, valign: 'middle' })
   text(slide, [
-    { text: 'K-pop 방송댄스 공고는 같은 공고 안에서 신청 기간이 둘이다: 상단 10.1~10.17, 포스터 9.28~10.14', options: { breakLine: true } },
-    { text: 'AI 요약은 상단 기간을 안내하며 \'공고 안에 신청 기간이 다르게 적힌 곳도 있으니 기관에 확인\'을 덧붙인다 (3개 언어)', options: {} },
-  ], { x: 2.15, y: 5.38, w: 10.4, h: 0.78, fontSize: 13, valign: 'middle' })
-  card(slide, { x: 0.6, y: 6.3, w: 12.13, h: 0.55, fill: C.text2 })
-  text(slide, '자동 검증은 \'틀렸을 가능성\'을 줄이고, 마지막 판단은 사람과 원문이 한다', { x: 0.9, y: 6.3, w: 11.6, h: 0.55, fontSize: 15, bold: true, color: C.background1, valign: 'middle' })
+    { text: 'K-pop 방송댄스 공고: 같은 공고 안에 신청 기간이 둘 (상단 10.1~10.17, 포스터 9.28~10.14)', options: { bold: true, breakLine: true } },
+    { text: 'AI 요약은 상단 기간을 안내하고 \'신청 기간이 다르게 적힌 곳도 있으니 기관에 확인\'을 덧붙임 (3개 언어)', options: {} },
+  ], { x: 2.2, y: 4.65, w: 10.35, h: 1.3, fontSize: 14, valign: 'middle', paraSpaceAfter: 4 })
+  text(slide, '자동 검증은 틀렸을 가능성을 줄이는 장치, 마지막 판단은 사람과 원문', { x: 0.6, y: 6.2, w: 12.13, h: 0.5, fontSize: 17, bold: true, color: C.accent1, align: 'center', valign: 'middle' })
 }
 {
-  const slide = content('실행 계획', '오산에서 바로 시작할 수 있다',
-    '효과를 미리 숫자로 약속하지 않고, 아래 지표로 시범 운영에서 측정한다', '라이프케어와 실행')
+  const slide = content('실행 계획', '오산시가족센터에서 바로 시작',
+    '효과는 미리 숫자로 약속하지 않고, 시범 운영에서 아래 지표로 측정', '라이프케어와 실행')
   const phases = [
-    ['1단계 · 지금', '오산시가족센터', '시연 공고 25건, 실제 포스터\n3장 × 2개 언어 검증 완료.\n담당자는 지금처럼 포스터를\n올리기만 하면 된다'],
-    ['2단계', '학교 가정통신문', '진학·진로 정보가 많이 필요한 시기.\n화성오산교육지원청과 연계'],
+    ['1단계 · 지금', '오산시가족센터', '시연 공고 25건, 실제 포스터\n3장 × 2개 언어 검증 완료\n담당자는 지금처럼\n포스터만 올리면 끝'],
+    ['2단계', '학교 가정통신문', '진학·진로 정보가 많이 필요한 시기\n화성오산교육지원청과 연계'],
     ['3단계', '시 공공채널', '도서관·청소년센터·시청 공지까지\n같은 순환으로'],
   ]
   phases.forEach(([step, title, body], index) => {
     const x = 0.6 + index * 4.2
     card(slide, { x, y: 1.65, w: 3.75, h: 2.6, fill: index === 0 ? C.text2 : C.background2 })
-    text(slide, step, { x: x + 0.3, y: 1.85, w: 3.2, h: 0.4, fontSize: 14, bold: true, color: index === 0 ? C.accent4 : C.accent1 })
+    text(slide, step, { x: x + 0.3, y: 1.85, w: 3.2, h: 0.4, fontSize: 14, bold: true, color: index === 0 ? C.accent2 : C.accent6 })
     text(slide, title, { x: x + 0.3, y: 2.25, w: 3.2, h: 0.5, fontSize: 20, bold: true, color: index === 0 ? C.background1 : C.text1 })
     text(slide, body, { x: x + 0.3, y: 2.85, w: 3.2, h: 1.3, fontSize: 13, color: index === 0 ? C.accent5 : C.text1 })
-    if (index < 2) arrow(slide, { x: x + 3.82, y: 2.95, w: 0.32, h: 0 })
+    if (index < 2) arrow(slide, { x: x + 3.82, y: 2.95, w: 0.32, h: 0, color: C.accent6 })
   })
   text(slide, '시범 운영에서 잴 것', { x: 0.6, y: 4.55, w: 6, h: 0.45, fontSize: 18, bold: true, color: C.accent1 })
   const kpis = [
@@ -506,27 +601,28 @@ pres.addSection({ title: '라이프케어와 실행' })
 }
 
 // =========================================================
-// 16. 마무리
+// 18. 마무리
 // =========================================================
 pres.addSection({ title: '마무리' })
 {
   const slide = pres.addSlide({ masterName: 'COVER', sectionTitle: '마무리' })
-  slide.addText('2분 시연영상은 별도 파일로 제출합니다', { placeholder: 'kicker' })
+  blob(slide, { x: 7.6, y: 0.4, size: 6.6 })
+  slide.addText('2분 시연영상 별도 제출', { placeholder: 'kicker' })
   slide.addText([
     { text: '읽기 · 연결 · 편성', options: { breakLine: true } },
     { text: '아이가 자라는 동안 계속 도는', options: { fontSize: 32, breakLine: true } },
-    { text: '오산의 AX 라이프케어', options: { fontSize: 32 } },
+    { text: '오산의 AX 라이프케어', options: { fontSize: 32, color: C.accent1 } },
   ], { placeholder: 'title' })
   slide.addText([
-    { text: '포스터 통번역 → 상담 → 공고 보완 → 다음 공고', options: { breakLine: true } },
-    { text: 'github.com/NiceTry3675/osan-kids-bridge', options: { color: C.accent4 } },
+    { text: '포스터 통번역 → 상담 → 공고 보완·편성 → 다음 공고', options: { breakLine: true } },
+    { text: 'github.com/NiceTry3675/osan-kids-bridge', options: { color: C.accent1 } },
   ], { placeholder: 'body' })
   const team = [['선우', '문제 근거·통계'], ['채현', '공고 확보·개인정보'], ['소영', '보호자 서비스·UX'], ['준현', 'LLM 구조화·에이전트·대시보드']]
   team.forEach(([who, role], index) => {
     const y = 1.45 + index * 1.15
-    slide.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 8.6, y, w: 4.1, h: 0.95, rectRadius: 0.12, fill: { color: '1F4D3D' }, line: { type: 'none' }, objectName: name('team') })
-    text(slide, who, { x: 8.9, y, w: 0.85, h: 0.95, fontSize: 20, bold: true, color: C.background1, valign: 'middle' })
-    text(slide, role, { x: 9.75, y, w: 2.85, h: 0.95, fontSize: 14, color: C.accent5, valign: 'middle' })
+    card(slide, { x: 8.6, y, w: 4.1, h: 0.95 })
+    text(slide, who, { x: 8.9, y, w: 0.85, h: 0.95, fontSize: 20, bold: true, color: C.accent1, valign: 'middle' })
+    text(slide, role, { x: 9.75, y, w: 2.85, h: 0.95, fontSize: 14, color: C.text1, valign: 'middle' })
   })
 }
 
