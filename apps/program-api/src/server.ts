@@ -1,10 +1,17 @@
-import { realpathSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync } from 'node:fs'
 import { createServer as createHttpServer } from 'node:http'
 import type { IncomingMessage, Server, ServerResponse } from 'node:http'
-import { resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { corsOrigins, dataDir, serverPort } from './config'
-import { evaluateProgram, parseSearchFilters, searchPrograms } from './match'
+import { runAgent } from './agent/agent'
+import type { AgentReply, AgentRequest } from './agent/agent'
+import { parseAgentRequest, parseQuestion, summarizeQuestions } from './agent/requests'
+import type { StoredQuestion } from './agent/requests'
+import type { ToolContext } from './agent/tools'
+import { corsOrigins, dataDir, posterDir, serverPort } from './config'
+import { evaluateProgram, parseSearchFilters, searchPrograms, seoulToday } from './match'
+import { findSourcePoster, POSTER_LANGUAGES, servablePoster } from './poster/translate'
+import type { PosterLanguage } from './poster/tokens'
 import { nowSource } from './review/clock'
 import { isPublished, publicSummaries } from './review/hash'
 import { isValidProgramId, recordWatcher } from './store'
@@ -24,8 +31,12 @@ export interface ServerOptions {
   origins?: string[]
   /** 서버 쪽 기록 (요청 본문은 남기지 않는다) */
   log?: Warn
-  /** 자동 대조를 통과한 미승인 요약도 내보낼지 (기본: SHOW_MACHINE_CHECKED_SUMMARIES=1) */
+  /** 자동 대조를 통과한 미승인 요약·번역 포스터도 내보낼지 (기본: SHOW_MACHINE_CHECKED_SUMMARIES=1) */
   showMachineChecked?: boolean
+  /** 포스터 원본·번역본 폴더 (기본: config의 posterDir) */
+  posterDir?: string
+  /** 상담 에이전트 (시험에서 바꿔 끼운다) */
+  agent?: (request: AgentRequest, context: ToolContext) => Promise<AgentReply>
 }
 
 class HttpError extends Error {
@@ -36,6 +47,25 @@ class HttpError extends Error {
 
 const NOT_FOUND = '프로그램을 찾을 수 없습니다.'
 const NOT_PUBLISHED = '이 프로그램은 지금 게시되어 있지 않습니다.'
+
+function sendFile(response: ServerResponse, path: string, contentType: string): void {
+  const body = readFileSync(path)
+  response.writeHead(200, {
+    'Content-Type': contentType,
+    'Content-Length': body.length,
+    'Cache-Control': 'no-cache',
+    'X-Content-Type-Options': 'nosniff',
+  })
+  response.end(body)
+}
+
+function parseJson(text: string): unknown {
+  try {
+    return text.trim() ? JSON.parse(text) : undefined
+  } catch {
+    throw new HttpError(400, '요청 본문이 올바른 JSON이 아닙니다.')
+  }
+}
 
 function send(response: ServerResponse, status: number, body: unknown, headers: Record<string, string> = {}): void {
   const json = JSON.stringify(body)
@@ -110,6 +140,10 @@ export function createServer(options: ServerOptions = {}): Server {
   const origins = options.origins ?? corsOrigins()
   const records = recordWatcher(options.dataDir ?? dataDir(), log)
   const showMachineChecked = options.showMachineChecked ?? process.env.SHOW_MACHINE_CHECKED_SUMMARIES === '1'
+  const posters = options.posterDir ?? posterDir()
+  const agent = options.agent ?? runAgent
+  const questionsFile = join(options.dataDir ?? dataDir(), 'questions', 'questions.jsonl')
+  const posterLanguages = (id: string): PosterLanguage[] => POSTER_LANGUAGES.filter((language) => servablePoster(id, language, showMachineChecked, posters))
 
   // 파일이 바뀌어 다시 읽었을 때만 게시 여부(해시)와 내보낼 요약을 다시 계산한다
   interface Cache {
@@ -182,6 +216,68 @@ export function createServer(options: ServerOptions = {}): Server {
       const text = await readBody(request)
       const record = publishedRecord(evaluate[1])
       return send(response, 200, evaluateProgram(record, parseFilters(text), now()))
+    }
+
+    if (path === '/agent/chat') {
+      if (method !== 'POST') throw methodNotAllowed('POST')
+      const parsed = parseAgentRequest(parseJson(await readBody(request)))
+      if (!parsed.ok) throw new HttpError(400, '상담 요청을 확인해 주세요.', parsed.errors)
+      const { published } = current()
+      if (parsed.request.program_id) publishedRecord(parsed.request.program_id)
+      let reply: AgentReply
+      try {
+        reply = await agent(parsed.request, { records: published, now: now(), posterLanguages })
+      } catch (error) {
+        log(`[program-api] 상담 에이전트 실패: ${(error as Error)?.stack ?? String(error)}`)
+        throw new HttpError(503, '상담 도우미가 지금 답할 수 없습니다. 잠시 후 다시 시도해 주세요.')
+      }
+      return send(response, 200, reply)
+    }
+
+    if (path === '/agent/questions') {
+      if (method === 'POST') {
+        // 보호자가 '기관에 알리기'를 눌렀을 때만 저장한다 (이름·연락처·대화 내용 없이 공고·주제·일반화한 질문·날짜만)
+        const parsed = parseQuestion(parseJson(await readBody(request)))
+        if (!parsed.ok) throw new HttpError(400, '질문을 확인해 주세요.', parsed.errors)
+        publishedRecord(parsed.question.program_id)
+        const stored: StoredQuestion = { ...parsed.question, date: seoulToday(now()) }
+        mkdirSync(join(questionsFile, '..'), { recursive: true })
+        appendFileSync(questionsFile, `${JSON.stringify(stored)}\n`)
+        return send(response, 201, { ok: true })
+      }
+      if (method !== 'GET') throw methodNotAllowed('GET, POST')
+      const lines = existsSync(questionsFile) ? readFileSync(questionsFile, 'utf8').split('\n').filter(Boolean) : []
+      const stored = lines.flatMap((line) => { try { return [JSON.parse(line) as StoredQuestion] } catch { return [] } })
+      return send(response, 200, summarizeQuestions(stored, current().byId))
+    }
+
+    const poster = path.match(/^\/posters\/([^/]+)(?:\/(original|vi|zh))?$/)
+    if (poster) {
+      if (method !== 'GET') throw methodNotAllowed('GET')
+      const record = publishedRecord(poster[1])
+      const source = findSourcePoster(record.program_id, posters)
+      const variant = poster[2]
+      if (!variant) {
+        const languages = Object.fromEntries(posterLanguages(record.program_id).map((language) => {
+          const { report } = servablePoster(record.program_id, language, showMachineChecked, posters)!
+          const attempt = report.attempts.find((item) => item.n === report.chosen_attempt)
+          return [language, {
+            status: report.status,
+            attempts: report.attempts.length,
+            chosen_attempt: report.chosen_attempt,
+            checked: { segments: report.table.length, qr: report.qr ? report.qr.matches : null, issues: attempt?.issues.length ?? 0 },
+            created_at: report.created_at,
+          }]
+        }))
+        return send(response, 200, { program_id: record.program_id, original: source !== null, languages })
+      }
+      if (variant === 'original') {
+        if (!source) throw new HttpError(404, '원본 포스터가 없습니다.')
+        return sendFile(response, source.path, source.mimeType)
+      }
+      const servable = servablePoster(record.program_id, variant as PosterLanguage, showMachineChecked, posters)
+      if (!servable) throw new HttpError(404, '이 언어의 번역 포스터가 없습니다.')
+      return sendFile(response, servable.path, 'image/png')
     }
 
     throw new HttpError(404, '요청한 주소를 찾을 수 없습니다.')

@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai'
-import type { Part } from '@google/genai'
+import type { Content, FunctionDeclaration, Part, ThinkingLevel } from '@google/genai'
 import { geminiConfig } from '../config'
 
 let client: GoogleGenAI | null = null
@@ -66,4 +66,36 @@ export async function generateJson<T>(options: GenerateOptions & { schema: objec
   } catch {
     throw new Error(`Gemini JSON 응답을 해석하지 못했습니다: ${text.slice(0, 200)}`)
   }
+}
+
+export interface ToolCall {
+  name: string
+  args: Record<string, unknown>
+  id?: string
+}
+
+export interface ToolTurn {
+  calls: ToolCall[]
+  text: string | null
+  /** 다음 요청에 그대로 돌려줄 모델 차례 (thought signature 포함) */
+  content: Content
+}
+
+/** 도구를 쓸 수 있는 한 차례. JSON 응답 모드와 함께 쓰면 도구 호출을 끝내지 않아, 끝맺음도 도구(respond)로 받는다 */
+export async function generateWithTools(options: { system: string; contents: Content[]; tools: FunctionDeclaration[]; temperature?: number; thinkingLevel?: ThinkingLevel }): Promise<ToolTurn> {
+  const response = await withRetry(() => geminiClient().models.generateContent({
+    model: modelName(),
+    contents: options.contents,
+    config: {
+      systemInstruction: options.system,
+      temperature: options.temperature ?? 0,
+      tools: [{ functionDeclarations: options.tools }],
+      ...(options.thinkingLevel ? { thinkingConfig: { thinkingLevel: options.thinkingLevel } } : {}),
+    },
+  }))
+  const content = response.candidates?.[0]?.content
+  if (!content) throw new Error('Gemini 응답이 비어 있습니다.')
+  const calls = (response.functionCalls ?? []).map((call) => ({ name: call.name ?? '', args: (call.args ?? {}) as Record<string, unknown>, id: call.id }))
+  const text = content.parts?.filter((part) => typeof part.text === 'string' && !part.thought).map((part) => part.text).join('').trim() || null
+  return { calls, text, content }
 }

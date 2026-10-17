@@ -1,6 +1,6 @@
 import type { DisplayLanguage, Weekday } from '../types'
 import { gradeRangeLabel } from '../match/labels'
-import type { DateFact, DateTimeFact, MethodFact, SessionFact, SummaryFacts } from './facts'
+import type { ClassFact, DateFact, DateTimeFact, MethodFact, SessionFact, SummaryFacts } from './facts'
 
 // 언어별 표기. 날짜·요일·시각·비용·학년은 코드가 만들고 모델은 그대로 옮긴다.
 
@@ -176,6 +176,11 @@ export function listedRemaining(facts: SummaryFacts): SessionFact[] | null {
   return facts.sessions.length > MAX_LISTED_SESSIONS && remaining && remaining.length <= MAX_LISTED_SESSIONS ? remaining : null
 }
 
+/** 요일마다 따로 운영하는 반을 반마다 따로 쓸 때의 반 목록. 남은 회차를 하나씩 쓰는 공고는 null */
+export function listedClasses(facts: SummaryFacts): ClassFact[] | null {
+  return facts.classes.length && !listedRemaining(facts) ? facts.classes : null
+}
+
 /**
  * 모델에게 주는 언어별 사실. ISO 날짜 대신 그 언어의 표기만 담아 계산·환산할 여지를 없앤다.
  * null은 원문에서 확인되지 않은 값이다.
@@ -191,6 +196,7 @@ export function localizeFacts(facts: SummaryFacts, language: DisplayLanguage) {
     address: session.address,
   })
   const remaining = listedRemaining(facts)
+  const classes = listedClasses(facts)
   const inquiry = facts.application_methods.filter((method) => method.purpose === 'inquiry').map((method) => methodLabel(method, language))
   return {
     title: facts.title,
@@ -212,6 +218,14 @@ export function localizeFacts(facts: SummaryFacts, language: DisplayLanguage) {
       remaining_sessions: remaining ? remaining.map(sessionFact) : null,
       /** 같은 요일마다 하다가 쉬는 날 */
       skipped_dates: facts.skipped_dates.map((fact) => dateLabel(fact, language, today)),
+      /** 요일마다 따로 운영하는 반 (원문 안내). from~to는 그 반의 다음 회차부터 마지막 회차, count는 from부터 to까지의 회차 수 */
+      classes: classes?.map((item) => ({
+        name: item.name,
+        weekday: WEEKDAY_NAMES[language][item.weekday],
+        from: dateLabel(item.from, language, today),
+        to: dateLabel(item.to, language, today),
+        count: item.count,
+      })) ?? null,
       /** 회차가 없을 때 원문의 공통 장소 (한국어 원문 표기) */
       venue: facts.venue,
       weekdays: upcomingWeekdays(facts).map((weekday) => WEEKDAY_NAMES[language][weekday]),
@@ -244,6 +258,8 @@ export function localizeFacts(facts: SummaryFacts, language: DisplayLanguage) {
       note: facts.application_note,
       /** 신청 마감이 이미 지남 */
       closed: facts.application_closed,
+      /** 공고 안에 신청 기간이 서로 다르게 적힌 곳이 있음 (위 start·end는 그중 하나) */
+      period_conflict: facts.application_conflict,
     },
     support_languages: facts.support_languages?.map((code) => LANGUAGE_CODE_NAMES[language][code] ?? code) ?? null,
     /** 원문이 언어 지원을 '통역'이라고 밝힘 */

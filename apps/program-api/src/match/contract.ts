@@ -48,10 +48,24 @@ const NOTE_FIELDS: Partial<Record<UncertainTopic, string[]>> = {
   schedule: ['schedule_note', 'period'],
 }
 const MAX_NOTE = 80
+/**
+ * 신청(접수·모집) 기간·마감을 묻는 항목은 주제(일정)의 운영 기간이 아니라 원문의 신청 기간 표현을 붙인다.
+ * 운영 기간과 견주는 항목('신청 마감이 운영 종료일보다 늦은 점')은 운영 기간 표현을 그대로 둔다
+ */
+const APPLICATION_ITEM = /^(?!.*(?:운영|행사|종료))(?=.*(?:신청|접수|모집)\s*(?:기간|일정|날짜|시작|마감|일시))/
+const APPLICATION_FIELD = /^application_(?:period|start|end)$/
+/** 목록과 본문처럼 신청 기간이 두 곳에 적혔으면 두 표현을 함께 보인다 (서로 다르게 적힌 공고) */
+const MAX_APPLICATION_NOTES = 2
 
 function sourceNote(record: ProgramRecord, topic: UncertainTopic, item: string): string | null {
   const outside = item.match(OUTSIDE_OSAN)
   if (outside) return outside[1]
+  if (APPLICATION_ITEM.test(item)) {
+    const quotes = [...new Set(record.evidence
+      .filter((entry) => entry.verified && APPLICATION_FIELD.test(entry.field) && entry.quote.trim().length <= MAX_NOTE)
+      .map((entry) => entry.quote.trim()))]
+    if (quotes.length) return quotes.slice(0, MAX_APPLICATION_NOTES).join(' / ')
+  }
   for (const field of NOTE_FIELDS[topic] ?? []) {
     const quote = record.evidence.find((entry) => entry.verified && entry.field === field && entry.quote.trim().length <= MAX_NOTE)?.quote.trim()
     if (quote) return quote

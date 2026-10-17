@@ -1,0 +1,53 @@
+/* AI 상담 도우미 (시트) */
+.chat { display: grid; gap: 12px; padding-bottom: 8px; }
+.chat-intro { display: grid; gap: 6px; padding: 14px; border-radius: 16px; background: var(--action-soft); font-size: var(--text-sm); line-height: 1.55; }
+.chat-intro-lead { display: flex; gap: 8px; align-items: flex-start; font-weight: 650; }
+.chat-badge { display: grid; place-items: center; flex: none; width: 28px; height: 22px; border-radius: 7px; background: var(--action); color: var(--action-ink); font-size: 11px; font-weight: 900; letter-spacing: 0.04em; margin-top: 1px; }
+.chat-viewing { font-size: var(--text-xs); color: var(--ink-2); font-weight: 700; }
+.chat-reset { margin-left: auto; font-size: var(--text-sm); font-weight: 750; }
+.chat-suggestions .chip, .chat-followups .chip { min-height: 40px; text-align: left; }
+.chat-followups .chip { border-color: var(--action); color: var(--action); }
+
+.bubble { max-width: 92%; padding: 11px 14px; border-radius: 18px; font-size: var(--text-sm); line-height: 1.6; overflow-wrap: anywhere; }
+.bubble--user { justify-self: end; background: var(--action); color: var(--action-ink); border-bottom-right-radius: 6px; white-space: pre-wrap; }
+.bubble--bot { justify-self: start; background: var(--sunken); border-bottom-left-radius: 6px; }
+.bubble--pending { display: flex; align-items: center; gap: 10px; color: var(--ink-2); }
+.bubble--pending .spinner { width: 18px; height: 18px; }
+.bubble-text { display: grid; gap: 6px; }
+.bubble-text ul { display: grid; gap: 3px; padding-left: 18px; list-style: disc; }
+
+.bot-turn { display: grid; gap: 8px; }
+.agent-steps { display: flex; flex-wrap: wrap; gap: 4px 6px; font-size: var(--text-xs); color: var(--ink-2); }
+.agent-step { display: inline-flex; align-items: center; gap: 3px; padding: 3px 9px 3px 6px; border-radius: 999px; background: var(--paper); border: 1px solid var(--line); }
+.agent-step .icon { width: 14px; height: 14px; color: var(--status-open); }
+.agent-step--failed .icon { color: var(--status-closed); }
+
+.chat-card { display: grid; gap: 8px; padding: 13px 14px; border-radius: 16px; border: 1px solid var(--line); background: var(--paper); font-size: var(--text-sm); }
+.chat-card-title { font-weight: 800; }
+.chat-sources blockquote { padding: 8px 10px; border-left: 3px solid var(--action); background: var(--sunken); border-radius: 0 10px 10px 0; font-size: var(--text-xs); color: var(--ink-2); }
+.inquiry-text { margin: 0; padding: 12px; border-radius: 12px; background: var(--sunken); font: inherit; font-size: var(--text-sm); line-height: 1.6; white-space: pre-wrap; }
+.chat-inquiry .btn, .chat-unanswered .btn { min-height: 44px; }
+.chat-unanswered { background: var(--mark-soft); border-color: transparent; box-shadow: inset 4px 0 0 var(--mark); }
+.unanswered-list { display: grid; gap: 6px; }
+.unanswered-list li { display: grid; gap: 1px; }
+.unanswered-topic { font-size: var(--text-xs); color: var(--mark-ink); font-weight: 700; }
+.unanswered-sent { display: flex; align-items: center; gap: 6px; color: var(--status-open); font-weight: 750; }
+
+.sheet-foot:has(.chat-input) { grid-template-columns: 1fr auto; align-items: end; }
+.chat-input { min-height: 48px; max-height: 120px; resize: none; padding-top: 12px; line-height: 1.4; }
+
+/* 상세·홈의 AI 진입 */
+.ai-entry { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; width: 100%; padding: 14px; border: 0; border-radius: 18px; background: var(--action-soft); text-align: left; color: var(--ink); }
+.ai-entry strong { display: block; font-size: var(--text-md); }
+.ai-entry small { display: block; color: var(--ink-2); font-size: var(--text-xs); margin-top: 1px; }
+.ai-entry .chat-badge { width: 40px; height: 32px; font-size: 13px; border-radius: 10px; }
+.ai-entry .icon { color: var(--action); }
+.detail .ai-entry { margin: 4px 0 6px; }
+
+/* 번역 포스터 */
+.poster-check { display: grid; gap: 4px; margin-bottom: 10px; font-size: var(--text-xs); color: var(--ink-2); }
+.poster-check p:first-child { display: flex; gap: 6px; align-items: flex-start; color: var(--status-open); font-weight: 750; }
+.poster-check .icon { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+.poster-frame { display: block; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: var(--sunken); }
+.poster-frame img { display: block; width: 100%; height: auto; }
+.poster .btn--quiet { margin-top: 6px; }

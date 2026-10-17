@@ -1,0 +1,13 @@
+{
+  "name": "osan-kids-bridge-deck",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "build": "node build-deck.js"
+  },
+  "dependencies": {
+    "playwright-core": "^1.48.2",
+    "pptxgenjs": "^3.12.0",
+    "sharp": "^0.35.5"
+  }
+}

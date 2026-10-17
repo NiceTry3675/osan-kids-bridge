@@ -6,6 +6,8 @@ import { Icon } from '../../components/Icon'
 import { Marked } from '../../components/feedback'
 import { ExternalLink, PhoneLink } from '../../components/links'
 import { Sheet } from '../../components/Sheet'
+import { agentAvailable } from '../../data/agent'
+import { AiEntry } from '../chat/AiEntry'
 
 export type ActionTab = 'apply' | 'ask'
 
@@ -14,10 +16,12 @@ interface Props {
   tab: ActionTab | null
   onTab: (tab: ActionTab) => void
   onClose: () => void
+  /** AI 상담 도우미 열기 (서버가 연결된 화면에서만) */
+  onOpenChat?: () => void
 }
 
 /** 06 신청·물어보기: 상세 위에 여는 시트 하나, 탭 두 개(명세 5.2: 신청과 문의는 다른 행동). */
-export function ActionSheet({ program, tab, onTab, onClose }: Props) {
+export function ActionSheet({ program, tab, onTab, onClose, onOpenChat }: Props) {
   const { t } = useI18n()
   const tabs = (
     <div className="seg" role="tablist">
@@ -27,7 +31,7 @@ export function ActionSheet({ program, tab, onTab, onClose }: Props) {
   )
   return (
     <Sheet open={tab !== null} onClose={onClose} title={tab === 'ask' ? t('askButton') : t('tabApply')} titleHidden headerExtra={tabs}>
-      {tab === 'ask' ? <AskPanel program={program} /> : <ApplyPanel program={program} />}
+      {tab === 'ask' ? <AskPanel program={program} onOpenChat={onOpenChat} /> : <ApplyPanel program={program} />}
     </Sheet>
   )
 }
@@ -66,11 +70,12 @@ function ApplyPanel({ program }: { program: Program }) {
   )
 }
 
-/** 물어보기: ① 원문에서 먼저 → ② 확인된 문의처(없으면 없다고) */
-function AskPanel({ program }: { program: Program }) {
+/** 물어보기: (AI 도우미) → ① 원문에서 먼저 → ② 확인된 문의처(없으면 없다고) */
+function AskPanel({ program, onOpenChat }: { program: Program; onOpenChat?: () => void }) {
   const { t } = useI18n()
   return (
     <div className="stack">
+      {onOpenChat && agentAvailable && <AiEntry title={t('chatOpen')} body={t('chatOpenHomeBody')} onOpen={onOpenChat} />}
       <div className="step-card">
         <p className="step-title"><span className="step-no">1</span>{t('askStep1')}</p>
         <p className="muted">{t('askStep1Body')}</p>

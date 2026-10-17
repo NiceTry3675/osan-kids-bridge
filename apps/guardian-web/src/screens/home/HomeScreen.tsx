@@ -10,6 +10,8 @@ import { Icon } from '../../components/Icon'
 import { StatePanel } from '../../components/feedback'
 import { ProgramItem } from '../../components/ProgramItem'
 import { ConditionSheet } from './ConditionSheet'
+import { ChatSheet } from '../chat/ChatSheet'
+import { AiEntry } from '../chat/AiEntry'
 import { useSearch } from './useSearch'
 
 interface Props {
@@ -23,6 +25,7 @@ export function HomeScreen({ filters, onFiltersChange, restoreScrollY }: Props) 
   const { locale, t } = useI18n()
   const [search, retry] = useSearch(filters, locale)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false)
   const chips = filterChips(filters, locale)
   const hasConditions = chips.length > 0
   const openSheet = () => setSheetOpen(true)
@@ -51,6 +54,7 @@ export function HomeScreen({ filters, onFiltersChange, restoreScrollY }: Props) 
         <HomeHeader
           count={search.status === 'ready' ? search.data.results.length : null}
           onFit={openSheet}
+          onChat={() => setChatOpen(true)}
           onInterest={(interest) => onFiltersChange({ ...filters, interests: [interest] })}
         />
       )}
@@ -62,12 +66,13 @@ export function HomeScreen({ filters, onFiltersChange, restoreScrollY }: Props) 
       {search.status === 'ready' && (hasConditions ? <Results data={search.data} onEdit={openSheet} /> : <AllPrograms programs={search.data.results} />)}
 
       {!hasConditions && <p className="home-foot">{t('homeFooter')}</p>}
+      <ChatSheet open={chatOpen} onClose={() => setChatOpen(false)} program={null} suggestions={['chatSuggestSaturday', 'chatSuggestFree']} />
       <ConditionSheet open={sheetOpen} filters={filters} onClose={() => setSheetOpen(false)} onApply={(next) => { onFiltersChange(next); setSheetOpen(false) }} />
     </main>
   )
 }
 
-function HomeHeader({ count, onFit, onInterest }: { count: number | null; onFit: () => void; onInterest: (interest: Interest) => void }) {
+function HomeHeader({ count, onFit, onChat, onInterest }: { count: number | null; onFit: () => void; onChat: () => void; onInterest: (interest: Interest) => void }) {
   const { locale, t } = useI18n()
   return (
     <header className="home-head">
@@ -77,6 +82,7 @@ function HomeHeader({ count, onFit, onInterest }: { count: number | null; onFit:
         <span className="fit-text"><strong>{t('fitTitle')}</strong><small>{t('fitBody')}</small></span>
         <Icon name="chevron" />
       </button>
+      <AiEntry title={t('chatOpenHome')} body={t('chatOpenHomeBody')} onOpen={onChat} />
       <ul className="tiles">
         {INTERESTS.map((interest) => (
           <li key={interest}>

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { generateJson } from '../src/llm/gemini'
 import { checkSummary, numberTokens } from '../src/summarize/check'
-import { skippedDates, summaryFacts } from '../src/summarize/facts'
+import { skippedDates, summaryFacts, weekdayClasses } from '../src/summarize/facts'
 import { ageLabel, costLabel, dateLabel, gradeLabel, localizeFacts } from '../src/summarize/format'
 import { checkHeading, HEADING_SCHEMA, wantsHeading, withHeading } from '../src/summarize/heading'
 import { buildVerifyPrompt, SUMMARY_SCHEMA, summarySystemPrompt } from '../src/summarize/prompt'
@@ -113,6 +113,10 @@ const factsOf = (overrides: Partial<ProgramRecord> = {}) => summaryFacts(record(
 const check = (lines: string[], language: DisplayLanguage, facts = factsOf()) => checkSummary(lines, facts, language)
 const replaced = (language: DisplayLanguage, index: number, from: string, to: string) =>
   GOOD[language].map((line, at) => (at === index ? line.replace(from, to) : line))
+const replacedIn = (lines: string[], index: number, from: string, to: string) => {
+  expect(lines[index]).toContain(from)
+  return lines.map((line, at) => (at === index ? line.replace(from, to) : line))
+}
 const hasIssue = (issues: string[], text: string) => expect(issues.some((issue) => issue.includes(text)), `${text} 없음: ${JSON.stringify(issues)}`).toBe(true)
 
 describe('summaryFacts', () => {
@@ -145,6 +149,13 @@ describe('summaryFacts', () => {
     expect(facts.undated_sessions).toBe(1)
     expect(facts.check_items).toContain('중도 참여 가능 여부')
     expect(factsOf().check_items).toEqual(['형제자매 동반 가능 여부'])
+  })
+
+  it('학년·나이 범위로 옮기지 못했어도 대상 원문이 나이·학년을 밝혔으면 학년·나이를 묻지 않는다', () => {
+    const unstructured = { grade_range: null, age_range: null, uncertain_items: ['대상 학년·나이', '형제자매 동반 가능 여부'] }
+    expect(factsOf({ ...unstructured, target_raw: '만 5세 ~ 초등학교 6학년 다문화가족 자녀 (성별 무관)' }).check_items).toEqual(['형제자매 동반 가능 여부'])
+    expect(factsOf({ ...unstructured, target_raw: '다문화가족 자녀' }).check_items).toContain('대상 학년·나이')
+    expect(factsOf({ ...unstructured, target_raw: '다문화가족 3세대 가정' }).check_items).toContain('대상 학년·나이')
   })
 
   it('중도입국을 묻는 확인 항목은 중도 참여 확인을 대신하지 않는다', () => {
@@ -417,6 +428,15 @@ describe('쉬는 날·남은 회차·신청 이름·신청 안내', () => {
     expect(skippedDates([{ date: '2026-10-05', weekday: 'mon' }, { date: '2026-10-19', weekday: 'mon' }], 2, null, '2026-10-01')).toEqual([])
   })
 
+  it('요일마다 그 요일의 첫 회차와 마지막 회차 사이만 본다 (먼저 끝난 월요일 반의 다음 월요일은 쉬는 날이 아니다)', () => {
+    // 실제 K-pop 공고: A반 월 10/19~11/23, B반 금 10/23~12/4 (11/6 빠짐)
+    const dates = ['2026-10-19', '2026-10-23', '2026-10-26', '2026-10-30', '2026-11-02', '2026-11-09', '2026-11-13', '2026-11-16', '2026-11-20', '2026-11-23', '2026-11-27', '2026-12-04']
+    const facts = factsOf({ sessions: dates.map((date, index) => session(`k${index}`, date, '15:30', '17:30')), session_count: 12 })
+    expect(facts.skipped_dates).toEqual([{ date: '2026-11-06', weekday: 'fri' }])
+    // 한 번뿐인 요일(목·수)이 섞인 불규칙 일정은 빈 월요일(10/12)을 쉬는 날로 보지 않는다
+    expect(skippedDates([{ date: '2026-10-05', weekday: 'mon' }, { date: '2026-10-08', weekday: 'thu' }, { date: '2026-10-14', weekday: 'wed' }, { date: '2026-10-19', weekday: 'mon' }], 4, null, '2026-10-01')).toEqual([])
+  })
+
   it('쉬는 날을 2줄에 쓰지 않으면 문제로 본다', () => {
     const lines = [
       "오산시가족센터가 '다문화가족 자녀 토요 과학교실'을 열어요. 다문화가족 초등 1~4학년 자녀가 대상이에요.",
@@ -454,6 +474,153 @@ describe('쉬는 날·남은 회차·신청 이름·신청 안내', () => {
     const lines = replaced('ko-easy', 2, '10월 12일(월) 09:00부터 10월 22일(목) 18:00까지 온라인이나 전화 031-378-9000으로', '일정이 정해진 뒤 따로 알려 주면 온라인이나 전화 031-378-9000으로')
     expect(check(lines, 'ko-easy', facts).some((issue) => issue.includes('신청 기간'))).toBe(false)
     expect(factsOf({ application_note: '일정 확정 후 별도 안내' }).application_note).toBeNull()
+  })
+})
+
+describe('요일마다 따로 운영하는 반·신청 기간 불일치 (K-pop 포스터)', () => {
+  // 실제 포스터: A반 월 10/19~11/23 6회, B반 금 10/23~12/4 6회 (11/6 없음), 목록과 포스터의 신청 기간이 다름
+  const dates = ['2026-10-19', '2026-10-23', '2026-10-26', '2026-10-30', '2026-11-02', '2026-11-09', '2026-11-13', '2026-11-16', '2026-11-20', '2026-11-23', '2026-11-27', '2026-12-04']
+  const CLASS_NOTICE = 'A반(월요일)과 B반(금요일)은 따로 운영하는 반으로, 반마다 6회이고 각 반 6명입니다.'
+  const CONFLICT_ITEM = '상단 접수기간과 본문 신청 기간의 불일치'
+  const kpop = (overrides: Partial<ProgramRecord> = {}) => record({
+    title: '다문화가족 자녀성장프로그램 k-pop 방송댄스',
+    target_raw: '만 5세 ~ 초등학교 6학년 다문화가족 자녀 (성별 무관) / 각 반 6명',
+    grade_range: null,
+    sessions: dates.map((date, index) => session(`k${index}`, date, '15:30', '17:30')),
+    session_count: 12,
+    attendance_rule: 'unknown',
+    cost_krw: null,
+    cost_raw: null,
+    capacity: 6,
+    application_start: '2026-10-01T00:00',
+    application_end: '2026-10-17T00:00',
+    application_methods: [{ type: 'online', label: '신청 QR코드' }, { type: 'phone', label: '문의', phone: '031-376-3428' }],
+    uncertain_items: ['참가비', '보호자·형제자매 동반 가능 여부', CONFLICT_ITEM],
+    notices: [CLASS_NOTICE, '우선순위: 오산시가족센터 신규 다문화 가족'],
+    ...overrides,
+  })
+  const LINES: Record<DisplayLanguage, string[]> = {
+    'ko-easy': [
+      "'다문화가족 자녀성장프로그램 k-pop 방송댄스'를 오산시가족센터가 열어요. 만 5세 ~ 초등학교 6학년 다문화가족 자녀가 대상이에요.",
+      'A반(월요일)은 10월 19일(월)부터 11월 23일(월)까지 6번, B반(금요일)은 10월 23일(금)부터 12월 4일(금)까지 6번 해요. 시간은 15:30~17:30이고 11월 6일(금)은 쉬어요.',
+      '비용은 기관에 물어보세요. 10월 1일(목) 00:00부터 10월 16일(금)까지 온라인 신청(신청 QR코드)으로 해요. 공고 안에 신청 기간이 다르게 적힌 곳도 있어요. 문의는 031-376-3428이에요.',
+    ],
+    vi: [
+      'Trung tâm Gia đình thành phố Osan (오산시가족센터) mở chương trình “다문화가족 자녀성장프로그램 k-pop 방송댄스” (Nhảy K-pop cho con em gia đình đa văn hóa). Đối tượng là con em gia đình đa văn hóa từ 5 tuổi đến lớp 6 tiểu học.',
+      'Lớp A (Thứ Hai) học từ 19/10 (Thứ Hai) đến 23/11 (Thứ Hai), 6 buổi; lớp B (Thứ Sáu) học từ 23/10 (Thứ Sáu) đến 4/12 (Thứ Sáu), 6 buổi. Thời gian 15:30–17:30. Ngày 6/11 (Thứ Sáu) nghỉ.',
+      'Hãy hỏi đơn vị tổ chức về chi phí. Đăng ký từ 1/10 (Thứ Năm) 00:00 đến 16/10 (Thứ Sáu) qua đăng ký trực tuyến (신청 QR코드 – mã QR đăng ký). Thời gian đăng ký được ghi khác nhau trong thông báo, hãy hỏi đơn vị tổ chức. Thắc mắc xin gọi 031-376-3428.',
+    ],
+    zh: [
+      '“다문화가족 자녀성장프로그램 k-pop 방송댄스”（多元文化家庭子女成长项目：K-POP舞蹈）由오산시가족센터举办，对象为满5周岁至小学6年级的多元文化家庭子女。',
+      'A班（周一）10月19日（周一）至11月23日（周一）共6次，B班（周五）10月23日（周五）至12月4日（周五）共6次，时间为15:30–17:30，11月6日（周五）休息。',
+      '费用请向机构确认。报名时间为10月1日（周四）00:00至10月16日（周五），通过网上报名（신청 QR코드）。公告内的报名时间写法不一致，请向机构确认。咨询电话031-376-3428。',
+    ],
+  }
+
+  it('안내 문장이 요일별 반을 밝히면 반마다 다음 회차·마지막 회차·회차 수를 사실로 넘긴다', () => {
+    const facts = summaryFacts(kpop(), NOW)
+    expect(facts.classes).toEqual([
+      { name: 'A반', weekday: 'mon', from: { date: '2026-10-19', weekday: 'mon' }, to: { date: '2026-11-23', weekday: 'mon' }, count: 6 },
+      { name: 'B반', weekday: 'fri', from: { date: '2026-10-23', weekday: 'fri' }, to: { date: '2026-12-04', weekday: 'fri' }, count: 6 },
+    ])
+    expect(localizeFacts(facts, 'zh').schedule.classes).toEqual([
+      { name: 'A반', weekday: '周一', from: '10月19日（周一）', to: '11月23日（周一）', count: 6 },
+      { name: 'B반', weekday: '周五', from: '10月23日（周五）', to: '12月4日（周五）', count: 6 },
+    ])
+    // 반 안내가 없으면 월·금 회차를 한 과정으로 둔다
+    expect(summaryFacts(kpop({ notices: [] }), NOW).classes).toEqual([])
+    expect(localizeFacts(summaryFacts(kpop({ notices: [] }), NOW), 'ko-easy').schedule.classes).toBeNull()
+  })
+
+  it('반 이름·요일이 회차 요일과 꼭 맞을 때만 반으로 나눈다', () => {
+    const sessions = dates.map((date) => ({ date, weekday: (['2026-10-19', '2026-10-26', '2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23'].includes(date) ? 'mon' : 'fri') as 'mon' | 'fri' }))
+    expect(weekdayClasses(sessions, sessions, ['월요일 1조, 금요일 2조로 나누어 진행합니다.']).map((item) => item.name)).toEqual(['1조', '2조'])
+    expect(weekdayClasses(sessions, sessions, ['월요일반과 금요일반은 따로 모집합니다.']).map((item) => [item.name, item.weekday])).toEqual([[null, 'mon'], [null, 'fri']])
+    // 한 요일에 두 반, 회차에 없는 요일의 반, 반이 하나뿐인 안내, '월요일 반드시'는 반이 아니다
+    expect(weekdayClasses(sessions, sessions, ['A반(월요일), B반(월요일), C반(금요일)'])).toEqual([])
+    expect(weekdayClasses(sessions, sessions, ['A반(월요일)과 B반(수요일)'])).toEqual([])
+    expect(weekdayClasses(sessions, sessions, ['A반(월요일)만 모집합니다.'])).toEqual([])
+    expect(weekdayClasses(sessions, sessions, ['월요일 반드시 참석, 금요일 반드시 참석'])).toEqual([])
+    // 이미 끝난 반은 빼고, 남은 반은 다음 회차부터 그 사이 회차 수로 쓴다 ('11월 27일부터 12월 4일까지 6번'이 아니다)
+    const upcoming = sessions.filter((item) => item.date >= '2026-11-24')
+    expect(weekdayClasses(sessions, upcoming, [CLASS_NOTICE]).map((item) => [item.name, item.from.date, item.to.date, item.count])).toEqual([['B반', '2026-11-27', '2026-12-04', 2]])
+    const started = sessions.filter((item) => item.date >= '2026-11-06')
+    expect(weekdayClasses(sessions, started, [CLASS_NOTICE]).map((item) => [item.name, item.from.date, item.count])).toEqual([['A반', '2026-11-09', 3], ['B반', '2026-11-13', 4]])
+  })
+
+  it('주 2회 한 과정의 안내 속 낱말(반찬·반나절·조리·조별·그룹 활동)이나 두 요일에 모이는 한 반은 요일별 반으로 나누지 않는다', () => {
+    const sessions = ['2026-10-20', '2026-10-22', '2026-10-27', '2026-10-29', '2026-11-03', '2026-11-05'].map((date) => ({ date, weekday: (new Date(`${date}T00:00:00Z`).getUTCDay() === 2 ? 'tue' : 'thu') as 'tue' | 'thu' }))
+    for (const notice of [
+      '화요일 조리 실습, 목요일 조리 평가', '화요일 반나절 체험, 목요일 반나절 체험', '화요일 반찬 만들기, 목요일 반찬 나눔',
+      '화요일 조별 활동, 목요일 조별 발표', '화요일 그룹 활동, 목요일 그룹 발표', '화요일 수업 반복, 목요일 수업 반복',
+      '1조(화요일), 1조(목요일) 모두 참여', '화요일 A반, 목요일 A반',
+    ]) expect([notice, weekdayClasses(sessions, sessions, [notice])]).toEqual([notice, []])
+    expect(weekdayClasses(sessions, sessions, ['초급반(화요일), 중급반(목요일)']).map((item) => item.name)).toEqual(['초급반', '중급반'])
+    expect(weekdayClasses(sessions, sessions, ['화요일 반은 저학년, 목요일 반은 고학년']).map((item) => item.weekday)).toEqual(['tue', 'thu'])
+  })
+
+  it('반마다 기간·횟수를 쓴 2줄과 신청 기간 불일치를 알린 3줄은 세 언어 모두 통과한다', () => {
+    const facts = summaryFacts(kpop(), NOW)
+    expect(facts.application_conflict).toBe(true)
+    expect(localizeFacts(facts, 'vi').application.period_conflict).toBe(true)
+    for (const language of ['ko-easy', 'vi', 'zh'] as const) expect([language, check(LINES[language], language, facts)]).toEqual([language, []])
+  })
+
+  it('반마다 기간을 따로 쓰는 2줄은 반 하나만큼 더 길어도 된다', () => {
+    const line = 'A班（周一）10月19日（周一）至11月23日（周一）共6次；B班（周五）10月23日（周五）至12月4日（周五）共6次，11月6日（周五）休息。时间均为15:30–17:30，在오산시가족센터 2층 교육실（乌山市家庭中心2楼教育室）进行。'
+    const lines = [LINES.zh[0], line, LINES.zh[2]]
+    expect([...line].length).toBeGreaterThan(120)
+    expect(check(lines, 'zh', summaryFacts(kpop(), NOW))).toEqual([])
+    hasIssue(check(lines, 'zh', summaryFacts(kpop({ notices: [] }), NOW)), '2줄이 너무 김')
+  })
+
+  it('두 반을 합친 요일·총 횟수의 한 과정으로 쓰면 반마다의 기간·횟수가 없다고 알린다', () => {
+    const facts = summaryFacts(kpop(), NOW)
+    const merged = LINES['ko-easy'].map((line, index) => (index === 1 ? '10월 19일(월)부터 12월 4일(금)까지 월·금요일 총 12회, 시간은 15:30~17:30이에요. 11월 6일(금)은 쉬어요.' : line))
+    const issues = check(merged, 'ko-easy', facts)
+    hasIssue(issues, 'A반의 기간(10월 19일~11월 23일)이 없음')
+    hasIssue(issues, 'B반의 기간(10월 23일~12월 4일)이 없음')
+    // 날짜 속 수(11월 6일)는 반의 회차 수로 보지 않는다
+    hasIssue(issues, '2줄에 A반의 회차 수(6)가 없음')
+  })
+
+  it('반의 회차 수는 사실에 있는 수이고, 반이 시작된 뒤에는 남은 기간의 회차 수를 쓴다', () => {
+    // A반 첫 회차(10/19)가 지난 뒤: A반은 10/26부터 5번. 5는 안내·대상·정원·날짜·시각에 없는 수지만 반의 회차 수라 받는다
+    const bare = kpop({ sessions: dates.map((date, index) => session(`k${index}`, date)), notices: ['A반(월요일), B반(금요일)'], capacity: null, target_raw: '다문화가족 자녀' })
+    const started = new Date('2026-10-20T03:00:00Z')
+    const second = (line: string) => check([LINES['ko-easy'][0], line, LINES['ko-easy'][2]], 'ko-easy', summaryFacts(bare, started)).filter((issue) => /2줄|회차 수/.test(issue))
+    expect(summaryFacts(bare, started).classes.map((item) => [item.name, item.from.date, item.count])).toEqual([['B반', '2026-10-23', 6], ['A반', '2026-10-26', 5]])
+    expect(second('A반(월요일)은 10월 26일(월)부터 11월 23일(월)까지 5번, B반(금요일)은 10월 23일(금)부터 12월 4일(금)까지 6번 해요. 시간은 10:00~12:00이고 11월 6일(금)은 쉬어요.')).toEqual([])
+    hasIssue(second('A반(월요일)은 10월 26일(월)부터 11월 23일(월)까지 6번, B반(금요일)은 10월 23일(금)부터 12월 4일(금)까지 6번 해요. 시간은 10:00~12:00이고 11월 6일(금)은 쉬어요.'), '2줄에 A반의 회차 수(5)가 없음')
+  })
+
+  it('신청 기간 불일치를 3줄에 쓰지 않거나, 사실에 없는 다른 쪽 기간의 날짜를 쓰면 문제로 본다', () => {
+    const facts = summaryFacts(kpop(), NOW)
+    hasIssue(check(replacedIn(LINES['ko-easy'], 2, ' 공고 안에 신청 기간이 다르게 적힌 곳도 있어요.', ''), 'ko-easy', facts), '신청 기간이 서로 다르게 적혀 있다는 말이 없음')
+    hasIssue(check(replacedIn(LINES.zh, 2, '公告内的报名时间写法不一致，请向机构确认。', ''), 'zh', facts), '신청 기간이 서로 다르게 적혀 있다는 말이 없음')
+    const invented = replacedIn(LINES['ko-easy'], 2, '다르게 적힌 곳도 있어요.', '9월 28일(월)부터 10월 14일(수)까지로 다르게 적힌 곳도 있어요.')
+    hasIssue(check(invented, 'ko-easy', facts), '사실에 없는 날짜 9월 28일')
+  })
+
+  it('신청 기간이 다르다는 항목만 불일치로 본다 (마감 시각 표기·운영 종료일과 견주는 항목은 아니다)', () => {
+    const conflict = (items: string[]) => summaryFacts(kpop({ uncertain_items: items }), NOW).application_conflict
+    expect(conflict(['신청 기간이 목록과 포스터에서 다름'])).toBe(true)
+    expect(conflict(['참가비', '보호자 동반', '형제자매 동반', '준비물', '모집 기간 상이'])).toBe(true)
+    expect(conflict(['접수 마감 일시 불일치'])).toBe(false)
+    expect(conflict(['신청 마감(10월 31일)이 운영 종료일(10월 17일)보다 늦은 점'])).toBe(false)
+    expect(conflict(['신청 기간과 운영 기간의 차이'])).toBe(false)
+    expect(conflict(['참가비'])).toBe(false)
+    // 신청이 마감된 공고는 확인할 점을 넘기지 않는다
+    expect(summaryFacts(kpop({ application_end: '2026-10-14T18:00' }), NOW).application_conflict).toBe(false)
+  })
+
+  it('지시문은 반을 나눠 쓰고 불일치를 알리게 하고, 대조는 합쳐 쓴 것과 빠진 불일치를 잡게 한다', () => {
+    const prompt = summarySystemPrompt('ko-easy')
+    expect(prompt).toContain('schedule.classes가 있으면')
+    expect(prompt).toContain('application.period_conflict가 true면')
+    const verify = buildVerifyPrompt(LINES['ko-easy'], summaryFacts(kpop(), NOW), 'ko-easy')
+    expect(verify).toContain('"period_conflict": true')
+    expect(verify).toContain('"name": "B반"')
   })
 })
 
