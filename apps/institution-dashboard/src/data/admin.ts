@@ -1,7 +1,8 @@
 /**
- * 관리자 API(program-api /admin/...) 연결. 공고 검수·번역 포스터 승인·공고 보완 도우미·기관 추가 안내를 다룹니다.
+ * 관리자 API(program-api /admin/...) 연결. 공고 검수·번역 포스터 승인·공고 보완 도우미·기관 추가 안내·편성 도우미를 다룹니다.
  * 서버 모양은 apps/program-api/src/admin/programs.ts, improve.ts와 같습니다(앱끼리 직접 가져오지 않도록 옮겨 둠).
  */
+import type { Dong, Grade, Interest, SafeCount, SlotKey } from '@osan-kids-bridge/planning'
 import type { QuestionTopic } from './questions'
 
 export type ReviewStatus = 'pending' | 'approved' | 'rejected' | 'stale'
@@ -105,6 +106,43 @@ export interface ImproveResult {
   model: string
 }
 
+/** 편성 도우미 결과 (apps/program-api/src/admin/planner.ts와 같은 모양) */
+export interface PlanClass { n: number; slot: SlotKey; when: string; venue_id: string; venue: string; dong: Dong; reach: string; reach_count: SafeCount; expected: string; expected_people: number; over_capacity: boolean }
+export interface PlanReason { text: string; facts: { id: string; label: string; value: string }[] }
+export interface PlanProposal {
+  id: string
+  /** 계산 결과에서 고른 안 번호 (일정·장소 추천에서 같은 안을 연다) */
+  rank: number
+  title: string
+  interest: Interest | 'all'
+  interest_label: string
+  grade_range: [Grade, Grade]
+  class_count: number
+  capacity: number
+  classes: PlanClass[]
+  eligible: number
+  covered: string
+  covered_count: SafeCount
+  coverage_pct: number | null
+  baseline: { label: string; covered: string; coverage_pct: number | null } | null
+  gain: number | null
+  language_support: { language: 'ko-easy' | 'vi' | 'zh'; label: string }[]
+  language_needs: string[]
+  teaching: string[]
+  warnings: string[]
+  reasons: PlanReason[]
+  problems: string[]
+}
+export type PlanTool = 'read_demand' | 'read_questions' | 'read_programs' | 'simulate_plan' | 'check_plan' | 'submit_plan'
+export interface PlanResult {
+  proposals: PlanProposal[]
+  passed: boolean
+  rounds: number
+  steps: { tool: PlanTool; ok: boolean; label?: string; problems?: number }[]
+  model: string
+  data_note: string
+}
+
 export interface NewAddendum {
   topic: QuestionTopic
   text: string
@@ -151,6 +189,8 @@ export const reviewProgram = (programId: string, input: ReviewInput) => post<Pro
 export const approvePoster = (programId: string, language: PosterLanguage, reviewer: string) => post<ProgramDetail>(`/admin/posters/${id(programId)}/${language}/approve`, { reviewer })
 export const improveProgram = (programId: string, questions: { question_ko: string; topic: QuestionTopic; count: number }[], signal?: AbortSignal) =>
   post<ImproveResult>(`/admin/programs/${id(programId)}/improve`, { questions }, signal)
+export const proposePlan = (questions: { question_ko: string; topic: QuestionTopic; count: number }[], signal?: AbortSignal) =>
+  post<PlanResult>('/admin/planning/propose', { questions }, signal)
 export const addAddenda = (programId: string, author: string, items: NewAddendum[]) => post<ProgramDetail>(`/admin/programs/${id(programId)}/addenda`, { author, items })
 export const removeAddendum = (programId: string, addendumId: string) => request<ProgramDetail>(`/admin/programs/${id(programId)}/addenda/${id(addendumId)}`, { method: 'DELETE' })
 

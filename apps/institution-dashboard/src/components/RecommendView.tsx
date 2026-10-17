@@ -16,7 +16,12 @@ const INTEREST_ART: Record<Interest | 'all', { emoji: string; tone: string }> = 
   career: { emoji: '🧭', tone: 'lilac' },
 }
 
-interface Props { form: PlanForm; setForm: (form: PlanForm) => void }
+interface Props {
+  form: PlanForm
+  setForm: (form: PlanForm) => void
+  /** 처음 펼칠 안 번호 (AI 편성 제안에서 넘어올 때 그 안) */
+  initialRank?: number
+}
 function readComboLimit(): number | undefined {
   const text = new URLSearchParams(window.location.search).get('comboLimit')
   const value = text === null || text === '' ? NaN : Number(text)
@@ -25,12 +30,12 @@ function readComboLimit(): number | undefined {
 
 /**
  * 추천 탭. ‘조건’ → ‘결과’ 두 화면을 오가고 ‘자세히’는 시트로 엽니다(보호자 웹의 조건 → 결과와 같은 흐름).
- * 추천 계산은 @osan-kids-bridge/planning의 recommend() 그대로입니다.
+ * 추천 계산은 @osan-kids-bridge/planning의 recommend()이며, 편성 도우미(program-api)의 편성 계산 도구도 같은 계산을 씁니다.
  */
-export function RecommendView({ form, setForm }: Props) {
+export function RecommendView({ form, setForm, initialRank = 1 }: Props) {
   const { locale, t } = useLanguage()
   const [capacityText, setCapacityText] = useState(String(form.capacity))
-  const [selected, setSelected] = useState(0)
+  const [selected, setSelected] = useState(Math.max(0, initialRank - 1))
   const [detailsOpen, setDetailsOpen] = useState(false)
   const comboLimit = useMemo(readComboLimit, [])
   const result = useMemo(() => recommend(DEMO_RESPONSES, VENUES, toProgramPlan(form), { comboLimit }), [form, comboLimit])

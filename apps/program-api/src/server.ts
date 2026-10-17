@@ -7,6 +7,8 @@ import { addAddenda, adminDetail, adminRow, parseAddenda, parseReviewRequest, re
 import type { AdminContext } from './admin/programs'
 import { parseImproveRequest, runImprover } from './admin/improve'
 import type { Improver } from './admin/improve'
+import { parsePlanRequest, runPlanner } from './admin/planner'
+import type { Planner } from './admin/planner'
 import { runAgent } from './agent/agent'
 import type { AgentReply, AgentRequest } from './agent/agent'
 import { parseAgentRequest, parseQuestion, summarizeQuestions } from './agent/requests'
@@ -50,6 +52,8 @@ export interface ServerOptions {
   admin?: boolean
   /** 공고 보완 도우미 (시험에서 바꿔 끼운다) */
   improver?: Improver
+  /** 프로그램 편성 도우미 (시험에서 바꿔 끼운다) */
+  planner?: Planner
 }
 
 class HttpError extends Error {
@@ -159,6 +163,7 @@ export function createServer(options: ServerOptions = {}): Server {
   const questionsFile = join(dataFolder, 'questions', 'questions.jsonl')
   const adminEnabled = options.admin ?? process.env.ADMIN_API === '1'
   const improver = options.improver ?? runImprover
+  const planner = options.planner ?? runPlanner
   const adminContext = (): AdminContext => ({ now: now(), dataDir: dataFolder, posterDir: posters, showMachineChecked })
   const posterLanguages = (id: string): PosterLanguage[] => POSTER_LANGUAGES.filter((language) => servablePoster(id, language, showMachineChecked, posters))
 
@@ -401,6 +406,18 @@ export function createServer(options: ServerOptions = {}): Server {
       } catch (error) {
         log(`[program-api] 공고 보완 도우미 실패: ${(error as Error)?.stack ?? String(error)}`)
         throw new HttpError(503, '공고 보완 도우미가 지금 답할 수 없습니다. 잠시 후 다시 시도해 주세요.')
+      }
+    }
+
+    if (path === '/admin/planning/propose') {
+      if (method !== 'POST') throw methodNotAllowed('POST')
+      const parsed = parsePlanRequest(parseJson(await readBody(request)))
+      if (!parsed.ok) throw new HttpError(400, '질문 목록을 확인해 주세요.', parsed.errors)
+      try {
+        return send(response, 200, await planner({ records: current().source, questions: parsed.questions, now: now() }))
+      } catch (error) {
+        log(`[program-api] 편성 도우미 실패: ${(error as Error)?.stack ?? String(error)}`)
+        throw new HttpError(503, '편성 도우미가 지금 답할 수 없습니다. 잠시 후 다시 시도해 주세요.')
       }
     }
 

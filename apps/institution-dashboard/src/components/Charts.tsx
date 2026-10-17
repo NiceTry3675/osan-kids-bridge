@@ -36,7 +36,7 @@ export function Heatmap({ counts, max, caption, marks, baselineSlots = [], compa
               const isBaseline = baselineSlots.includes(slot)
               const label = localizedSlot(slot, t) + ' ' + localizedCount(count, t) + (badges.length ? ', ' + t('recommended') : '') + (isBaseline ? ', ' + t('existing') : '')
               return (
-                <div key={slot} role="cell" className={`heat-cell ${level}${badges.length ? ' marked' : ''}${isBaseline ? ' baseline' : ''}`} title={label}>
+                <div key={slot} role="cell" className={`heat-cell ${level}${badges.length ? ' heat-marked' : ''}${isBaseline ? ' baseline' : ''}`} title={label}>
                   <span className="visually-hidden">{label}</span>
                   <span className="heat-value" aria-hidden="true">{localizedCount(count, t, 'short')}</span>
                   {(badges.length > 0 || isBaseline) && (
