@@ -15,6 +15,8 @@ export interface QuestionEntry {
 export interface QuestionSummary {
   total: number
   live: number
+  /** 서버가 있는데 질문을 받아 오지 못함(연결 실패·오류 응답). '아직 질문 없음'과 구별합니다. */
+  liveFailed: boolean
   programs: QuestionEntry[]
 }
 
@@ -51,7 +53,7 @@ const DEMO_QUESTIONS: Omit<QuestionEntry, 'total' | 'topics'>[] = [
   },
 ]
 
-function merge(live: Omit<QuestionEntry, 'total' | 'topics'>[]): QuestionSummary {
+function merge(live: Omit<QuestionEntry, 'total' | 'topics'>[], liveFailed = false): QuestionSummary {
   const programs = new Map<string, QuestionEntry>()
   let liveCount = 0
   for (const [source, isLive] of [[DEMO_QUESTIONS, false], [live, true]] as const) {
@@ -75,17 +77,20 @@ function merge(live: Omit<QuestionEntry, 'total' | 'topics'>[]): QuestionSummary
   }
   const list = [...programs.values()].sort((a, b) => b.total - a.total)
   for (const entry of list) entry.questions.sort((a, b) => b.count - a.count)
-  return { total: list.reduce((sum, entry) => sum + entry.total, 0), live: liveCount, programs: list }
+  return { total: list.reduce((sum, entry) => sum + entry.total, 0), live: liveCount, liveFailed, programs: list }
 }
 
+/** 서버가 없으면 예시만, 받아 오지 못하면 예시와 함께 liveFailed를 돌려줍니다. 취소되면 AbortError로 끝납니다. */
 export async function loadQuestions(signal?: AbortSignal): Promise<QuestionSummary> {
   if (!apiBaseUrl) return merge([])
   try {
     const response = await fetch(`${apiBaseUrl}/agent/questions`, { signal })
-    if (!response.ok) return merge([])
-    const body = await response.json() as { programs: Omit<QuestionEntry, 'total' | 'topics'>[] }
-    return merge(body.programs)
-  } catch {
-    return merge([])
+    if (!response.ok) return merge([], true)
+    const body = await response.json() as { programs?: unknown }
+    if (!Array.isArray(body?.programs)) return merge([], true)
+    return merge(body.programs as Omit<QuestionEntry, 'total' | 'topics'>[])
+  } catch (error) {
+    if (signal?.aborted) throw error
+    return merge([], true)
   }
 }

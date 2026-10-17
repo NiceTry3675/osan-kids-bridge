@@ -142,6 +142,7 @@
 .questions-meta { display: grid; gap: 2px; font-size: var(--text-sm); }
 .questions-meta small { color: var(--ink-3); font-size: var(--text-xs); }
 .questions-live { color: var(--action); font-weight: 750; font-size: var(--text-xs); }
+.questions-meta .questions-offline { color: var(--ink-2); }
 .topic-bars { display: grid; gap: 6px; margin-top: 4px; }
 .topic-bars li { display: grid; grid-template-columns: 7.5em 1fr 2em; gap: 8px; align-items: center; font-size: var(--text-xs); }
 .topic-name { color: var(--ink-2); font-weight: 650; }
@@ -153,5 +154,8 @@
 .question-fix ul { display: grid; gap: 2px; padding-left: 18px; list-style: disc; }
 .question-list li { display: grid; gap: 1px; padding: 6px 2px; font-size: var(--text-sm); }
 .question-list small { color: var(--ink-3); font-size: var(--text-xs); }
-.question-list li.is-live span::after { content: ' ●'; color: var(--action); font-size: 10px; vertical-align: middle; }
+/* 보호자 웹에서 들어온 질문 표시: 점은 꾸밈, 뜻은 위 안내 줄과 숨은 글자로 전합니다. */
+.live-mark { color: var(--action); font-size: 10px; vertical-align: middle; }
+.questions-live .live-mark { margin-right: 4px; }
+.question-list .live-mark { margin-left: 4px; }
 .questions-privacy { font-size: var(--text-xs); }

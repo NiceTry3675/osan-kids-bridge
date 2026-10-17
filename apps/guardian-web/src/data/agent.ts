@@ -57,10 +57,24 @@ async function readJson<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>
 }
 
+/** 서버로 보내는 최근 대화 수와 한 메시지 길이. 서버 검사(32개·1,600자)보다 넉넉히 작고, 모델에는 어차피 최근 16개·800자만 갑니다. */
+export const HISTORY_LIMIT = 12
+export const MESSAGE_LIMIT = 800
+
+/** 대화가 길어져도 요청이 늘 유효하도록 최근 대화만, 길이를 잘라 보냅니다. 첫 메시지는 보호자 질문으로 맞춥니다. */
+export function recentHistory(messages: ChatMessage[]): ChatMessage[] {
+  const recent = messages
+    .map((message) => ({ role: message.role, text: message.text.trim().slice(0, MESSAGE_LIMIT).trim() }))
+    .filter((message) => message.text)
+    .slice(-HISTORY_LIMIT)
+  while (recent.length > 1 && recent[0].role !== 'user') recent.shift()
+  return recent
+}
+
 export async function askAgent(messages: ChatMessage[], locale: Locale, programId: string | null, signal?: AbortSignal): Promise<AgentReply> {
   const response = await fetch(`${apiBaseUrl}/agent/chat`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, locale, program_id: programId }), signal,
+    body: JSON.stringify({ messages: recentHistory(messages), locale, program_id: programId }), signal,
   })
   return readJson<AgentReply>(response)
 }

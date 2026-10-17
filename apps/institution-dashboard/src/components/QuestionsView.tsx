@@ -25,7 +25,8 @@ export function QuestionsView() {
 
   useEffect(() => {
     const controller = new AbortController()
-    loadQuestions(controller.signal).then(setSummary)
+    // 새로고침·탭 이동으로 취소된 요청의 결과는 버립니다.
+    loadQuestions(controller.signal).then((next) => { if (!controller.signal.aborted) setSummary(next) }, () => {})
     return () => controller.abort()
   }, [version])
 
@@ -34,8 +35,9 @@ export function QuestionsView() {
     <p className="demand-summary">{t('questionsLead')}</p>
     {summary && <p className="questions-meta">
       <strong>{t('questionsTotal', { n: summary.total, m: summary.programs.length })}</strong>
-      {summary.live > 0 && <span className="questions-live">{t('questionsLive', { n: summary.live })}</span>}
+      {summary.live > 0 && <span className="questions-live"><span className="live-mark" aria-hidden="true">●</span>{t('questionsLive', { n: summary.live })}</span>}
       <small>{t('questionsDemo')}</small>
+      {summary.liveFailed && <small className="questions-offline" role="status">{t('questionsOffline')}</small>}
     </p>}
     {summary && summary.programs.length === 0 && <p className="muted">{t('questionsEmpty')}</p>}
     {summary?.programs.map((program) => {
@@ -57,8 +59,8 @@ export function QuestionsView() {
         <details className="fold">
           <summary>{t('questionsSource')}<small>{program.questions.length}</small></summary>
           <ul className="question-list fold-body">
-            {program.questions.map((question) => <li key={question.question_ko} className={question.live ? 'is-live' : undefined}>
-              <span lang="ko">{question.question_ko}</span>
+            {program.questions.map((question) => <li key={question.question_ko}>
+              <span><span lang="ko">{question.question_ko}</span>{question.live && <><span className="live-mark" aria-hidden="true">●</span>{' '}<span className="visually-hidden">{t('questionsLiveLabel')}</span></>}</span>
               <small>{t('questionsCount', { n: question.count })} · {question.last_date}</small>
             </li>)}
           </ul>

@@ -3,10 +3,11 @@ import { useI18n } from '../../i18n'
 import type { MessageKey } from '../../i18n'
 import { agentAvailable, askAgent, reportQuestion } from '../../data/agent'
 import type { AgentReply, AgentStep, ChatMessage, UncertainTopic } from '../../data/agent'
+import { isSafeUrl } from '../../lib/format'
 import { navigate, programPath } from '../../lib/router'
 import { Icon } from '../../components/Icon'
 import { Notice } from '../../components/feedback'
-import { PhoneLink } from '../../components/links'
+import { ExternalLink, PhoneLink } from '../../components/links'
 import { Sheet } from '../../components/Sheet'
 
 type Turn = { role: 'user'; text: string } | { role: 'assistant'; reply: AgentReply }
@@ -37,8 +38,11 @@ export function ChatSheet({ open, onClose, program, suggestions }: Props) {
   const endRef = useRef<HTMLDivElement>(null)
   const abort = useRef<AbortController | null>(null)
 
+  /** 대화를 비우고 기다리던 답은 취소합니다. */
+  const reset = () => { abort.current?.abort(); setTurns([]); setFailed(false) }
+
   // 다른 공고나 다른 언어로 바뀌면 대화를 새로 시작합니다.
-  useEffect(() => { setTurns([]); setFailed(false); abort.current?.abort() }, [program?.program_id, locale])
+  useEffect(reset, [program?.program_id, locale])
   useEffect(() => { endRef.current?.scrollIntoView?.({ block: 'end', behavior: 'smooth' }) }, [turns, pending])
   useEffect(() => () => abort.current?.abort(), [])
 
@@ -56,7 +60,7 @@ export function ChatSheet({ open, onClose, program, suggestions }: Props) {
     abort.current = controller
     try {
       const reply = await askAgent(messages, locale, program?.program_id ?? null, controller.signal)
-      setTurns((current) => [...current, { role: 'assistant', reply }])
+      if (!controller.signal.aborted) setTurns((current) => [...current, { role: 'assistant', reply }])
     } catch (error) {
       if ((error as Error).name !== 'AbortError') setFailed(true)
     } finally {
@@ -82,7 +86,10 @@ export function ChatSheet({ open, onClose, program, suggestions }: Props) {
   ) : undefined
 
   return (
-    <Sheet open={open} onClose={onClose} title={t('chatTitle')} tall footer={footer} onSubmit={() => void send(draft)}>
+    <Sheet
+      open={open} onClose={onClose} title={t('chatTitle')} tall footer={footer} onSubmit={() => void send(draft)}
+      headerExtra={turns.length > 0 && <button type="button" className="btn btn--quiet chat-reset" onClick={reset}>{t('chatReset')}</button>}
+    >
       <div className="chat" aria-live="polite">
         <div className="chat-intro">
           <p className="chat-intro-lead"><span className="chat-badge" aria-hidden="true">AI</span>{t('chatIntro')}</p>
@@ -187,6 +194,7 @@ function AssistantTurn({ reply, viewing, onAsk, onOpenProgram }: { reply: AgentR
 function InquiryCard({ inquiry }: { inquiry: NonNullable<AgentReply['inquiry']> }) {
   const { t } = useI18n()
   const [copied, setCopied] = useState(false)
+  const contacts = inquiry.contacts.filter(shownContact)
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(inquiry.message_ko)
@@ -200,20 +208,42 @@ function InquiryCard({ inquiry }: { inquiry: NonNullable<AgentReply['inquiry']> 
       <p className="muted">{t('inquiryNote')}</p>
       <pre className="inquiry-text" lang="ko">{inquiry.message_ko}</pre>
       <button type="button" className="btn btn--secondary" onClick={copy}><Icon name={copied ? 'check' : 'link'} />{copied ? t('inquiryCopied') : t('inquiryCopy')}</button>
-      {inquiry.contacts.length
-        ? inquiry.contacts.filter((contact) => contact.phone).map((contact) => <PhoneLink key={contact.phone} phone={contact.phone!} demo={inquiry.is_demo}>{t('inquiryPhone', { phone: contact.phone! })}</PhoneLink>)
+      {contacts.length
+        ? contacts.map((contact, index) => <InquiryContact key={index} contact={contact} demo={inquiry.is_demo} />)
         : <p className="muted">{t('inquiryNoContact')}</p>}
     </div>
   )
 }
 
+type InquiryContactInfo = NonNullable<AgentReply['inquiry']>['contacts'][number]
+
+/** 화면에 보일 수 있는 문의처만: 번호가 있는 전화, 주소가 있는 방문, 안전한 주소의 온라인 */
+const shownContact = (contact: InquiryContactInfo) =>
+  contact.type === 'phone' ? Boolean(contact.phone?.trim())
+    : contact.type === 'visit' ? Boolean(contact.address?.trim())
+      : contact.type === 'online' && isSafeUrl(contact.url)
+
+function InquiryContact({ contact, demo }: { contact: InquiryContactInfo; demo: boolean }) {
+  const { t } = useI18n()
+  if (contact.type === 'phone') return <PhoneLink phone={contact.phone!} demo={demo}>{t('inquiryPhone', { phone: contact.phone! })}</PhoneLink>
+  if (contact.type === 'visit') return <p className="action-visit"><Icon name="pin" /><span lang="ko">{t('inquiryVisit', { address: contact.address! })}</span></p>
+  return <ExternalLink href={contact.url!} demo={demo} variant="secondary">{t('inquiryOnline')}</ExternalLink>
+}
+
 function UnansweredCard({ items }: { items: AgentReply['unanswered'] }) {
   const { t } = useI18n()
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle')
+  // 이미 알린 질문. 중간에 실패해 다시 누르면 남은 질문만 보내 같은 질문이 두 번 세어지지 않게 합니다.
+  const sent = useRef(new Set<string>())
   const send = async () => {
     setState('sending')
     try {
-      for (const item of items) await reportQuestion({ program_id: item.program_id, topic: item.topic, question_ko: item.question_ko })
+      for (const item of items) {
+        const id = `${item.program_id}\n${item.question_ko}`
+        if (sent.current.has(id)) continue
+        await reportQuestion({ program_id: item.program_id, topic: item.topic, question_ko: item.question_ko })
+        sent.current.add(id)
+      }
       setState('sent')
     } catch {
       setState('failed')
