@@ -184,6 +184,17 @@ describe('기관에 확인할 점 (보호자 웹 UncertainItem)', () => {
     expect(program.uncertain_items_ko).toEqual(['형제자매 동반 가능 여부', '참여 자격 확인 필요: 다문화가족'])
     expect(program.uncertain_items).toEqual([{ topic: 'companion', note_ko: null }, { topic: 'family_eligibility', note_ko: null }])
   })
+
+  it('기관이 덧붙인 안내는 확인할 점에서 빼고, 주제·문장·서울 기준 날짜만 응답에 담는다 (담당자 이름·질문은 뺀다)', () => {
+    const addendum = {
+      id: 'add-1', topic: 'companion' as const, text: '형제자매도 함께 올 수 있습니다.', resolves_questions: ['동생도 가도 되나요?'],
+      resolves_items: ['형제자매 동반 가능 여부'], author: '김담당', added_at: '2026-10-15T16:30:00.000Z', drafted_by_ai: true,
+    }
+    const program = evaluateProgram(record({ uncertain_items: ['형제자매 동반 가능 여부'], addenda: [addendum] }), null, NOW)
+    expect(program.addenda).toEqual([{ topic: 'companion', text: '형제자매도 함께 올 수 있습니다.', added_at: '2026-10-16' }])
+    expect(program.uncertain_items.map((item) => item.topic)).not.toContain('companion')
+    expect(evaluateProgram(record(), null, NOW).addenda).toEqual([])
+  })
 })
 
 describe('신청·문의 방법', () => {

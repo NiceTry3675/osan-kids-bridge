@@ -75,7 +75,7 @@ function AskPanel({ program, onOpenChat }: { program: Program; onOpenChat?: () =
   const { t } = useI18n()
   return (
     <div className="stack">
-      {onOpenChat && agentAvailable && <AiEntry title={t('chatOpen')} body={t('chatOpenHomeBody')} onOpen={onOpenChat} />}
+      {onOpenChat && agentAvailable && <AiEntry title={t('chatOpen')} body={t('chatOpenProgramBody')} onOpen={onOpenChat} />}
       <div className="step-card">
         <p className="step-title"><span className="step-no">1</span>{t('askStep1')}</p>
         <p className="muted">{t('askStep1Body')}</p>

@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { I18nProvider } from '../i18n'
 import type { MessageKey } from '../i18n'
 import { ChatSheet } from '../screens/chat/ChatSheet'
 import { HISTORY_LIMIT, MESSAGE_LIMIT, recentHistory } from '../data/agent'
 import type { AgentReply, ChatMessage } from '../data/agent'
+import { getMockProgram } from '../data/mock'
+import { emptyFilters } from '../data/types'
 
 // 서버가 연결된 화면처럼: agentAvailable은 모듈을 읽을 때 정해지므로 먼저 바꿉니다.
 vi.hoisted(() => { vi.stubEnv('VITE_API_BASE_URL', 'http://api.test'); vi.stubEnv('VITE_DATA_MODE', 'live') })
@@ -33,15 +35,76 @@ function serve(chat: (body: ChatBody) => Response | Promise<Response>, questions
 const renderChat = (suggestions: MessageKey[] = ['chatSuggestFit']) =>
   render(<I18nProvider initial="ko-easy"><ChatSheet open onClose={() => {}} program={null} suggestions={suggestions} /></I18nProvider>)
 
-async function ask(text: string) {
-  const input = screen.getByLabelText('궁금한 것을 쓰세요')
+async function ask(text: string, label = '궁금한 것을 쓰세요', thinking = '공고를 확인하고 있어요') {
+  const input = screen.getByLabelText(label)
   fireEvent.change(input, { target: { value: text } })
   fireEvent.keyDown(input, { key: 'Enter' })
-  await waitFor(() => expect(screen.queryByText('공고를 확인하고 있어요')).toBeNull())
+  await waitFor(() => expect(screen.queryByText(thinking)).toBeNull())
 }
 
 beforeEach(() => { serve(() => json(reply())) })
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
+
+describe('상담 답의 모양', () => {
+  it('결론 한 줄 뒤에 목록이 오면 결론을 굵게, 목록 줄의 이름표를 굵게 보인다', async () => {
+    serve(() => json(reply({ reply: '공고 기준으로 나이는 맞아요.\n- 기관에 확인할 것: 오산시 거주 조건\n- 10:00~13:00에 열려요' })))
+    renderChat()
+    await ask('갈 수 있나요?')
+    expect(screen.getByText('공고 기준으로 나이는 맞아요.').className).toBe('bubble-lead')
+    expect(screen.getByText('기관에 확인할 것:').tagName).toBe('STRONG')
+    expect(screen.getByText('기관에 확인할 것:').parentElement!.textContent).toBe('기관에 확인할 것: 오산시 거주 조건')
+    // 시각의 쌍점은 이름표가 아닙니다.
+    expect(screen.getByText('10:00~13:00에 열려요').tagName).toBe('LI')
+  })
+
+  it('목록 없이 문단만 있으면 첫 문단을 결론처럼 굵게 하지 않는다', async () => {
+    serve(() => json(reply({ reply: '공고에 적힌 내용으로 답해요. 준비물은 공고에 없어요.' })))
+    renderChat()
+    await ask('준비물이 있나요?')
+    expect(screen.getByText('공고에 적힌 내용으로 답해요. 준비물은 공고에 없어요.').className).toBe('')
+  })
+
+  it('대화가 시작되면 안내를 한 줄로 접는다', async () => {
+    renderChat()
+    expect(screen.getByText(/검수된 공고에 적힌 내용으로만 답해요/)).toBeTruthy()
+    await ask('첫 질문')
+    expect(screen.queryByText(/검수된 공고에 적힌 내용으로만 답해요/)).toBeNull()
+    expect(screen.getByText('공고에 적힌 것만 답해요 · 이름은 묻지 않아요')).toBeTruthy()
+  })
+
+  it('AI가 한 일을 제목과 차례로 보이고, 보고 있는 공고는 화면 언어 제목으로 적는다', async () => {
+    const program = getMockProgram('demo-korean', emptyFilters())!
+    serve(() => json(reply({ steps: [
+      { tool: 'get_program', program_id: 'demo-korean', title: program.title, ok: true },
+      { tool: 'check_fit', program_id: 'demo-korean', title: program.title, ok: true },
+      { tool: 'get_program', program_id: 'demo-art', title: '주말 미술 4회 과정', ok: true },
+      { tool: 'draft_inquiry', ok: false },
+    ] })))
+    render(<I18nProvider initial="vi"><ChatSheet open onClose={() => {}} program={program} suggestions={[]} /></I18nProvider>)
+    expect(screen.getByText('Thông báo đang xem: Lớp học vui chơi tiếng Hàn cuối tuần')).toBeTruthy()
+    await ask('Đăng ký thế nào?', 'Nhập điều bạn muốn hỏi', 'Đang kiểm tra thông báo')
+    const steps = within(screen.getByRole('list', { name: 'Việc trợ lý đã làm', hidden: true })).getAllByRole('listitem', { hidden: true })
+    expect(steps.map((step) => step.textContent)).toEqual([
+      '1Đọc thông báoLớp học vui chơi tiếng Hàn cuối tuần',
+      '2So sánh với điều kiện của con',
+      '3Đọc thông báo주말 미술 4회 과정',
+      '4Bước chưa kiểm tra được',
+    ])
+    expect(screen.queryByText(program.title)).toBeNull()
+    // 화면 언어 제목이 없는 다른 공고는 한국어 원문이라고 알립니다.
+    expect(within(steps[2]).getByText('주말 미술 4회 과정').getAttribute('lang')).toBe('ko')
+    expect(within(steps[0]).getByText('Lớp học vui chơi tiếng Hàn cuối tuần').getAttribute('lang')).toBeNull()
+  })
+
+  it('보고 있는 공고에 화면 언어 요약이 없으면 한국어 원제목에만 lang을 붙인다', () => {
+    const program = getMockProgram('demo-art', emptyFilters())!
+    render(<I18nProvider initial="vi"><ChatSheet open onClose={() => {}} program={program} suggestions={[]} /></I18nProvider>)
+    const title = screen.getByText(program.title)
+    expect(title.getAttribute('lang')).toBe('ko')
+    expect(title.parentElement!.textContent).toBe(`Thông báo đang xem: ${program.title}`)
+    expect(title.parentElement!.getAttribute('lang')).toBeNull()
+  })
+})
 
 describe('답의 근거', () => {
   it('공고가 나온 뒤 기관이 덧붙인 안내는 공고 원문과 구별해 알린다', async () => {

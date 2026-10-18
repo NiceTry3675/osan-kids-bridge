@@ -17,7 +17,8 @@ describe('상세 화면', () => {
     renderDetail('demo-art', 'vi')
     expect(await screen.findByText(/chưa có hướng dẫn bằng Tiếng Việt/)).toBeTruthy()
     expect(screen.getByText('Xem bản gốc tiếng Hàn')).toBeTruthy()
-    expect(screen.getByRole('heading', { level: 1 }).getAttribute('lang')).toBe('ko')
+    // 제목 글자에만 lang=ko (꼬리표는 화면 언어)
+    expect(screen.getByRole('heading', { level: 1 }).querySelector('[lang]')?.getAttribute('lang')).toBe('ko')
   })
 
   it('검수본이 있으면 그 언어로 보여 주고 원문 대조 사실을 표시한다', async () => {

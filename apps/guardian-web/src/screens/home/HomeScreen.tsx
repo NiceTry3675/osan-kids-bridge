@@ -13,6 +13,8 @@ import { ConditionSheet } from './ConditionSheet'
 import { ChatSheet } from '../chat/ChatSheet'
 import { AiEntry } from '../chat/AiEntry'
 import { useSearch } from './useSearch'
+import { PosterStrip } from './PosterStrip'
+import { InterestIcon, ValueIcon } from '../intro/art'
 
 interface Props {
   filters: SearchFilters
@@ -53,6 +55,7 @@ export function HomeScreen({ filters, onFiltersChange, restoreScrollY }: Props) 
       ) : (
         <HomeHeader
           count={search.status === 'ready' ? search.data.results.length : null}
+          programs={search.status === 'ready' ? search.data.results : []}
           onFit={openSheet}
           onChat={() => setChatOpen(true)}
           onInterest={(interest) => onFiltersChange({ ...filters, interests: [interest] })}
@@ -72,13 +75,23 @@ export function HomeScreen({ filters, onFiltersChange, restoreScrollY }: Props) 
   )
 }
 
-function HomeHeader({ count, onFit, onChat, onInterest }: { count: number | null; onFit: () => void; onChat: () => void; onInterest: (interest: Interest) => void }) {
+interface HomeHeaderProps {
+  count: number | null
+  programs: Program[]
+  onFit: () => void
+  onChat: () => void
+  onInterest: (interest: Interest) => void
+}
+
+/** 홈 머리: 제목 → 내 언어로 바꾼 포스터 → 우리 아이에게 맞게 보기 → AI 상담 → 분야. 첫 화면의 세 가지 가치와 같은 아이콘을 씁니다. */
+function HomeHeader({ count, programs, onFit, onChat, onInterest }: HomeHeaderProps) {
   const { locale, t } = useI18n()
   return (
     <header className="home-head">
       <h1 className="home-title">{count === null ? t('browseTitle') : t('homeCount', { count })}</h1>
+      <PosterStrip programs={programs} />
       <button type="button" className="fit-card" onClick={onFit}>
-        <span className="fit-art" aria-hidden="true">🧒</span>
+        <span className="fit-art" aria-hidden="true"><ValueIcon name="fit" /></span>
         <span className="fit-text"><strong>{t('fitTitle')}</strong><small>{t('fitBody')}</small></span>
         <Icon name="chevron" />
       </button>
@@ -87,7 +100,7 @@ function HomeHeader({ count, onFit, onChat, onInterest }: { count: number | null
         {INTERESTS.map((interest) => (
           <li key={interest}>
             <button type="button" className="tile" onClick={() => onInterest(interest)}>
-              <span className={`tile-art tone-${INTEREST_VISUAL[interest].tone}`} aria-hidden="true">{INTEREST_VISUAL[interest].emoji}</span>
+              <span className={`tile-art tone-${INTEREST_VISUAL[interest].tone}`} aria-hidden="true"><InterestIcon interest={interest} /></span>
               {interestLabel(locale, interest)}
             </button>
           </li>

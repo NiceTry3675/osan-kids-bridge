@@ -1,4 +1,5 @@
-import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { request as httpRequest } from 'node:http'
 import type { IncomingHttpHeaders, Server } from 'node:http'
 import { connect } from 'node:net'
@@ -8,8 +9,9 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { approveRecord, rejectRecord } from '../src/review/lifecycle'
+import type { Program as GuardianProgram } from '../../guardian-web/src/data/types'
 import { createServer, isEntryPoint } from '../src/server'
-import type { ServerOptions } from '../src/server'
+import type { ProgramPosters, ServerOptions } from '../src/server'
 import { saveRecord } from '../src/store'
 import type { LanguageSummary, ProgramRecord, ProgramResponse, ProgramSession } from '../src/types'
 
@@ -352,6 +354,61 @@ describe('프로그램 API', () => {
       expect(reply.headers['content-type']).toBe('application/json; charset=utf-8')
       expect(reply.headers['cache-control']).toBe('no-store')
     })
+  })
+})
+
+// 보호자 웹 Program.posters와 같은 모양인지 타입 검사(npm run typecheck)에서 확인한다
+export const asGuardianPosters = (posters: ProgramPosters): GuardianProgram['posters'] => posters
+
+describe('프로그램 API: 목록·상세의 포스터 정보', () => {
+  let dir = ''
+  let server: Server
+  let port = 0
+
+  beforeAll(async () => {
+    dir = mkdtempSync(join(tmpdir(), 'program-api-posters-'))
+    const data = join(dir, 'data')
+    const posters = join(dir, 'posters')
+    for (const id of ['with-poster', 'original-only', 'stale-poster', 'no-poster']) saveRecord(approve(record(id)), data)
+    const image = Buffer.from('poster-image')
+    const report = (id: string, language: 'vi' | 'zh', status: string, sha = createHash('sha256').update(image).digest('hex')) => {
+      writeFileSync(join(posters, 'translated', `${id}.${language}.png`), image)
+      writeFileSync(join(posters, 'translated', `${id}.${language}.json`), JSON.stringify({ program_id: id, language, source_sha256: sha, status, chosen_attempt: 1, attempts: [], table: [] }))
+    }
+    mkdirSync(join(posters, 'translated'), { recursive: true })
+    for (const id of ['with-poster', 'original-only', 'stale-poster']) {
+      mkdirSync(join(posters, 'inbox', id), { recursive: true })
+      writeFileSync(join(posters, 'inbox', id, 'poster.png'), image)
+    }
+    // 승인한 베트남어만 내보내고, 담당자 확인 전 중국어·원본이 바뀐 뒤의 번역본은 내보내지 않는다
+    report('with-poster', 'vi', 'approved')
+    report('with-poster', 'zh', 'machine_checked')
+    report('stale-poster', 'vi', 'approved', 'old-source-hash')
+    ;({ server, port } = await start({ dataDir: data, posterDir: posters, now: () => NOW, origins: [], log: () => {}, showMachineChecked: false }))
+  })
+
+  afterAll(async () => {
+    await new Promise((done) => server.close(done))
+    rmSync(dir, { recursive: true, force: true })
+  })
+
+  it('검색 결과의 공고마다 원본 유무와 내보낼 수 있는 번역본 언어를 붙인다', async () => {
+    const reply = await call(port, 'POST', '/programs/search', { body: '{}' })
+    const byId = Object.fromEntries(reply.body.results.map((program: ProgramResponse & { posters: ProgramPosters }) => [program.program_id, program.posters]))
+    expect(byId).toEqual({
+      'with-poster': { original: true, languages: ['vi'] },
+      'original-only': { original: true, languages: [] },
+      'stale-poster': { original: true, languages: [] },
+      'no-poster': { original: false, languages: [] },
+    })
+  })
+
+  it('상세(GET)와 조건 판정(POST evaluate)에도 같은 포스터 정보를 붙인다', async () => {
+    const detail = await call(port, 'GET', '/programs/with-poster')
+    expect(detail.body.posters).toEqual({ original: true, languages: ['vi'] })
+    const evaluated = await call(port, 'POST', '/programs/with-poster/evaluate', { body: JSON.stringify({ child_grade: 2 }) })
+    expect(evaluated.body.posters).toEqual({ original: true, languages: ['vi'] })
+    expect((await call(port, 'GET', '/programs/no-poster')).body.posters).toEqual({ original: false, languages: [] })
   })
 })
 

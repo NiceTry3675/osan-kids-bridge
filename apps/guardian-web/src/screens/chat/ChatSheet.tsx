@@ -1,11 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { useI18n } from '../../i18n'
-import type { MessageKey } from '../../i18n'
+import type { MessageKey, Vars } from '../../i18n'
 import { agentAvailable, askAgent, reportQuestion } from '../../data/agent'
 import type { AgentReply, AgentStep, ChatMessage, UncertainTopic } from '../../data/agent'
+import type { Program } from '../../data/types'
+import { programText } from '../../lib/content'
 import { isSafeUrl } from '../../lib/format'
 import { navigate, programPath } from '../../lib/router'
 import { Icon } from '../../components/Icon'
+import type { IconName } from '../../components/Icon'
 import { Notice } from '../../components/feedback'
 import { ExternalLink, PhoneLink } from '../../components/links'
 import { Sheet } from '../../components/Sheet'
@@ -16,21 +20,31 @@ interface Props {
   open: boolean
   onClose: () => void
   /** 상세에서 열면 그 공고를 먼저 보고 답합니다. */
-  program: { program_id: string; title: string } | null
+  program: Program | null
   suggestions: MessageKey[]
 }
+
+/** 화면 언어로 보여 줄 공고 제목. 검수본이 없으면 한국어 원문이라 lang='ko'를 붙입니다. */
+interface ShownTitle { program_id: string; title: string; lang: 'ko' | undefined }
 
 const TOPIC_KEYS: Record<UncertainTopic, MessageKey> = {
   family_eligibility: 'topicFamily', companion: 'topicCompanion', korean_level: 'topicKoreanLevel',
   schedule: 'topicSchedule', age_grade: 'topicAgeGrade', materials: 'topicMaterials', other: 'topicOther',
 }
 
+/** 도구마다 다른 선 아이콘. 처음 보는 도구는 체크로 그립니다. */
+const STEP_ICONS: Record<string, IconName> = {
+  search_programs: 'search', get_program: 'doc', check_fit: 'scale', flag_unanswered: 'flag', draft_inquiry: 'pen',
+}
+
 /**
  * AI 상담 도우미. 서버의 에이전트가 검수된 공고를 도구로 찾아보고 답합니다.
- * 답과 함께 확인한 과정, 원문 근거, 기관에 보낼 한국어 문장, 공고에 답이 없던 질문을 보여 줍니다.
+ * 답과 함께 AI가 한 일(도구를 쓴 차례), 원문 근거, 기관에 보낼 한국어 문장, 공고에 답이 없던 질문을 보여 줍니다.
  */
 export function ChatSheet({ open, onClose, program, suggestions }: Props) {
   const { locale, t } = useI18n()
+  const text = program && programText(program, locale)
+  const viewing: ShownTitle | null = program && text && { program_id: program.program_id, title: text.title, lang: text.lang }
   const [turns, setTurns] = useState<Turn[]>([])
   const [draft, setDraft] = useState('')
   const [pending, setPending] = useState(false)
@@ -91,11 +105,16 @@ export function ChatSheet({ open, onClose, program, suggestions }: Props) {
       headerExtra={turns.length > 0 && <button type="button" className="btn btn--quiet chat-reset" onClick={reset}>{t('chatReset')}</button>}
     >
       <div className="chat" aria-live="polite">
-        <div className="chat-intro">
-          <p className="chat-intro-lead"><span className="chat-badge" aria-hidden="true">AI</span>{t('chatIntro')}</p>
-          <p className="muted">{t('chatPrivacy')}</p>
-          {program && <p className="chat-viewing" lang="ko">{t('chatViewing', { title: program.title })}</p>}
-        </div>
+        {/* 대화가 시작되면 안내는 한 줄로 접어 질문·단계·답이 한 화면에 들어오게 합니다. */}
+        {turns.length > 0 ? (
+          <p className="chat-intro chat-intro--short"><span className="chat-badge" aria-hidden="true">AI</span>{t('chatIntroShort')}</p>
+        ) : (
+          <div className="chat-intro">
+            <p className="chat-intro-lead"><span className="chat-badge" aria-hidden="true">AI</span>{t('chatIntro')}</p>
+            <p className="muted">{t('chatPrivacy')}</p>
+            {viewing && <p className="chat-viewing">{withTitle(t, 'chatViewing', viewing)}</p>}
+          </div>
+        )}
         {!agentAvailable && <Notice tone="mark" title={t('chatUnavailable')} />}
         {agentAvailable && turns.length === 0 && (
           <ul className="chips chat-suggestions">
@@ -104,7 +123,7 @@ export function ChatSheet({ open, onClose, program, suggestions }: Props) {
         )}
         {turns.map((turn, index) => (turn.role === 'user'
           ? <p key={index} className="bubble bubble--user">{turn.text}</p>
-          : <AssistantTurn key={index} reply={turn.reply} viewing={program?.program_id ?? null} onAsk={(text) => void send(text)} onOpenProgram={(id) => { onClose(); navigate(programPath(id)) }} />))}
+          : <AssistantTurn key={index} reply={turn.reply} viewing={viewing} onAsk={(question) => void send(question)} onOpenProgram={(id) => { onClose(); navigate(programPath(id)) }} />))}
         {pending && <p className="bubble bubble--bot bubble--pending" role="status"><span className="spinner" aria-hidden="true" />{t('chatThinking')}</p>}
         {failed && <Notice tone="warn" title={t('chatError')} />}
         <div ref={endRef} />
@@ -113,11 +132,20 @@ export function ChatSheet({ open, onClose, program, suggestions }: Props) {
   )
 }
 
-function stepLabel(step: AgentStep, t: (key: MessageKey, vars?: Record<string, string | number>) => string): string {
+type Translate = (key: MessageKey, vars?: Vars) => string
+
+/** 문구의 {title} 자리에 공고 제목을 넣습니다. 제목이 한국어 원문이면 그 부분에만 lang='ko'를 붙입니다. */
+function withTitle(t: Translate, key: MessageKey, { title, lang }: Pick<ShownTitle, 'title' | 'lang'>): ReactNode {
+  if (!lang) return t(key, { title })
+  const [before, after = ''] = t(key, { title: '\u0000' }).split('\u0000')
+  return <>{before}<span lang={lang}>{title}</span>{after}</>
+}
+
+function stepLabel(step: AgentStep, t: Translate): string {
   if (!step.ok) return t('stepFailed')
   switch (step.tool) {
     case 'search_programs': return t('stepSearch', { count: step.count ?? 0 })
-    case 'get_program': return t('stepGetProgram', { title: step.title ?? '' })
+    case 'get_program': return t('stepGetProgram')
     case 'check_fit': return t('stepCheckFit')
     case 'draft_inquiry': return t('stepDraftInquiry')
     case 'flag_unanswered': return t('stepFlag')
@@ -125,12 +153,38 @@ function stepLabel(step: AgentStep, t: (key: MessageKey, vars?: Record<string, s
   }
 }
 
+/** 공고를 읽은 단계 아래에 붙일 제목. 보고 있는 공고는 화면 언어 제목을, 다른 공고는 서버가 준 한국어 제목을 씁니다. */
+function stepTitle(step: AgentStep, viewing: ShownTitle | null): Pick<ShownTitle, 'title' | 'lang'> | null {
+  if (!step.ok || step.tool !== 'get_program') return null
+  if (viewing && step.program_id === viewing.program_id) return viewing
+  return step.title ? { title: step.title, lang: 'ko' } : null
+}
+
 /** 같은 일을 연달아 한 단계(같은 공고를 두 번 읽기 등)는 한 번만 보입니다. */
 function uniqueSteps(steps: AgentStep[]): AgentStep[] {
   return steps.filter((step, index) => index === 0 || step.tool !== steps[index - 1].tool || step.program_id !== steps[index - 1].program_id)
 }
 
-/** 모델 답의 줄 목록: '- '로 시작하면 목록, 나머지는 문단. 강조 기호는 지웁니다. */
+/** 첫 문단을 결론으로 굵게 보일 최대 길이. 모델이 형식을 지키지 않고 긴 문단을 쓰면 굵게 하지 않습니다. */
+const LEAD_MAX = 160
+/**
+ * 목록 줄 앞의 짧은 이름표('기관에 확인할 것:' 등). 숫자로 끝나면 시각(10:00)일 수 있고,
+ * 쌍점 뒤가 '/'이면 주소(https://)라서 이름표로 보지 않습니다.
+ */
+const LINE_LABEL = /^([^:：\d][^:：]{0,28}[^:：\d\s])(\s*[:：](?!\/)\s*)(\S.*)$/
+
+/** 목록 한 줄: 짧은 이름표가 있으면 그 부분만 굵게 */
+function ReplyLine({ line }: { line: string }) {
+  const match = LINE_LABEL.exec(line)
+  if (!match) return <>{line}</>
+  const [, name, separator, rest] = match
+  return <><strong className="bubble-label">{name}{separator.trim()}</strong>{/\s$/.test(separator) && ' '}{rest}</>
+}
+
+/**
+ * 모델 답의 줄 목록: '- '로 시작하면 목록, 나머지는 문단. 강조 기호는 지웁니다.
+ * 결론 한 줄 뒤에 목록이 오면(상담 형식) 첫 문단을 결론으로 굵게 보입니다.
+ */
 function ReplyText({ text }: { text: string }) {
   const blocks: { list: boolean; lines: string[] }[] = []
   for (const raw of text.replace(/\*\*|__|^#+\s*/gm, '').split('\n')) {
@@ -142,30 +196,49 @@ function ReplyText({ text }: { text: string }) {
     if (last && last.list === list && list) last.lines.push(content)
     else blocks.push({ list, lines: [content] })
   }
+  const lead = blocks.length > 1 && !blocks[0].list && blocks[0].lines[0].length <= LEAD_MAX
   return (
     <div className="bubble-text">
       {blocks.map((block, index) => (block.list
-        ? <ul key={index}>{block.lines.map((line, i) => <li key={i}>{line}</li>)}</ul>
-        : <p key={index}>{block.lines[0]}</p>))}
+        ? <ul key={index}>{block.lines.map((line, i) => <li key={i}><ReplyLine line={line} /></li>)}</ul>
+        : <p key={index} className={lead && index === 0 ? 'bubble-lead' : undefined}>{block.lines[0]}</p>))}
     </div>
   )
 }
 
-function AssistantTurn({ reply, viewing, onAsk, onOpenProgram }: { reply: AgentReply; viewing: string | null; onAsk: (text: string) => void; onOpenProgram: (id: string) => void }) {
+/** 에이전트가 도구로 한 일을 차례대로: 번호·도구 아이콘·한 일 */
+function AgentSteps({ steps, viewing }: { steps: AgentStep[]; viewing: ShownTitle | null }) {
+  const { t } = useI18n()
+  const titleId = useId()
+  return (
+    <div className="agent-steps">
+      <p className="agent-steps-title" id={titleId}>{t('chatSteps')}</p>
+      <ol aria-labelledby={titleId}>
+        {steps.map((step, index) => {
+          const read = stepTitle(step, viewing)
+          return (
+            <li key={index} className={step.ok ? 'agent-step' : 'agent-step agent-step--failed'} style={{ '--step': index } as CSSProperties}>
+              <span className="agent-step-no" aria-hidden="true">{index + 1}</span>
+              <Icon name={step.ok ? STEP_ICONS[step.tool] ?? 'check' : 'x'} />
+              <span className="agent-step-text">
+                {stepLabel(step, t)}
+                {read && <small className="agent-step-detail" lang={read.lang}>{read.title}</small>}
+              </span>
+            </li>
+          )
+        })}
+      </ol>
+    </div>
+  )
+}
+
+function AssistantTurn({ reply, viewing, onAsk, onOpenProgram }: { reply: AgentReply; viewing: ShownTitle | null; onAsk: (text: string) => void; onOpenProgram: (id: string) => void }) {
   const { t } = useI18n()
   const steps = uniqueSteps(reply.steps)
-  const others = reply.programs.filter((program) => program.program_id !== viewing)
+  const others = reply.programs.filter((program) => program.program_id !== viewing?.program_id)
   return (
     <div className="bot-turn">
-      {steps.length > 0 && (
-        <ol className="agent-steps" aria-label={t('chatSteps')}>
-          {steps.map((step, index) => (
-            <li key={index} className={step.ok ? 'agent-step' : 'agent-step agent-step--failed'}>
-              {step.ok ? <Icon name="check" /> : <Icon name="x" />}<span lang={step.tool === 'get_program' ? 'ko' : undefined}>{stepLabel(step, t)}</span>
-            </li>
-          ))}
-        </ol>
-      )}
+      {steps.length > 0 && <AgentSteps steps={steps} viewing={viewing} />}
       <div className="bubble bubble--bot"><ReplyText text={reply.reply} /></div>
       {reply.citations.length > 0 && (
         <div className="chat-card chat-sources">

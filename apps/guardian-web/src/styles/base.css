@@ -1,8 +1,44 @@
 /* 보호자 웹에만 있는 요소. 두 앱 공통 요소는 packages/ui/src/components.css */
+
+/*
+  보호자 웹의 따뜻한 색: 덱·시연 영상 무대(크림·코랄·초록)와 맞춥니다.
+  공통 토큰(packages/ui/src/tokens.css)은 기관 대시보드도 쓰므로 여기서만 덮어씁니다.
+  - 글자색 ink-3도 paper·canvas·sunken과 모든 *-soft 바탕 위에서 5:1 이상입니다.
+  - 코랄(--coral)은 그림·장식에만 씁니다(흰 글자 대비 2.95:1). 따뜻한 글자는 --warm(코랄 바탕 위 4.8:1, 흰 바탕 위 5.8:1).
+*/
+:root {
+  --ink: #2b2420;
+  --ink-2: #574b44;
+  --ink-3: #6a5d55;
+  --canvas: #fbf6ee;
+  --sunken: #f7f2ea;
+  --line: #ece4d8;
+  --line-strong: #d8ccbc;
+  --coral: #e07a5f;
+  --coral-soft: #fce6dc;
+  --warm: #a9482a;
+  --shadow-sheet: 0 -8px 40px rgb(43 36 32 / 18%);
+  --shadow-card: 0 1px 2px rgb(43 36 32 / 6%), 0 4px 14px rgb(43 36 32 / 5%);
+}
+
 .page--detail { padding-bottom: 0; }
 
 .tag-original { display: inline-block; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--line-strong); border-radius: 999px; color: var(--ink-3); font-size: 11px; font-weight: 600; vertical-align: 0.15em; white-space: nowrap; }
 
+/* 언어 띠: 형광펜 노랑은 '확인되지 않은 것'에만 쓰므로 띠는 크림 바탕에 아래 선만 */
+.shell .lp--band { background: var(--canvas); border-bottom: 1px solid var(--line); }
+.shell .lp--band:has(+ .ribbon) { border-bottom-color: transparent; }
+
+/* 번역 초안·시연 안내: 노란 띠 대신 조용한 정보 한 줄 */
+.shell .ribbon { display: flex; align-items: flex-start; gap: 6px; padding: 2px 18px 8px; border-bottom: 1px solid var(--line); background: var(--canvas); color: var(--ink-2); font-size: var(--text-xs); line-height: 1.45; }
+.shell .ribbon + .ribbon { padding-top: 0; }
+.shell .ribbon::before {
+  content: ''; flex: none; width: 15px; height: 15px; margin-top: 2px; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5.5M12 7.6v.1'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5.5M12 7.6v.1'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.shell .ribbon:has(+ .ribbon) { border-bottom-color: transparent; }
+.shell--intro .ribbon { padding-top: 8px; }
+
 /* 상단 줄 */
 .bar-top { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 6px; }
-
