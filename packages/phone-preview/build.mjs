@@ -16,8 +16,8 @@ const out = join(root, 'dist-preview')
 mkdirSync(out, { recursive: true })
 
 const APPS = [
-  { name: 'guardian', dir: 'apps/guardian-web', title: '오산 아이 프로그램', label: '보호자 웹', env: { VITE_DATA_MODE: 'demo', VITE_ROUTER: 'hash' } },
-  { name: 'dashboard', dir: 'apps/institution-dashboard', title: '오산 아이 프로그램 기관 화면', label: '운영기관 대시보드', env: { VITE_DATA_MODE: 'demo' } },
+  { name: 'guardian', dir: 'apps/guardian-web', title: '잇다, 오산', label: '보호자 웹', env: { VITE_DATA_MODE: 'demo', VITE_ROUTER: 'hash' } },
+  { name: 'dashboard', dir: 'apps/institution-dashboard', title: '잇다, 오산 기관 화면', label: '운영기관 대시보드', env: { VITE_DATA_MODE: 'demo' } },
 ]
 
 const MIME = { '.woff2': 'font/woff2', '.woff': 'font/woff', '.svg': 'image/svg+xml', '.png': 'image/png' }
