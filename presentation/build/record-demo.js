@@ -510,6 +510,25 @@ async function resetState() {
 
 const fillBlanks = (draft, value) => draft.replace(/\{\{\s*([^{}]*?)\s*\}\}/g, () => value)
 
+/** 담당자가 영상에서 채워 덧붙일 안내 (고른 초안의 빈칸을 FILL 값으로) */
+const filledItems = (improve, chosen) => chosen.map(({ index }) => {
+  const item = improve.items[index]
+  return { topic: item.topic, text: fillBlanks(item.draft, FILL[item.topic]).trim(), resolves_questions: item.questions, resolves_items: item.resolves_items, drafted_by_ai: true }
+})
+
+/**
+ * 영상에서 덧붙일 안내를 미리 한 번 저장했다 지운다. 저장할 때 서버가 번역을 기억해 두므로(translate-addenda.ts),
+ * 녹화 중의 '덧붙이기'가 번역을 기다리지 않고 바로 끝나 내레이션과 맞는다
+ */
+async function warmTranslations(items) {
+  console.log('덧붙일 안내의 번역을 미리 받아 두는 중…')
+  try {
+    await api('POST', `/admin/programs/${PROGRAM}/addenda`, { author: REVIEWER, items })
+  } finally {
+    await resetState()
+  }
+}
+
 /** 녹화 전에 받은 실제 결과를 저장해 두는 파일. 제출용과 녹음용 영상이 같은 답을 쓰고, 모델 호출 한도에 걸려도 다시 녹화할 수 있다 (FRESH=1이면 새로 받음) */
 const PREFETCH_CACHE = path.resolve(__dirname, 'render/prefetch.json')
 
@@ -522,6 +541,7 @@ async function prefetch() {
     const cached = JSON.parse(fs.readFileSync(PREFETCH_CACHE, 'utf8'))
     if (cached.againLocale !== 'zh') throw new Error('render/prefetch.json의 두 번째 상담 답이 중국어가 아닙니다(지난 판). FRESH=1 node record-demo.js로 새로 받으세요.')
     console.log('저장해 둔 실제 결과(render/prefetch.json, render/plan-result.json)를 씁니다.')
+    await warmTranslations(filledItems(JSON.parse(cached.improve), cached.chosen))
     return { ...cached, plan: fs.readFileSync(PLAN_FIXTURE, 'utf8') }
   }
   console.log('상담 API에서 실제 답을 받는 중…')
@@ -542,7 +562,7 @@ async function prefetch() {
     .filter(({ item }) => item.kind === 'add_notice' && FILL[item.topic] && item.blanks.length === 1)
     .filter(({ item }, at, list) => list.findIndex((entry) => entry.item.topic === item.topic) === at)
   if (chosen.length !== 2) throw new Error(`채울 항목을 찾지 못했습니다: ${result.items.map((item) => `${item.topic}/${item.kind}/${item.blanks.length}`).join(', ')}`)
-  const items = chosen.map(({ item }) => ({ topic: item.topic, text: fillBlanks(item.draft, FILL[item.topic]), resolves_questions: item.questions, resolves_items: item.resolves_items, drafted_by_ai: true }))
+  const items = filledItems(result, chosen)
   let replyAgain
   try {
     await api('POST', `/admin/programs/${PROGRAM}/addenda`, { author: REVIEWER, items })
@@ -1312,7 +1332,8 @@ async function record() {
       await wait(160)
       await desk.evaluate((sel) => document.querySelector(sel)?.click(), confirm)
       mark('덧붙이기 누름')
-      await desk.waitForSelector('.improve .notice--ok', { timeout: 10_000 })
+      // 번역은 미리 받아 두지만(warmTranslations), 서버를 새로 띄웠으면 번역 시간 제한(20초)까지 걸릴 수 있다
+      await desk.waitForSelector('.improve .notice--ok', { timeout: 25_000 })
       await hideCursor()
       // 확정하면 질문 목록에 '답함' 표시가 붙고, 패널 위에 덧붙였다는 알림이 뜬다
       await wait(150)
@@ -1335,8 +1356,7 @@ async function record() {
     // 7. 다시 묻기: 기관 → 휴대폰으로 안내가 돌아간다. 이번에는 중국어가 편한 다른 가정 (중국어 화면, 중국어 질문, 중국어 답)
     // 내레이션: '중국어가 편한 다른 가정이에요'(0~2.9초)에 넓게 보기 → 중국어 화면, '아까 그 안내가 보여요'(약 3.1~4.9초)에 초록 추가 안내 카드,
     // '참가비랑 준비물을 물으면'(약 5.4~7.7초)에 질문, '이번엔 그 안내를 보고 답해요'(약 8.1초~)에 중국어 답 문장 → 근거
-    // 추가 안내 카드부터 찍는다: 그 위 공고 요약의 '참가비: 기관에 확인' 줄은 그대로라 함께 보이면 서로 어긋나 보인다
-    // (앱은 추가 안내가 어느 항목의 답인지 모른다: 알려진 한계)
+    // 추가 안내 카드부터 찍는다 (비용 줄도 이 안내를 보여 준다)
     await scene('again', async () => {
       await stage(() => window.link(2))
       await camera(OVERVIEW, 1150, undefined, undefined, undefined, false, SOFT)
@@ -1360,8 +1380,8 @@ async function record() {
       await stage(() => window.link(0))
       // 이름표는 휴대폰 왼쪽 빈 캔버스에 (아래 '기관에 확인할 점' 제목을 덮지 않게)
       await ringApp('addenda', PHONE, await rectIn(phone, '.addenda'), 'ok', '기관이 덧붙인 안내', { pad: 4, at: 'left', edge: PHONE_EDGE })
-      // 카드 제목·설명은 중국어지만 안내 문장은 기관이 쓴 한국어다 (자동 번역하지 않는다)
-      await badges(['추가 안내 문장은 기관이 쓴 한국어 그대로'])
+      // 안내 문장은 저장할 때 AI가 옮긴 중국어이고, 기관이 쓴 한국어 원문이 함께 보인다
+      await badges(['AI 번역 · 기관이 쓴 한국어 원문 함께'])
       mark('추가 안내 카드')
       await atSay('참가비랑', -0.8)
       await tap(phone, PHONE, '.ai-entry', { settle: 300 })

@@ -34,3 +34,7 @@ presentation/*.pdf
 presentation/build/node_modules/
 presentation/build/render/
 presentation/*.mp4
+
+# 팀 조사 자료(원본 화면 캡처·분석 덱·공고 목록)와 Claude Code 로컬 설정·작업 폴더: 공개 저장소에 올리지 않는다
+research/
+.claude/

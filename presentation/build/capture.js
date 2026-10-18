@@ -2,6 +2,8 @@
 // node capture.js [all|home|detail|chat|journey|dashboard|plan|loop] [언어...]  (dashboard·plan·loop는 관리자 API가 켜진 npm run demo에서)
 //   journey·chat 뒤에 언어(ko-easy|vi|zh)를 주면 그 언어만 찍는다. 기본: journey는 세 언어, chat은 베트남어·중국어
 //   loop: 질문 하나가 공고를 바꾸기까지(12번). 베트남어 보호자가 알린 질문에 담당자가 빈칸을 채워 덧붙이고, 중국어 보호자가 그 안내와 그 안내를 인용한 답을 본다. 끝나면(실패해도) 덧붙인 안내·알린 질문을 지운다
+//         record-demo.js가 받아 둔 render/prefetch.json이 있어야 한다. all에서는 맨 끝에 찍고, 그 파일이 없으면 알리고 건너뛴다(앞의 캡처는 그대로 남는다)
+//   record-demo.js와 같은 시연 서버 상태(덧붙인 안내·알린 질문)를 바꾸므로 녹화 중에는 실행하지 않는다
 const { chromium } = require('playwright-core')
 const fs = require('node:fs')
 const path = require('node:path')
@@ -12,7 +14,9 @@ const API = 'http://127.0.0.1:8787'
 const GUARDIAN = 'http://127.0.0.1:5173'
 const DASHBOARD = 'http://127.0.0.1:5174'
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+const MODES = ['all', 'home', 'detail', 'chat', 'journey', 'dashboard', 'plan', 'loop']
 const which = process.argv[2] ?? 'all'
+if (!MODES.includes(which)) throw new Error(`모르는 캡처: ${which} (${MODES.join('|')})`)
 const LOCALES = ['ko-easy', 'vi', 'zh']
 const chosenLocales = (fallback) => {
   const asked = process.argv.slice(3)
@@ -156,7 +160,6 @@ async function main() {
     if (which === 'all' || which === 'journey') {
       for (const locale of chosenLocales(LOCALES)) await journey(browser, locale)
     }
-    if (which === 'all' || which === 'loop') await loop(browser)
     if (which === 'all' || which === 'plan') {
       // AI 편성 제안: 실제 편성 도우미를 부른다(20~30초). 위(통계·도우미)와 아래(편성안 카드·근거)를 따로 찍는다
       const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 })
@@ -221,6 +224,12 @@ async function main() {
       await page.evaluate(() => { const el = document.querySelector('.improve'); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 16) })
       await page.waitForTimeout(400)
       await page.screenshot({ path: path.join(OUT, 'dash-improve-drafts.png') })
+    }
+    // loop는 맨 끝에. record-demo.js의 render/prefetch.json이 없으면 all은 앞의 캡처를 남기고 건너뛴다(loop만 부르면 멈춘다)
+    if (which === 'loop') await loop(browser)
+    else if (which === 'all') {
+      if (fs.existsSync(PREFETCH_CACHE)) await loop(browser)
+      else console.warn('loop를 건너뜁니다: render/prefetch.json이 없습니다. node record-demo.js를 한 번 실행한 뒤 node capture.js loop로 1·12번 그림을 찍으세요.')
     }
   } finally {
     await browser.close()
