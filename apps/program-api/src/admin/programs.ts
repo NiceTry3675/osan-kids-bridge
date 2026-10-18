@@ -7,6 +7,7 @@ import { koreanDateLabel } from '../match/dates'
 import { ageRangeLabel, gradeRangeLabel } from '../match/labels'
 import { findSourcePoster, POSTER_LANGUAGES, readReport, servablePoster } from '../poster/translate'
 import type { PosterStatus } from '../poster/translate'
+import { readableTokenMessage } from '../poster/tokens'
 import type { PosterLanguage } from '../poster/tokens'
 import { factChecks, unverifiedFacts } from '../review/critical'
 import { AUDIENCE_LABELS, scheduleText, TARGET_LABELS } from '../review/format'
@@ -234,7 +235,13 @@ function posterDetail(id: string, language: PosterLanguage, context: AdminContex
     reviewer: report.reviewer ?? null,
     approved_at: report.approved_at ?? null,
     source_changed: source !== null && source.sha256 !== report.source_sha256,
-    attempt_list: report.attempts.map((attempt) => ({ n: attempt.n, passed: attempt.issues.length === 0, issues: attempt.issues.map(({ kind, message }) => ({ kind, message })), duration_ms: attempt.duration_ms })),
+    attempt_list: report.attempts.map((attempt) => ({
+      n: attempt.n,
+      passed: attempt.issues.length === 0,
+      // 예전 기록의 내부 날짜 표기('10-31', 'invalid:10/31/2026')도 담당자가 읽는 말로 보인다
+      issues: attempt.issues.map(({ kind, message }) => ({ kind, message: kind === 'tokens' ? readableTokenMessage(message) : message })),
+      duration_ms: attempt.duration_ms,
+    })),
   }
 }
 

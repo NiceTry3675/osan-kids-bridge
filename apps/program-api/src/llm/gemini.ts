@@ -26,6 +26,8 @@ export interface GenerateOptions {
   /** JSON Schema. 주면 JSON으로 받아 파싱한다 */
   schema?: object
   temperature?: number
+  /** 생각 단계 (주지 않으면 모델 기본값). 짧은 번역처럼 빨리 답해야 하는 요청은 낮춘다 */
+  thinkingLevel?: ThinkingLevel
 }
 
 // 응답이 오지 않아 시간 제한으로 끊긴 요청(timeout·abort)도 다시 시도한다
@@ -60,6 +62,7 @@ export async function generateText(options: GenerateOptions): Promise<string> {
       systemInstruction: options.system,
       temperature: options.temperature ?? 0,
       ...(options.schema ? { responseMimeType: 'application/json', responseJsonSchema: options.schema } : {}),
+      ...(options.thinkingLevel ? { thinkingConfig: { thinkingLevel: options.thinkingLevel } } : {}),
     },
   }))
   const text = response.text

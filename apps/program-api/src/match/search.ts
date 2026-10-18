@@ -58,7 +58,7 @@ function compareKeys(a: SortKey, b: SortKey): number {
  * 학년·나이, 시간, 무료 조건과 확인된 불일치는 제외. 시간을 입력했고 시간 미상이면 needs_confirmation.
  * 관심 분야·사는 동은 순서만 바꾼다.
  */
-export function searchPrograms(records: ProgramRecord[], filters: SearchFilters, now: Date): SearchResponse {
+export function searchPrograms(records: ProgramRecord[], filters: SearchFilters, now: Date): SearchResponse<ProgramResponse> {
   const clock = clockOf(now)
   const timeApplied = filters.available_windows.length > 0
   const results: { program: ProgramResponse; key: SortKey }[] = []

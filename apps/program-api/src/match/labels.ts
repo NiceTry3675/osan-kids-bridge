@@ -23,8 +23,12 @@ export function gradeRangeLabel([from, to]: [number, number]): string {
   return `${gradeLabel(from)}~${gradeLabel(to)}`
 }
 
+/** 나이 범위. 위가 열린 범위(99세 이상, 추출이 '5세 이상'을 [5, 99]로 둔다)는 'N세 이상', 아래가 0이면 'N세 이하' */
 export function ageRangeLabel([from, to]: [number, number]): string {
-  return from === to ? `${from}세` : `${from}~${to}세`
+  if (from === to) return `${from}세`
+  if (to >= 99) return from <= 0 ? '나이 제한 없음' : `${from}세 이상`
+  if (from <= 0) return `${to}세 이하`
+  return `${from}~${to}세`
 }
 
 /** '10월 17일(토) 10:10~12:00' */

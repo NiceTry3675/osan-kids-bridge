@@ -7,13 +7,13 @@ import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { approveRecord, rejectRecord } from '../src/review/lifecycle'
-import type { Program as GuardianProgram } from '../../guardian-web/src/data/types'
 import { createServer, isEntryPoint } from '../src/server'
-import type { ProgramPosters, ServerOptions } from '../src/server'
+import type { ServerOptions } from '../src/server'
 import { saveRecord } from '../src/store'
-import type { LanguageSummary, ProgramRecord, ProgramResponse, ProgramSession } from '../src/types'
+import type { LanguageSummary, ProgramListing, ProgramRecord, ProgramResponse, ProgramSession } from '../src/types'
 
 // 2026-10-15(목) 12:00, Asia/Seoul
 const NOW = new Date('2026-10-15T03:00:00Z')
@@ -357,34 +357,43 @@ describe('프로그램 API', () => {
   })
 })
 
-// 보호자 웹 Program.posters와 같은 모양인지 타입 검사(npm run typecheck)에서 확인한다
-export const asGuardianPosters = (posters: ProgramPosters): GuardianProgram['posters'] => posters
-
 describe('프로그램 API: 목록·상세의 포스터 정보', () => {
   let dir = ''
+  let posters = ''
   let server: Server
   let port = 0
+  const logs: string[] = []
+  let image = Buffer.alloc(0)
+
+  /** 이미지 응답은 JSON이 아니므로 본문을 그대로 받는다 */
+  const fetchImage = async (path: string, headers: Record<string, string> = {}) => {
+    const reply = await fetch(`http://127.0.0.1:${port}${path}`, { headers })
+    return { status: reply.status, type: reply.headers.get('content-type'), etag: reply.headers.get('etag'), body: Buffer.from(await reply.arrayBuffer()) }
+  }
 
   beforeAll(async () => {
     dir = mkdtempSync(join(tmpdir(), 'program-api-posters-'))
     const data = join(dir, 'data')
-    const posters = join(dir, 'posters')
-    for (const id of ['with-poster', 'original-only', 'stale-poster', 'no-poster']) saveRecord(approve(record(id)), data)
-    const image = Buffer.from('poster-image')
+    posters = join(dir, 'posters')
+    for (const id of ['with-poster', 'original-only', 'stale-poster', 'no-poster', 'broken-link', 'not-a-folder', 'changing']) saveRecord(approve(record(id)), data)
+    image = await sharp({ create: { width: 900, height: 1200, channels: 3, background: '#f2c14e' } }).png().toBuffer()
     const report = (id: string, language: 'vi' | 'zh', status: string, sha = createHash('sha256').update(image).digest('hex')) => {
       writeFileSync(join(posters, 'translated', `${id}.${language}.png`), image)
       writeFileSync(join(posters, 'translated', `${id}.${language}.json`), JSON.stringify({ program_id: id, language, source_sha256: sha, status, chosen_attempt: 1, attempts: [], table: [] }))
     }
     mkdirSync(join(posters, 'translated'), { recursive: true })
-    for (const id of ['with-poster', 'original-only', 'stale-poster']) {
-      mkdirSync(join(posters, 'inbox', id), { recursive: true })
-      writeFileSync(join(posters, 'inbox', id, 'poster.png'), image)
-    }
+    for (const id of ['with-poster', 'original-only', 'stale-poster', 'broken-link', 'changing']) mkdirSync(join(posters, 'inbox', id), { recursive: true })
+    for (const id of ['with-poster', 'original-only', 'stale-poster', 'changing']) writeFileSync(join(posters, 'inbox', id, 'poster.png'), image)
+    // 깨진 포스터: 가리키는 파일이 없는 링크, 폴더 자리에 놓인 파일
+    symlinkSync(join(dir, 'missing.png'), join(posters, 'inbox', 'broken-link', 'poster.png'))
+    writeFileSync(join(posters, 'inbox', 'not-a-folder'), 'not a folder')
     // 승인한 베트남어만 내보내고, 담당자 확인 전 중국어·원본이 바뀐 뒤의 번역본은 내보내지 않는다
     report('with-poster', 'vi', 'approved')
     report('with-poster', 'zh', 'machine_checked')
     report('stale-poster', 'vi', 'approved', 'old-source-hash')
-    ;({ server, port } = await start({ dataDir: data, posterDir: posters, now: () => NOW, origins: [], log: () => {}, showMachineChecked: false }))
+    report('broken-link', 'vi', 'approved')
+    report('changing', 'vi', 'approved')
+    ;({ server, port } = await start({ dataDir: data, posterDir: posters, now: () => NOW, origins: [], log: (message) => logs.push(message), showMachineChecked: false }))
   })
 
   afterAll(async () => {
@@ -394,12 +403,15 @@ describe('프로그램 API: 목록·상세의 포스터 정보', () => {
 
   it('검색 결과의 공고마다 원본 유무와 내보낼 수 있는 번역본 언어를 붙인다', async () => {
     const reply = await call(port, 'POST', '/programs/search', { body: '{}' })
-    const byId = Object.fromEntries(reply.body.results.map((program: ProgramResponse & { posters: ProgramPosters }) => [program.program_id, program.posters]))
+    const byId = Object.fromEntries(reply.body.results.map((program: ProgramListing) => [program.program_id, program.posters]))
     expect(byId).toEqual({
       'with-poster': { original: true, languages: ['vi'] },
       'original-only': { original: true, languages: [] },
       'stale-poster': { original: true, languages: [] },
       'no-poster': { original: false, languages: [] },
+      'broken-link': { original: false, languages: [] },
+      'not-a-folder': { original: false, languages: [] },
+      changing: { original: true, languages: ['vi'] },
     })
   })
 
@@ -409,6 +421,65 @@ describe('프로그램 API: 목록·상세의 포스터 정보', () => {
     const evaluated = await call(port, 'POST', '/programs/with-poster/evaluate', { body: JSON.stringify({ child_grade: 2 }) })
     expect(evaluated.body.posters).toEqual({ original: true, languages: ['vi'] })
     expect((await call(port, 'GET', '/programs/no-poster')).body.posters).toEqual({ original: false, languages: [] })
+  })
+
+  it('포스터 파일이 깨져도(끊긴 링크, 폴더 자리의 파일) 목록·상세는 200이고 포스터 없이 보낸다', async () => {
+    const before = logs.length
+    for (const id of ['broken-link', 'not-a-folder']) {
+      const detail = await call(port, 'GET', `/programs/${id}`)
+      expect([id, detail.status, detail.body.posters]).toEqual([id, 200, { original: false, languages: [] }])
+      const evaluated = await call(port, 'POST', `/programs/${id}/evaluate`, { body: '{}' })
+      expect([id, evaluated.status]).toEqual([id, 200])
+      expect((await fetchImage(`/posters/${id}/original`)).status).toBe(404)
+      // 원본을 읽지 못하면 번역본도 내보내지 않는다
+      expect((await fetchImage(`/posters/${id}/vi?w=256`)).status).toBe(404)
+    }
+    const search = await call(port, 'POST', '/programs/search', { body: '{}' })
+    expect(search.status).toBe(200)
+    expect(search.body.results.find((program: ProgramListing) => program.program_id === 'with-poster').posters).toEqual({ original: true, languages: ['vi'] })
+    expect(logs.slice(before).join('\n')).not.toMatch(/처리 실패/)
+  })
+
+  it('원본 크기 이미지에 내용 해시로 ETag를 붙이고, 같은 판이면 본문 없이 304', async () => {
+    const full = await fetchImage('/posters/with-poster/original')
+    expect([full.status, full.type]).toEqual([200, 'image/png'])
+    expect(full.body.equals(image)).toBe(true)
+    expect(full.etag).toMatch(/^"[0-9a-f]{32}-original"$/)
+    const again = await fetchImage('/posters/with-poster/original', { 'If-None-Match': full.etag! })
+    expect([again.status, again.body.length, again.etag]).toEqual([304, 0, full.etag])
+    expect((await fetchImage('/posters/with-poster/original', { 'If-None-Match': '"other"' })).status).toBe(200)
+    const vi = await fetchImage('/posters/with-poster/vi')
+    expect([vi.status, vi.type]).toEqual([200, 'image/png'])
+    expect(vi.etag).not.toBe(full.etag)
+    expect((await fetchImage('/posters/with-poster/vi', { 'If-None-Match': `W/${vi.etag}, "x"` })).status).toBe(304)
+  })
+
+  it('썸네일(?w=N)은 128·256·384·512 중 같거나 큰 너비의 webp로 줄이고, 원본 크기와 같은 확인을 거친다', async () => {
+    const thumb = await fetchImage('/posters/with-poster/original?w=200')
+    expect([thumb.status, thumb.type]).toEqual([200, 'image/webp'])
+    expect(await sharp(thumb.body).metadata()).toMatchObject({ format: 'webp', width: 256, height: 341 })
+    expect(thumb.body.length).toBeLessThan(image.length)
+    expect(thumb.etag).toMatch(/^"[0-9a-f]{32}-original-w256"$/)
+    expect((await fetchImage('/posters/with-poster/original?w=256', { 'If-None-Match': thumb.etag! })).status).toBe(304)
+    expect((await sharp((await fetchImage('/posters/with-poster/original?w=5000')).body).metadata()).width).toBe(512)
+    expect((await sharp((await fetchImage('/posters/with-poster/vi?w=1')).body).metadata()).width).toBe(128)
+    // 내보낼 수 없는 번역본(담당자 확인 전, 원본이 바뀐 뒤)·없는 원본·게시 전 공고는 썸네일도 없다
+    expect((await fetchImage('/posters/with-poster/zh?w=256')).status).toBe(404)
+    expect((await fetchImage('/posters/stale-poster/vi?w=256')).status).toBe(404)
+    expect((await fetchImage('/posters/no-poster/original?w=256')).status).toBe(404)
+    for (const width of ['abc', '0', '-5', '1.5']) expect([width, (await fetchImage(`/posters/with-poster/original?w=${width}`)).status]).toEqual([width, 400])
+  })
+
+  it('원본 포스터가 바뀌면 다음 요청부터 번역본을 내리고 ETag도 바뀐다 (해시는 파일이 바뀔 때만 다시 계산)', async () => {
+    const before = await fetchImage('/posters/changing/original?w=128')
+    expect((await call(port, 'GET', '/programs/changing')).body.posters).toEqual({ original: true, languages: ['vi'] })
+    const changed = await sharp({ create: { width: 600, height: 800, channels: 3, background: '#1d6fb8' } }).png().toBuffer()
+    writeFileSync(join(posters, 'inbox', 'changing', 'poster.png'), changed)
+    expect((await call(port, 'GET', '/programs/changing')).body.posters).toEqual({ original: true, languages: [] })
+    expect((await fetchImage('/posters/changing/vi?w=128')).status).toBe(404)
+    const after = await fetchImage('/posters/changing/original?w=128', { 'If-None-Match': before.etag! })
+    expect(after.status).toBe(200)
+    expect(after.etag).not.toBe(before.etag)
   })
 })
 

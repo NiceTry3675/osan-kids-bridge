@@ -76,13 +76,13 @@ npm run review -- reset <ID>                      # 검수 대기로 되돌림
 
 ## API
 
-게시된 공고(`review.status === 'approved'`이고 `facts_hash`가 지금 사실과 같은 공고)만 보입니다. 응답 형식은 `src/types.ts`의 `ProgramResponse`·`SearchResponse`이고, 보호자 웹의 데이터 계약(`apps/guardian-web/src/data/types.ts`의 `Program`·`SearchResponse`)에 그대로 들어갑니다. `test/contract.test.ts`가 이를 타입으로 확인하므로 한쪽 계약이 바뀌면 `npm run typecheck`가 실패합니다.
+게시된 공고(`review.status === 'approved'`이고 `facts_hash`가 지금 사실과 같은 공고)만 보입니다. 응답 형식은 `src/types.ts`의 `ProgramListing`(판정 결과 `ProgramResponse` + 포스터 정보 `posters`)·`SearchResponse`이고, 보호자 웹의 데이터 계약(`apps/guardian-web/src/data/types.ts`의 `Program`·`SearchResponse`)에 그대로 들어갑니다. `test/contract.test.ts`가 공고·검색 응답과 `posters`·`addenda` 모양을 타입으로 확인하므로 한쪽 계약이 바뀌면 `npm run typecheck`가 실패합니다.
 
 | 요청 | 동작 |
 |---|---|
-| `POST /programs/search` | 본문은 `SearchFilters` JSON. `{}`와 빈 본문은 조건 없는 탐색. 신청 마감·운영 종료·보호자 대상 공고는 빼고 `results`와 `needs_confirmation`(시간 조건을 넣었고 시간 미상)을 돌려줌 |
-| `GET /programs/{id}` | 공유 링크용. 검색 조건 없이 판정(`not_applied`). 마감·종료된 공고도 200과 상태(운영이 끝났으면 신청 마감 전이어도 `closed`) |
-| `POST /programs/{id}/evaluate` | 검색과 같은 조건·같은 판정으로 상세와 `matched_sessions` |
+| `POST /programs/search` | 본문은 `SearchFilters` JSON. `{}`와 빈 본문은 조건 없는 탐색. 신청 마감·운영 종료·보호자 대상 공고는 빼고 `results`와 `needs_confirmation`(시간 조건을 넣었고 시간 미상)을 돌려줌. 공고마다 `posters`·`addenda`가 붙음 |
+| `GET /programs/{id}` | 공유 링크용. 검색 조건 없이 판정(`not_applied`). 마감·종료된 공고도 200과 상태(운영이 끝났으면 신청 마감 전이어도 `closed`). `posters`·`addenda` 포함 |
+| `POST /programs/{id}/evaluate` | 검색과 같은 조건·같은 판정으로 상세와 `matched_sessions`. `posters`·`addenda` 포함 |
 | `GET /health` | 저장된 공고 수와 게시 수 |
 
 - 상태 코드: 잘못된 조건·JSON·해석할 수 없는 요청 주소는 400(`{error, errors[]}`, 한국어), 없는 공고 404, 있지만 게시되지 않은 공고(검수 대기·반려·승인 뒤 변경) 410, 본문 64KB 초과 413. 내부 오류 내용은 응답에 싣지 않습니다.
@@ -100,6 +100,10 @@ npm run review -- reset <ID>                      # 검수 대기로 되돌림
 - `application_methods`는 신청을 받는 방법만, 문의만 받는 연락처는 `inquiry_methods`로 보냅니다. 주소가 없는 온라인 신청·문의는 원문 페이지로 연결합니다.
 - `next_session`은 대표 회차입니다. 시간이 맞는 첫 회차, 없으면 앞으로 시작할 첫 회차, 운영이 끝났으면 마지막 회차이고, 날짜를 모르면 장소만 있는 회차나 원문의 공통 장소(`venue`)를 날짜 없이 보냅니다.
 - `is_demo`는 시연용으로 만든 공고(inbox `source.json`의 `"demo": true`)만 `true`입니다. 보호자 웹은 이 공고의 링크·전화를 실제로 연결하지 않습니다.
+- `posters`는 `{original: boolean, languages: ('vi'|'zh')[]}`입니다. `original`은 원본 포스터가 있는지, `languages`는 보호자에게 보여 줄 수 있는 번역 포스터(승인됐거나 `SHOW_MACHINE_CHECKED_SUMMARIES=1`에서 자동 검증을 통과했고, 번역한 뒤 원본이 바뀌지 않은 것)입니다. 포스터 파일이 깨졌거나(끊긴 링크, 폴더 자리의 파일, 읽기 오류) 읽지 못하면 그 공고는 포스터 없이(`{original: false, languages: []}`) 보내고 목록·상세는 그대로 200입니다. 원본 포스터의 해시는 파일(경로·크기·수정 시각)이 바뀔 때만 다시 계산합니다.
+- `addenda`는 게시 뒤 기관 담당자가 확인해 덧붙인 안내(`{topic, text, added_at, covers, translations?}`)입니다. 담당자 이름과 보호자 질문 원문은 보내지 않습니다. `added_at`은 서울 기준 날짜(`YYYY-MM-DD`)입니다.
+  - `covers`는 이 안내가 답한 주제입니다. 안내의 주제(기타 제외)와, 푼 '기관에 확인할 점'을 `uncertain_items`와 같은 규칙으로 분류한 주제를 모으고, 안내나 푼 항목이 비용을 다루면(참가비·비용·무료·회비·재료비·금액) `'cost'`를 붙입니다. 보호자 웹은 이것으로 비용 행의 '확인 필요'를 이 안내로 바꿔 보여 줍니다.
+  - `translations`는 `text`의 베트남어·중국어 번역(`{vi?, zh?}`)입니다. 담당자가 저장할 때 Gemini로 옮기고, 숫자·날짜·시각·전화번호·주소가 원문과 하나라도 다르거나 괄호 밖에 한국어가 남은 번역은 버립니다(포스터 번역표와 같은 코드 대조). 번역이 없으면 이 필드를 보내지 않습니다.
 - 공고 파일이 바뀌면(수정 시각·크기 확인) 다음 요청부터 다시 읽습니다. 서버를 다시 켤 필요가 없습니다.
 - CORS는 `CORS_ORIGINS`의 출처만 허용합니다.
 
@@ -150,6 +154,10 @@ npm run poster -- approve <ID> --lang vi --reviewer 이름               # 사�
 | `GET /agent/questions` | 공고별·주제별 집계 |
 | `GET /posters/{id}` | 원본 포스터 유무와 내보낼 수 있는 번역 포스터의 검증 요약 |
 | `GET /posters/{id}/original` · `/vi` · `/zh` | 포스터 이미지. 번역본은 승인됐거나 시연 설정(`SHOW_MACHINE_CHECKED_SUMMARIES=1`)에서 자동 검증을 통과한 것만, 원본이 바뀌면 내림 |
+| `GET /posters/{id}/{original\|vi\|zh}?w=N` | 썸네일(`image/webp`). `N`은 128·256·384·512 중 같거나 큰 가장 가까운 값으로 맞추고(512보다 크면 512), 원본보다 크게 늘리지 않음. 원본 크기와 같은 확인을 거치고, 파일 해시·구분·너비로 메모리에 둠. `w`가 1 이상의 정수가 아니면 400 |
+
+- 포스터 이미지(원본 크기·썸네일, 관리자 이미지 포함)에는 파일 내용의 해시로 만든 `ETag`를 붙이고 `Cache-Control: no-cache`로 보냅니다. 브라우저가 `If-None-Match`로 같은 판을 보내면 본문 없이 304로 답합니다. 승인이 풀리거나 원본이 바뀌면 다음 요청부터 바로 반영됩니다.
+- 보호자 웹은 목록·포스터 띠·상세 머리의 작은 그림에 썸네일을, 상세의 큰 포스터와 '크게 보기'에 원본 크기를 씁니다.
 
 ## 기관용 관리자 API와 공고 보완 도우미
 
@@ -163,7 +171,7 @@ npm run poster -- approve <ID> --lang vi --reviewer 이름               # 사�
 | `GET /admin/posters/{id}/original` · `/vi` · `/zh` · `/vi-2` | 원본·내보내는 번역본·n회차 시도 이미지 |
 | `POST /admin/posters/{id}/{vi\|zh}/approve` | `{reviewer}`. 자동 검증을 통과했고 원본이 그대로인 번역 포스터만 |
 | `POST /admin/programs/{id}/improve` | `{questions: [{question_ko, topic, count}]}` → 공고 보완 도우미의 초안·검사 기록. 모델 오류는 503 |
-| `POST /admin/programs/{id}/addenda` | `{author, items: [{topic, text, resolves_questions, resolves_items, drafted_by_ai}]}` 기관 추가 안내 저장 |
+| `POST /admin/programs/{id}/addenda` | `{author, items: [{topic, text, resolves_questions, resolves_items, drafted_by_ai}]}` 기관 추가 안내 저장. 저장할 때 문장을 베트남어·중국어로 옮겨 코드 대조를 통과한 번역만 `translations`로 함께 남김(번역이 실패해도 저장) |
 | `DELETE /admin/programs/{id}/addenda/{addendumId}` | 추가 안내 지우기 |
 | `POST /admin/planning/propose` | `{questions: [{question_ko, topic, count}]}` → 편성 도우미의 편성안·검사 기록. 언제·어디서·닿는 가정 수는 `@osan-kids-bridge/planning`의 `recommend()`(합성 데이터)가 계산하고, 근거 문장의 숫자는 코드가 도구 결과와 대조한다. 검사한 편성안 없이 모델 호출이 실패하면 503 (아래 '편성 도우미') |
 
@@ -174,12 +182,13 @@ read_notice(공고 사실·원문 인용·확인할 점) → read_questions(질�
 ```
 
 - 항목마다 `already_in_notice`(공고에 답이 이미 있음: 원문 인용을 코드가 다시 찾아 확인) 또는 `add_notice`(공고에 덧붙일 안내)로 나눕니다.
-- 기관만 아는 값(금액, 가능 여부, 준비물 등)은 AI가 정하지 않고 `{{빈칸}}`으로 남깁니다. 코드 검사(`src/admin/check.ts`, 포스터 루프의 고정값 추출을 다시 씀):
+- 기관만 아는 값(금액, 가능 여부, 준비물 등)은 AI가 정하지 않고 `{{빈칸}}`으로 남깁니다. 빈칸 이름은 채울 항목의 이름만 씁니다(`{{참가비}}`). 코드 검사(`src/admin/check.ts`, 포스터 루프의 고정값 추출을 다시 씀):
+  - 빈칸 이름에 예시나 답을 넣으면(`{{참가비 (예: 무료)}}`, `{{준비물 (운동화, 물병 등)}}`, `{{무료}}`) 받지 않고 이름만 쓰게 돌려보냅니다. 담당자가 AI가 적은 값을 그대로 옮겨 적지 않게 하기 위해서입니다.
   - `add_notice`: 빈칸 밖에 답을 단정하는 말('무료', '가능합니다', '할 수 있어요', '없어요', '제공해요' 등)을 쓸 수 없고, 숫자·날짜·시각·전화·인터넷 주소와 단위가 붙은 수량('3명')은 공고에서 확인된 글에 있는 것만 다시 쓸 수 있습니다.
   - `already_in_notice`: 다시 쓴 문장의 고정값·수량·단정은 **인용한 원문 문장**에 있어야 하고, 단정의 대상 낱말('참가비는 무료')도 그 문장에 있어야 합니다. 공고 다른 곳의 '주차는 무료'를 근거로 '참가비는 무료'라고 쓰지 못합니다.
   - 낱말 단위의 규칙이라 모든 지어냄을 막지는 못합니다. 그래서 공고에 이미 있는 답은 담당자가 골라야 덧붙이고, 빈칸은 담당자가 채워야 저장됩니다.
 - 담당자가 빈칸을 채우고 고른 항목만 저장합니다. 저장할 때 빈칸이 남았거나, '기관에 확인할 점' 목록에 없는 문구를 풀겠다고 하면 400입니다.
-- 추가 안내(`addenda`)는 원문이 아니라 담당자가 이름을 걸고 확정한 문장이라 사실 해시에 넣지 않습니다(덧붙여도 원문 검수가 풀리지 않음). 저장하면 바로 ① 상담 에이전트의 `get_program`에 `institution_addenda`로 들어가 인용할 수 있고 ② 고른 '기관에 확인할 점'이 보호자 화면에서 빠집니다.
+- 추가 안내(`addenda`)는 원문이 아니라 담당자가 이름을 걸고 확정한 문장이라 사실 해시에 넣지 않습니다(덧붙여도 원문 검수가 풀리지 않음). 저장하면 바로 ① 상담 에이전트의 `get_program`에 `institution_addenda`로 들어가 인용할 수 있고 ② 고른 '기관에 확인할 점'이 보호자 화면에서 빠지며 ③ 보호자 상세 화면에 '기관이 확인해 덧붙인 안내'로 보입니다(보호자 API의 `addenda`: 답한 주제 `covers`, 저장할 때 만든 번역 `translations`).
 
 ### 편성 도우미 (`POST /admin/planning/propose`)
 

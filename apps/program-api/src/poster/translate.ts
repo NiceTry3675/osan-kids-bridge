@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import sharp from 'sharp'
 import { posterDir } from '../config'
@@ -8,6 +8,7 @@ import { editImage } from '../llm/openai'
 import type { EditImageInput } from '../llm/openai'
 import { transcribePoster } from '../extract/transcribe'
 import { isValidProgramId } from '../store'
+import type { ProgramPosters } from '../types'
 import { transplantQr } from './qr'
 import { buildTable, LANGUAGE_NAMES } from './table'
 import type { TableIssue, TableSegment } from './table'
@@ -61,27 +62,59 @@ export interface SourcePoster {
   file: string
   path: string
   mimeType: string
-  data: Buffer
   sha256: string
 }
 
-/** inbox/<id>/의 첫 포스터 이미지 */
+/**
+ * 파일(경로·크기·수정 시각)이 그대로면 앞서 읽은 값을 다시 쓴다.
+ * 목록·상세 요청마다 포스터 파일을 다시 읽거나 해시하지 않게 한다. 읽지 못하면 예외
+ */
+function memoByFile<T>(read: (path: string) => T): (path: string) => T {
+  const memo = new Map<string, { size: number; mtimeMs: number; value: T }>()
+  return (path) => {
+    const { size, mtimeMs } = statSync(path)
+    const known = memo.get(path)
+    if (known && known.size === size && known.mtimeMs === mtimeMs) return known.value
+    const value = read(path)
+    memo.set(path, { size, mtimeMs, value })
+    return value
+  }
+}
+
+/** 파일 내용의 SHA-256 (같은 파일이면 다시 해시하지 않는다) */
+export const fileSha256 = memoByFile((path) => createHash('sha256').update(readFileSync(path)).digest('hex'))
+const parseReport = memoByFile((path) => JSON.parse(readFileSync(path, 'utf8')) as PosterReport)
+
+/**
+ * inbox/<id>/의 첫 포스터 이미지.
+ * 깨진 링크, 폴더 자리에 놓인 파일, 읽기 오류는 포스터가 없는 것으로 본다 (포스터 하나 때문에 목록·상세가 멈추지 않게)
+ */
 export function findSourcePoster(id: string, dir = posterDir()): SourcePoster | null {
   if (!isValidProgramId(id)) return null
   const folder = join(dir, 'inbox', id)
-  if (!existsSync(folder)) return null
-  const file = readdirSync(folder).filter((name) => !name.startsWith('.') && !name.startsWith('_') && IMAGE_TYPES[extname(name).toLowerCase()]).sort()[0]
-  if (!file) return null
-  const path = join(folder, file)
-  const data = readFileSync(path)
-  return { file, path, mimeType: IMAGE_TYPES[extname(file).toLowerCase()], data, sha256: createHash('sha256').update(data).digest('hex') }
+  try {
+    if (!existsSync(folder)) return null
+    const file = readdirSync(folder).filter((name) => !name.startsWith('.') && !name.startsWith('_') && IMAGE_TYPES[extname(name).toLowerCase()]).sort()[0]
+    if (!file) return null
+    const path = join(folder, file)
+    return { file, path, mimeType: IMAGE_TYPES[extname(file).toLowerCase()], sha256: fileSha256(path) }
+  } catch {
+    return null
+  }
 }
 
+/** 번역할 원본 포스터와 그 내용. 해시는 읽은 내용으로 다시 계산한다 */
+export function readSourcePoster(id: string, dir = posterDir()): (SourcePoster & { data: Buffer }) | null {
+  const source = findSourcePoster(id, dir)
+  if (!source) return null
+  const data = readFileSync(source.path)
+  return { ...source, data, sha256: createHash('sha256').update(data).digest('hex') }
+}
+
+/** 번역 검증 기록. 없거나 읽을 수 없으면 null (같은 파일이면 다시 읽지 않으므로 받은 값을 고치지 않는다) */
 export function readReport(id: string, language: PosterLanguage, dir = posterDir()): PosterReport | null {
-  const path = reportPath(id, language, dir)
-  if (!existsSync(path)) return null
   try {
-    return JSON.parse(readFileSync(path, 'utf8')) as PosterReport
+    return parseReport(reportPath(id, language, dir))
   } catch {
     return null
   }
@@ -164,7 +197,7 @@ export async function translatePoster(id: string, language: PosterLanguage, opti
   const log = options.log ?? (() => {})
   const maxAttempts = options.maxAttempts ?? 3
   const now = options.now ?? (() => new Date())
-  const source = findSourcePoster(id, dir)
+  const source = readSourcePoster(id, dir)
   if (!source) throw new Error(`${id}: inbox/${id}/에 포스터 이미지가 없습니다.`)
   mkdirSync(translatedDir(dir), { recursive: true })
 
@@ -265,14 +298,26 @@ export async function translatePoster(id: string, language: PosterLanguage, opti
   return report
 }
 
-/** 보호자에게 내보낼 수 있는 번역 포스터 (승인됨, 또는 시연 설정에서 자동 검증 통과) */
-export function servablePoster(id: string, language: PosterLanguage, showMachineChecked: boolean, dir = posterDir()): { report: PosterReport; path: string } | null {
+/**
+ * 보호자에게 내보낼 수 있는 번역 포스터 (승인됨, 또는 시연 설정에서 자동 검증 통과).
+ * 원본을 이미 찾았으면 source로 넘겨 다시 찾지 않는다
+ */
+export function servablePoster(
+  id: string, language: PosterLanguage, showMachineChecked: boolean, dir = posterDir(), source?: SourcePoster | null,
+): { report: PosterReport; path: string } | null {
   const report = readReport(id, language, dir)
   if (!report || report.chosen_attempt === null) return null
   if (report.status !== 'approved' && !(showMachineChecked && report.status === 'machine_checked')) return null
-  const source = findSourcePoster(id, dir)
+  const original = source === undefined ? findSourcePoster(id, dir) : source
   // 원본 포스터가 바뀌면 번역본을 내린다
-  if (!source || source.sha256 !== report.source_sha256) return null
+  if (!original || original.sha256 !== report.source_sha256) return null
   const path = translatedPosterPath(id, language, dir)
   return existsSync(path) ? { report, path } : null
+}
+
+/** 보호자 목록·상세에 붙일 포스터 정보: 원본이 있는지, 내보낼 수 있는 번역본 언어 (원본은 한 번만 찾는다) */
+export function posterSummary(id: string, showMachineChecked: boolean, dir = posterDir()): ProgramPosters {
+  const source = findSourcePoster(id, dir)
+  if (!source) return { original: false, languages: [] }
+  return { original: true, languages: POSTER_LANGUAGES.filter((language) => servablePoster(id, language, showMachineChecked, dir, source) !== null) }
 }

@@ -16,25 +16,22 @@ import type { StoredQuestion } from './agent/requests'
 import type { ToolContext } from './agent/tools'
 import { corsOrigins, dataDir, posterDir, serverPort } from './config'
 import { evaluateProgram, parseSearchFilters, searchPrograms, seoulToday } from './match'
-import { findSourcePoster, POSTER_LANGUAGES, readReport, servablePoster, translatedDir, translatedPosterPath, writeReport } from './poster/translate'
+import { fileSha256, findSourcePoster, POSTER_LANGUAGES, posterSummary, readReport, servablePoster, translatedDir, translatedPosterPath, writeReport } from './poster/translate'
+import { posterThumbnail, snapWidth } from './poster/thumbnail'
 import type { PosterLanguage } from './poster/tokens'
+import { translateAddenda } from './admin/translate-addenda'
+import type { AddendumTranslator } from './admin/translate-addenda'
 import { nowSource } from './review/clock'
 import { unverifiedFacts } from './review/critical'
 import { isPublished, publicSummaries } from './review/hash'
 import { approveRecord, rejectRecord, resetReview } from './review/lifecycle'
 import { isValidProgramId, recordWatcher, saveRecord } from './store'
 import type { Warn } from './store'
-import type { ProgramRecord, ProgramResponse, SearchFilters } from './types'
+import type { ProgramListing, ProgramPosters, ProgramRecord, ProgramResponse, SearchFilters, SearchResponse } from './types'
 
 // 보호자 웹이 쓰는 프로그램 API (명세 6장, guardian-web/src/api.ts). 게시(승인 + 사실 해시 일치)된 공고만 보인다.
 
 export const BODY_LIMIT_BYTES = 64 * 1024
-
-/** 목록·상세 응답의 공고마다 붙는 포스터 정보: 원본이 있는지, 보호자에게 보여 줄 수 있는 번역본 언어 (guardian-web Program.posters) */
-export interface ProgramPosters {
-  original: boolean
-  languages: PosterLanguage[]
-}
 
 export interface ServerOptions {
   /** 데이터 폴더 (기본: config의 dataDir) */
@@ -60,6 +57,8 @@ export interface ServerOptions {
   improver?: Improver
   /** 프로그램 편성 도우미 (시험에서 바꿔 끼운다) */
   planner?: Planner
+  /** 기관 추가 안내 번역 (시험에서 바꿔 끼운다. 기본: Gemini) */
+  translator?: AddendumTranslator
 }
 
 class HttpError extends Error {
@@ -71,15 +70,31 @@ class HttpError extends Error {
 const NOT_FOUND = '프로그램을 찾을 수 없습니다.'
 const NOT_PUBLISHED = '이 프로그램은 지금 게시되어 있지 않습니다.'
 
-function sendFile(response: ServerResponse, path: string, contentType: string): void {
-  const body = readFileSync(path)
-  response.writeHead(200, {
-    'Content-Type': contentType,
-    'Content-Length': body.length,
-    'Cache-Control': 'no-cache',
-    'X-Content-Type-Options': 'nosniff',
-  })
+/** 브라우저가 가진 판(If-None-Match)이 지금 판(ETag)과 같은가 */
+function notModified(request: IncomingMessage, etag: string): boolean {
+  const header = request.headers['if-none-match']
+  if (!header) return false
+  return header.split(',').map((tag) => tag.trim().replace(/^W\//, '')).some((tag) => tag === etag || tag === '*')
+}
+
+/**
+ * 포스터 이미지. 파일 내용의 해시로 ETag를 붙이고, 브라우저가 같은 판을 갖고 있으면 본문 없이 304로 답한다.
+ * 승인이 풀리거나 원본이 바뀌면 바로 반영되도록 늘 다시 확인하게(no-cache) 둔다
+ */
+async function sendImage(request: IncomingMessage, response: ServerResponse, image: { etag: string; contentType: string; body: () => Buffer | Promise<Buffer> }): Promise<void> {
+  const headers = { ETag: image.etag, 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' }
+  if (notModified(request, image.etag)) {
+    response.writeHead(304, headers)
+    return void response.end()
+  }
+  const body = await image.body()
+  response.writeHead(200, { ...headers, 'Content-Type': image.contentType, 'Content-Length': body.length })
   response.end(body)
+}
+
+/** 파일 이미지를 그대로 보낸다 (ETag: 내용 해시 + 구분) */
+function sendFile(request: IncomingMessage, response: ServerResponse, path: string, contentType: string, tag: string): Promise<void> {
+  return sendImage(request, response, { etag: `"${fileSha256(path).slice(0, 32)}-${tag}"`, contentType, body: () => readFileSync(path) })
 }
 
 function parseJson(text: string): unknown {
@@ -148,13 +163,22 @@ function publicRecord(record: ProgramRecord, showMachineChecked: boolean): Progr
   return { ...record, summaries_by_language: publicSummaries(record, showMachineChecked) }
 }
 
-/** 요청 주소의 경로. 'http://a:b/x'·'//'처럼 해석할 수 없는 주소는 400 */
-function requestPath(url: string | undefined): string {
+/** 요청 주소의 경로와 검색어. 'http://a:b/x'·'//'처럼 해석할 수 없는 주소는 400 */
+function requestTarget(url: string | undefined): { path: string; query: URLSearchParams } {
   try {
-    return new URL(url ?? '/', 'http://localhost').pathname.replace(/\/+$/, '') || '/'
+    const parsed = new URL(url ?? '/', 'http://localhost')
+    return { path: parsed.pathname.replace(/\/+$/, '') || '/', query: parsed.searchParams }
   } catch {
     throw new HttpError(400, '요청 주소가 올바르지 않습니다.')
   }
+}
+
+/** 썸네일 너비(?w=N). 없으면 null(원본 크기), 있으면 128·256·384·512 중 같거나 큰 가장 가까운 값 */
+function thumbnailWidth(query: URLSearchParams): number | null {
+  const text = query.get('w')
+  if (text === null) return null
+  if (!/^\d{1,5}$/.test(text) || Number(text) < 1) throw new HttpError(400, '썸네일 너비(w)는 1 이상의 정수여야 합니다.')
+  return snapWidth(Number(text))
 }
 
 export function createServer(options: ServerOptions = {}): Server {
@@ -170,13 +194,24 @@ export function createServer(options: ServerOptions = {}): Server {
   const adminEnabled = options.admin ?? process.env.ADMIN_API === '1'
   const improver = options.improver ?? runImprover
   const planner = options.planner ?? runPlanner
+  const translator = options.translator ?? ((texts: string[]) => translateAddenda(texts, log))
   const adminContext = (): AdminContext => ({ now: now(), dataDir: dataFolder, posterDir: posters, showMachineChecked })
-  const posterLanguages = (id: string): PosterLanguage[] => POSTER_LANGUAGES.filter((language) => servablePoster(id, language, showMachineChecked, posters))
-  /** 보호자 웹 목록·상세가 포스터 썸네일을 고르도록 공고마다 붙인다. 번역본은 내보낼 수 있는 것만(번역본이 있으면 원본도 있다) */
-  const withPosters = (program: ProgramResponse): ProgramResponse & { posters: ProgramPosters } => {
-    const languages = posterLanguages(program.program_id)
-    return { ...program, posters: { original: languages.length > 0 || findSourcePoster(program.program_id, posters) !== null, languages } }
+  // 포스터는 덧붙는 정보라, 읽다 실패해도 공고 목록·상세는 포스터 없이 그대로 보낸다 (공고마다 한 번만 기록)
+  const posterFailures = new Set<string>()
+  const posterInfo = (id: string): ProgramPosters => {
+    try {
+      return posterSummary(id, showMachineChecked, posters)
+    } catch (error) {
+      if (!posterFailures.has(id)) {
+        posterFailures.add(id)
+        log(`[program-api] ${id} 포스터 정보를 읽지 못해 포스터 없이 보냅니다: ${(error as Error)?.message ?? String(error)}`)
+      }
+      return { original: false, languages: [] }
+    }
   }
+  const posterLanguages = (id: string): PosterLanguage[] => posterInfo(id).languages
+  /** 보호자 웹 목록·상세가 포스터 썸네일을 고르도록 공고마다 붙인다. 번역본은 내보낼 수 있는 것만(번역본이 있으면 원본도 있다) */
+  const withPosters = (program: ProgramResponse): ProgramListing => ({ ...program, posters: posterInfo(program.program_id) })
 
   // 파일이 바뀌어 다시 읽었을 때만 게시 여부(해시)와 내보낼 요약을 다시 계산한다
   interface Cache {
@@ -220,7 +255,7 @@ export function createServer(options: ServerOptions = {}): Server {
   const methodNotAllowed = (allow: string) => new HttpError(405, '지원하지 않는 요청 방식입니다.', undefined, { Allow: `${allow}, OPTIONS` })
 
   async function route(request: IncomingMessage, response: ServerResponse): Promise<void> {
-    const path = requestPath(request.url)
+    const { path, query } = requestTarget(request.url)
     const method = request.method ?? 'GET'
 
     if (path === '/health') {
@@ -233,14 +268,16 @@ export function createServer(options: ServerOptions = {}): Server {
       if (method !== 'POST') throw methodNotAllowed('POST')
       const filters = parseFilters(await readBody(request))
       const found = searchPrograms(current().published, filters, now())
-      return send(response, 200, { ...found, results: found.results.map(withPosters), needs_confirmation: found.needs_confirmation.map(withPosters) })
+      const listed: SearchResponse = { ...found, results: found.results.map(withPosters), needs_confirmation: found.needs_confirmation.map(withPosters) }
+      return send(response, 200, listed)
     }
 
     const detail = path.match(/^\/programs\/([^/]+)$/)
     if (detail) {
       if (method !== 'GET') throw methodNotAllowed('GET')
       // 공유 링크 단독 진입: 입력하지 않은 조건은 판정하지 않는다
-      return send(response, 200, withPosters(evaluateProgram(publishedRecord(detail[1]), null, now())))
+      const program: ProgramListing = withPosters(evaluateProgram(publishedRecord(detail[1]), null, now()))
+      return send(response, 200, program)
     }
 
     const evaluate = path.match(/^\/programs\/([^/]+)\/evaluate$/)
@@ -249,7 +286,8 @@ export function createServer(options: ServerOptions = {}): Server {
       // 본문을 다 받은 뒤 공고(404·410)를 먼저 확인하고 조건(400)을 검사한다
       const text = await readBody(request)
       const record = publishedRecord(evaluate[1])
-      return send(response, 200, withPosters(evaluateProgram(record, parseFilters(text), now())))
+      const program: ProgramListing = withPosters(evaluateProgram(record, parseFilters(text), now()))
+      return send(response, 200, program)
     }
 
     if (path === '/agent/chat') {
@@ -292,26 +330,46 @@ export function createServer(options: ServerOptions = {}): Server {
       const source = findSourcePoster(record.program_id, posters)
       const variant = poster[2]
       if (!variant) {
-        const languages = Object.fromEntries(posterLanguages(record.program_id).map((language) => {
-          const { report } = servablePoster(record.program_id, language, showMachineChecked, posters)!
+        const languages = Object.fromEntries(POSTER_LANGUAGES.flatMap((language) => {
+          const servable = servablePoster(record.program_id, language, showMachineChecked, posters, source)
+          if (!servable) return []
+          const { report } = servable
           const attempt = report.attempts.find((item) => item.n === report.chosen_attempt)
-          return [language, {
+          return [[language, {
             status: report.status,
             attempts: report.attempts.length,
             chosen_attempt: report.chosen_attempt,
             checked: { segments: report.table.length, qr: report.qr ? report.qr.matches : null, issues: attempt?.issues.length ?? 0 },
             created_at: report.created_at,
-          }]
+          }]]
         }))
         return send(response, 200, { program_id: record.program_id, original: source !== null, languages })
       }
+      // 썸네일(?w=N)도 원본 크기와 같은 확인(게시된 공고, 원본 유무, 내보낼 수 있는 번역본)을 거친다
+      const width = thumbnailWidth(query)
+      let file: { path: string; contentType: string }
       if (variant === 'original') {
         if (!source) throw new HttpError(404, '원본 포스터가 없습니다.')
-        return sendFile(response, source.path, source.mimeType)
+        file = { path: source.path, contentType: source.mimeType }
+      } else {
+        const servable = servablePoster(record.program_id, variant as PosterLanguage, showMachineChecked, posters, source)
+        if (!servable) throw new HttpError(404, '이 언어의 번역 포스터가 없습니다.')
+        file = { path: servable.path, contentType: 'image/png' }
       }
-      const servable = servablePoster(record.program_id, variant as PosterLanguage, showMachineChecked, posters)
-      if (!servable) throw new HttpError(404, '이 언어의 번역 포스터가 없습니다.')
-      return sendFile(response, servable.path, 'image/png')
+      if (width === null) return sendFile(request, response, file.path, file.contentType, variant)
+      const sha256 = fileSha256(file.path)
+      return sendImage(request, response, {
+        etag: `"${sha256.slice(0, 32)}-${variant}-w${width}"`,
+        contentType: 'image/webp',
+        body: async () => {
+          try {
+            return await posterThumbnail(file.path, `${variant}:${sha256}`, width)
+          } catch (error) {
+            log(`[program-api] ${record.program_id} ${variant} 썸네일을 만들지 못했습니다: ${(error as Error)?.message ?? String(error)}`)
+            throw new HttpError(404, '포스터 이미지를 읽을 수 없습니다.')
+          }
+        },
+      })
     }
 
     if (path === '/admin' || path.startsWith('/admin/')) {
@@ -393,14 +451,29 @@ export function createServer(options: ServerOptions = {}): Server {
         return save(next)
       }
       if (method !== 'POST') throw methodNotAllowed('POST')
-      // 본문을 다 받은 뒤 공고를 읽는다 (동시에 들어온 다른 저장을 덮어쓰지 않게)
       const body = parseJson(await readBody(request))
-      const record = anyRecord(addenda[1])
-      const toConfirm = evaluateProgram(record, null, now()).uncertain_items_ko
-      const parsed = parseAddenda(body, toConfirm)
-      if (!parsed.ok) throw new HttpError(400, '추가 안내를 확인해 주세요.', parsed.errors)
+      const parse = (record: ProgramRecord) => {
+        const parsed = parseAddenda(body, evaluateProgram(record, null, now()).uncertain_items_ko)
+        if (!parsed.ok) throw new HttpError(400, '추가 안내를 확인해 주세요.', parsed.errors)
+        return parsed.input
+      }
+      const texts = parse(anyRecord(addenda[1])).items.map((item) => item.text)
+      // 보호자 언어로 옮겨 함께 저장한다. 숫자·날짜·시각·전화번호가 달라진 번역이나 실패한 번역은 빼고 한국어만 저장한다
+      let translations: Awaited<ReturnType<AddendumTranslator>> = []
       try {
-        return save(addAddenda(record, parsed.input, now()))
+        translations = await translator(texts)
+      } catch (error) {
+        log(`[program-api] 추가 안내 번역 실패 (한국어만 저장): ${(error as Error)?.message ?? String(error)}`)
+      }
+      // 번역하는 동안 들어온 다른 저장을 덮어쓰지 않게 공고를 다시 읽는다
+      const record = anyRecord(addenda[1])
+      const input = parse(record)
+      const items = input.items.map((item, index) => {
+        const translated = translations[index]
+        return translated ? { ...item, translations: translated } : item
+      })
+      try {
+        return save(addAddenda(record, { ...input, items }, now()))
       } catch (error) {
         throw new HttpError(400, (error as Error).message)
       }
@@ -457,7 +530,7 @@ export function createServer(options: ServerOptions = {}): Server {
       if (variant === 'original') {
         const source = attemptText ? null : findSourcePoster(record.program_id, posters)
         if (!source) throw new HttpError(404, '원본 포스터가 없습니다.')
-        return sendFile(response, source.path, source.mimeType)
+        return sendFile(request, response, source.path, source.mimeType, 'original')
       }
       const report = readReport(record.program_id, variant as PosterLanguage, posters)
       if (!report) throw new HttpError(404, '이 언어의 번역 포스터가 없습니다.')
@@ -466,7 +539,7 @@ export function createServer(options: ServerOptions = {}): Server {
       // 회차 파일 이름은 번역 기록에 적힌 것이지만 폴더 밖을 가리키지 못하게 이름만 쓴다
       const file = attempt ? join(translatedDir(posters), basename(attempt.file)) : translatedPosterPath(record.program_id, variant as PosterLanguage, posters)
       if (!existsSync(file)) throw new HttpError(404, '번역 포스터 파일이 없습니다.')
-      return sendFile(response, file, 'image/png')
+      return sendFile(request, response, file, 'image/png', attempt ? `${variant}-${attempt.n}` : variant)
     }
 
     throw new HttpError(404, '요청한 주소를 찾을 수 없습니다.')

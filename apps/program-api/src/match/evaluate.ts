@@ -1,6 +1,6 @@
-import type { CompanionRule, GuardianAddendum, GuardianCompanionRule, MatchStatus, ProgramRecord, ProgramResponse, SearchFilters } from '../types'
+import type { CompanionRule, GuardianAddendum, GuardianCompanionRule, MatchStatus, ProgramRecord, ProgramResponse, SearchFilters, UncertainItem } from '../types'
 import { applicationStatus } from './application'
-import { guardianMethods, guardianSummaries, guardianUncertainItems, representativeSession } from './contract'
+import { addendumCovers, guardianMethods, guardianSummaries, guardianUncertainItems, representativeSession } from './contract'
 import { lastApplicationDay, seoulDateOf } from './dates'
 import { ageRangeLabel, gradeLabel, gradeRangeLabel, sessionLabel } from './labels'
 import { clockOf, hasOperationEnded, hasStarted, judgeTime, MID_JOIN_MENTION, needsMidJoinCheck } from './sessions'
@@ -92,9 +92,26 @@ export const supportInterpretation = (record: ProgramRecord) =>
 
 const companion = (rule: CompanionRule): GuardianCompanionRule => (rule === 'unknown' ? null : rule)
 
-/** 기관 추가 안내를 보호자 웹 모양으로: 주제·문장·덧붙인 날(서울 기준)만. 담당자 이름과 보호자 질문은 내보내지 않는다 */
-const guardianAddenda = (record: ProgramRecord): GuardianAddendum[] =>
-  (record.addenda ?? []).map(({ topic, text, added_at }) => ({ topic, text, added_at: seoulDateOf(added_at) }))
+/**
+ * 기관 추가 안내를 보호자 웹 모양으로: 주제·문장·덧붙인 날(서울 기준)·답한 주제·번역만. 담당자 이름과 보호자 질문은 내보내지 않는다.
+ * 답한 주제에서 아직 남은 확인할 점의 주제는 뺀다 (안내가 한 항목만 풀었을 때 같은 주제의 다른 항목까지 숨지 않게)
+ */
+const guardianAddenda = (record: ProgramRecord, open: UncertainItem[]): GuardianAddendum[] => {
+  const openTopics = new Set(open.map((item) => item.topic))
+  return (record.addenda ?? []).map((addendum) => {
+    const translations = Object.fromEntries((['vi', 'zh'] as const).flatMap((language) => {
+      const text = addendum.translations?.[language]?.trim()
+      return text ? [[language, text]] : []
+    }))
+    return {
+      topic: addendum.topic,
+      text: addendum.text,
+      added_at: seoulDateOf(addendum.added_at),
+      covers: addendumCovers(addendum, openTopics),
+      ...(Object.keys(translations).length ? { translations } : {}),
+    }
+  })
+}
 
 /**
  * 저장된 공고 한 건을 요청 시점의 판정과 함께 응답 형식으로 바꾼다.
@@ -108,6 +125,7 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
   const time = judgeTime(record, filters?.available_windows ?? [], clock)
   const reasons = [ageGrade.reason, timeReason(record, time, clock)].filter((reason): reason is string => reason !== null)
   const checkItems = uncertainItems(record, eligibility, clock)
+  const openItems = guardianUncertainItems(record, checkItems)
   const verifiedAt = record.review.status === 'approved' ? seoulDateOf(record.review.reviewed_at) : null
   const methods = guardianMethods(record, verifiedAt ?? seoulDateOf(record.extracted_at) ?? record.extracted_at.slice(0, 10))
 
@@ -123,7 +141,7 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
     age_grade_match_status: ageGrade.status,
     eligibility_status: eligibility,
     time_match_status: time.status,
-    uncertain_items: guardianUncertainItems(record, checkItems),
+    uncertain_items: openItems,
     uncertain_items_ko: checkItems,
     matched_reasons: reasons,
     attendance_rule: record.attendance_rule,
@@ -142,7 +160,7 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
     inquiry_methods: methods.inquiry,
     application_note: record.application_note ?? null,
     notices: record.notices ?? [],
-    addenda: guardianAddenda(record),
+    addenda: guardianAddenda(record, openItems),
     source_url: record.source.url,
     verified_at: verifiedAt,
     review_state: 'current',

@@ -348,9 +348,9 @@ describe('승인 전 근거 확인', () => {
   it('참여하는 사람은 audience 근거와 맞아야 하고, 대상 문구로 대신하지 않는다 (F5)', () => {
     const base = record()
     const withoutAudience = base.evidence.filter((entry) => entry.field !== 'audience')
-    expect(unverifiedFacts({ ...base, evidence: withoutAudience })).toEqual(['참여하는 사람(audience)'])
+    expect(unverifiedFacts({ ...base, evidence: withoutAudience })).toEqual(['참여하는 사람'])
     const adultQuote = [...withoutAudience, { field: 'audience', quote: '영양제 꿀팁', verified: true }]
-    expect(unverifiedFacts({ ...base, evidence: adultQuote })).toEqual(['참여하는 사람(audience)'])
+    expect(unverifiedFacts({ ...base, evidence: adultQuote })).toEqual(['참여하는 사람'])
   })
 
   it('참석 방식은 근거가 필요하다. 회차가 하나뿐인 all_sessions는 예외 (F2)', () => {

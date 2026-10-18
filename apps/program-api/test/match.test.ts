@@ -3,6 +3,7 @@ import { applicationStatus } from '../src/match/application'
 import { isValidDate, isValidTime, lastApplicationDay, seoulNowMinutes, seoulToday, weekdayOf } from '../src/match/dates'
 import { evaluateProgram, MID_JOIN_ITEM } from '../src/match/evaluate'
 import { parseSearchFilters } from '../src/match/filters'
+import { ageRangeLabel } from '../src/match/labels'
 import { isListable, searchPrograms } from '../src/match/search'
 import type { AvailableWindow, ProgramRecord, ProgramResponse, ProgramSession, SearchFilters } from '../src/types'
 
@@ -332,6 +333,13 @@ describe('학년·나이와 별도 자격', () => {
     expect(evaluateProgram(record({ grade_range: null, target_type: 'unknown' }), filters({ child_grade: 2 }), NOW).age_grade_match_status).toBe('unknown')
     expect(evaluateProgram(record({ grade_range: null, audience: 'adult' }), filters({ child_grade: 2 }), NOW).age_grade_match_status).toBe('not_applied')
     expect(evaluateProgram(record({ grade_range: null, audience: 'parent_only' }), filters({ child_age: 8 }), NOW).age_grade_match_status).toBe('not_applied')
+  })
+
+  it('나이 범위는 위가 열려 있으면(99세) \'N세 이상\', 아래가 0이면 \'N세 이하\'로 쓴다', () => {
+    expect([[5, 99], [8, 12], [6, 6], [0, 7], [0, 99]].map((range) => ageRangeLabel(range as [number, number])))
+      .toEqual(['5세 이상', '8~12세', '6세', '7세 이하', '나이 제한 없음'])
+    expect(evaluateProgram(record({ grade_range: null, age_range: [5, 99] }), filters({ child_age: 7 }), NOW).matched_reasons)
+      .toEqual(['입력한 나이(7세)가 공고 대상 나이(5세 이상)에 들어가요'])
   })
 
   it('학년 일치 근거는 초·중·고 학년으로 쓴다', () => {
