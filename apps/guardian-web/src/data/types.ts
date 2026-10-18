@@ -113,8 +113,12 @@ export interface Program {
   verified_at: string | null
   /** current: 게시 중 / recheck: 원문 변경을 알아 재검수 중 */
   review_state: 'current' | 'recheck'
+  /** 서버가 붙이는 포스터 정보: 원본이 있는지, 보호자에게 보여 줄 수 있는 번역본 언어 */
+  posters?: { original: boolean; languages: ('vi' | 'zh')[] }
   /** 시연용 가상 공고 */
   is_demo: boolean
+  /** 공고가 나온 뒤 기관 담당자가 확인해 덧붙인 안내. 문장은 한국어, added_at은 YYYY-MM-DD(모르면 null). 예전 서버는 보내지 않습니다 */
+  addenda?: { topic: UncertainItem['topic']; text: string; added_at: string | null }[]
 }
 
 export interface SearchResponse {

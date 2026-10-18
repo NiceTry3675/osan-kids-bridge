@@ -44,6 +44,15 @@ async function main() {
     const input = entry ? await entry.async('nodebuffer') : path.join(research, fallback)
     await sharp(input).png().toFile(path.join(OUT, to))
   }
+  // 5번 슬라이드에는 챗봇의 답만 쓴다. 팀이 친 질문 말풍선에는 나라가 들어 있어(덱은 나라·국적을 쓰지 않음) 픽셀째 잘라 낸다.
+  // PowerPoint식 자르기(pptxgenjs sizing crop)는 원본 전체가 파일에 남아 '그림 원래대로'로 다시 보이므로 쓰지 않는다.
+  // 고해상도판(391×670) 기준 질문 말풍선은 y=162에서 끝나고 답 말풍선은 y=187에서 시작한다 → y=172부터 입력창까지 (webp도 같은 비율)
+  {
+    const file = path.join(OUT, 'problem-chatbot.png')
+    const { width, height } = await sharp(file).metadata()
+    const top = Math.round((height * 172) / 670)
+    await sharp(file).extract({ left: 0, top, width, height: height - top }).png().toFile(path.join(OUT, 'problem-chatbot-answer.png'))
+  }
   // 기관 화면 캡처(capture.js, 2880px 폭)에서 발표자료에 쓸 부분만 잘라 둔다: 검수 화면의 세 칸, 공고 보완 도우미, AI 편성 제안
   for (const [from, to, box] of [
     ['dash-improve-drafts.png', 'dash-improve-crop.png', { left: 1195, top: 36, width: 1620, height: 1325 }],

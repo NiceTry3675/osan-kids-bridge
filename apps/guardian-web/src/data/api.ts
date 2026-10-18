@@ -35,7 +35,7 @@ export function serializeFilters(filters: SearchFilters, locale?: Locale): Recor
   return request
 }
 
-const hasMatchConditions = (filters: SearchFilters) =>
+export const hasMatchConditions = (filters: SearchFilters) =>
   filters.child_grade !== undefined || filters.child_age !== undefined || filters.available_windows.length > 0
 
 const pause = () => new Promise((resolve) => setTimeout(resolve, 120))

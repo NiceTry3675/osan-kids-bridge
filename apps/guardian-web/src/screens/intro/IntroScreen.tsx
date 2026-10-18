@@ -1,9 +1,19 @@
 import { langAttr } from '@osan-kids-bridge/ui'
 import { useI18n } from '../../i18n'
+import type { MessageKey } from '../../i18n'
 import { languageOptions } from '../../i18n/policy'
 import { Icon } from '../../components/Icon'
+import { IntroArt, ValueIcon } from './art'
+import type { ValueName } from './art'
 
 const SELECTABLE = languageOptions().filter((option) => option.state !== 'in_review')
+
+/** 이 서비스가 해 주는 세 가지. 홈의 포스터 띠·맞게 보기·AI 상담과 같은 아이콘을 씁니다. */
+const VALUES: [ValueName, MessageKey][] = [
+  ['poster', 'introValuePoster'],
+  ['fit', 'introValueFit'],
+  ['ask', 'introValueAsk'],
+]
 
 interface Props {
   onStart: () => void
@@ -15,9 +25,17 @@ export function IntroScreen({ onStart, onMoreLanguages }: Props) {
   const { locale, setLocale, t } = useI18n()
   return (
     <main className="intro" id="main">
-      <div className="intro-art" aria-hidden="true">🎒</div>
+      <IntroArt />
       <h1 className="intro-title">{t('introTitle')}</h1>
       <p className="intro-lead">{t('introLead')}</p>
+      <ul className="intro-values">
+        {VALUES.map(([icon, key]) => (
+          <li key={key} className={`intro-value intro-value--${icon}`}>
+            <span className="intro-value-icon"><ValueIcon name={icon} /></span>
+            {t(key)}
+          </li>
+        ))}
+      </ul>
 
       <h2 className="intro-q">{t('introLanguage')}</h2>
       <div className="intro-langs" role="radiogroup" aria-label={t('languageLabel')}>

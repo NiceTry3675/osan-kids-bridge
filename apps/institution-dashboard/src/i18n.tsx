@@ -6,7 +6,7 @@ import type { LanguageOption, LanguageState } from '@osan-kids-bridge/ui'
 
 export type Locale = 'ko-easy' | 'vi' | 'zh'
 const ko = {
-  brand: '오산 아이 프로그램', institution: '운영기관 화면', language: '화면 언어', demo: '시연용 가상 응답이에요. 실제 보호자가 답한 것이 아니에요.',
+  brand: '잇다, 오산', institution: '운영기관 화면', language: '화면 언어', demo: '시연용 가상 응답이에요. 실제 보호자가 답한 것이 아니에요.',
   pickerMore: '다른 언어', pickerTitle: '화면 언어 고르기', pickerSearch: '언어 이름으로 찾기', close: '닫기', pickerCurrent: '지금 보는 언어', pickerDraft: '번역 초안', pickerInReview: '번역 검수 중', pickerNotOffered: '아직 제공하지 않아요', pickerNoMatch: '찾는 언어가 없어요', draftNotice: '이 언어의 화면 문구는 검수 전 초안이에요. 개발·시연 화면에서만 고를 수 있어요.', skip: '본문으로 건너뛰기', demandSummary: '{n}가정이 답했어요.', demandSummaryFiltered: '전체 {total}가정 중 {n}가정이 조건에 맞아요.', demandPeak: '가장 많이 몰린 시간은 {slots}이에요.', demandPeakHidden: '시간별 숫자는 개인 식별을 막으려고 가렸어요.', showRecommend: '추천 보기', detailsOpen: '{n}안 자세히 보기', detailsTitle: '{n}안 자세히', applyFilters: '적용하기', nextStepTitle: '다음 단계 (이번에는 만들지 않음)', nextStepBody: '보호자 웹의 익명 동의 → 서버 집계·가림 → 이 화면', programQuestion: '어떤 프로그램을 여나요?', venuesSummary: '{n}곳 중 {m}곳', baselineOnSummary: '켜짐', baselineOffSummary: '꺼짐',
   demandTab: '수요 현황', recommendTab: '일정·장소 추천', guideTab: '데이터 안내',
   filterTitle: '조건 선택', filterOpen: '조건 바꾸기', reset: '초기화', all: '전체', allFields: '전체 분야', allLanguages: '전체 언어',
@@ -72,8 +72,8 @@ const ko = {
   confirmUnverified: '근거가 확인되지 않은 사실 {n}개를 원문과 직접 대조했어요', resetReview: '검수 대기로', resetDone: '검수 대기로 되돌렸어요. 보호자 화면에서 내려갑니다.',
   reject: '반려', rejectNeedsNote: '메모에 반려 사유를 적어 주세요', rejectDone: '반려했어요.', approve: '승인하고 게시', approveDone: '승인했어요. 보호자 화면에 게시됩니다.',
   questionsByProgram: '공고별 질문', questionsAsked: '질문 {n}건', openCount: '답 없음 {n}', allAnswered: '모두 답함', openReview: '공고 검수 화면', answeredBy: '추가 안내로 답함 · {date}',
-  planTab: 'AI 편성 제안', planLead: '보호자들이 익명으로 남긴 조건과 못 찾은 질문, 지금 공고를 보고 AI가 다음 프로그램 편성안을 써요. 언제·어디서와 숫자는 코드가 계산하고, 결정은 담당자가 해요.',
-  planDataTitle: '보호자 익명 통계', planDemo: '시연용 가상 응답', planDataLead: '{n}가정이 익명으로 남긴 가능 시간이에요.', planTargetLead: '편성안 대상 {target} · {n}가정의 가능 시간과 편성안의 반(번호)이에요.', gradeRangeShort: '초{a}~{b}',
+  planTab: 'AI 편성 제안', planLead: '보호자 익명 조건(시연은 가상 응답)과 못 찾은 질문, 지금 공고를 보고 AI가 다음 프로그램 편성안을 써요. 언제·어디서와 숫자는 코드가 계산하고, 결정은 담당자가 해요.',
+  planDataTitle: '보호자 익명 통계', planDemo: '시연용 가상 응답', virtualVenue: '가상 장소', planDataLead: '시연용 가상 응답 {n}가정의 가능 시간이에요.', planTargetLead: '편성안 대상 {target} · {n}가정의 가능 시간과 편성안의 반(번호)이에요.', gradeRangeShort: '초{a}~{b}',
   planInterestTitle: '관심 분야 (관심 표시 가정)', planQuestionTitle: '못 찾은 질문 주제 (건)', planQuestionNone: '아직 모인 질문이 없어요.',
   plannerTitle: '편성 도우미', planAgentLead: '통계·질문·지금 공고를 도구로 읽고, 추천 계산을 돌려 무엇을·누구에게·언제·어디서 열지 편성안을 써요. 근거 문장의 숫자는 코드가 도구 결과와 대조해요.',
   planNeedsApi: '편성 도우미는 관리자 API가 켜진 서버가 있어야 쓸 수 있어요.', planStart: 'AI 편성안 만들기', planRetry: '다시 만들기', planRunning: '통계·질문·공고를 읽고 편성을 계산하고 있어요 (보통 20~30초).',
@@ -89,13 +89,13 @@ const ko = {
   improvePassed: '코드 검사 통과 ({n}회 검사) · 빈칸 밖에 공고에 없는 숫자·날짜·수량이나 답을 단정하는 말이 없어요', improveNotPassed: '코드 검사를 통과하지 못한 항목이 있어요. 문제를 확인하고 고쳐 주세요.', improveUncovered: '초안이 다루지 않은 질문: {list}',
   authorName: '확정하는 담당자', fillBlanksFirst: '빈칸 {n}곳을 채워야 덧붙일 수 있어요.', addendaPublishHint: '덧붙인 안내는 담당자 이름과 함께 바로 보호자 AI 상담의 근거가 돼요.', cancel: '닫기', addAddenda: '고른 {n}건을 공고에 덧붙이기',
   kindAlready: '공고에 이미 있음', kindAdd: '공고에 덧붙일 안내', askedBy: '{n}명이 물음', quoteFromNotice: '공고 원문', draftSentence: '덧붙일 문장 (고칠 수 있어요)', blankPlaceholder: '기관이 정한 내용', draftPreview: '게시될 문장', resolvesLegend: "보호자 화면의 '기관에 확인할 점'에서 뺄 항목",
-  demandLead: '보호자가 익명으로 남긴 희망 조건을 모아 봐요. 적은 수의 집계는 가려요.', recommendLead: '조건을 바꾸면 오른쪽 추천이 바로 바뀌어요. 계산은 코드가 하고, 시연용 가정과 가상 장소를 써요.', guideLead: '이 화면이 쓰는 데이터와 쓰지 않는 데이터예요.',
+  demandLead: '보호자 희망 조건을 익명으로 모아 봐요(시연은 가상 응답). 적은 수의 집계는 가려요.', recommendLead: '조건을 바꾸면 오른쪽 추천이 바로 바뀌어요. 계산은 코드가 하고, 시연용 가정과 가상 장소를 써요.', guideLead: '이 화면이 쓰는 데이터와 쓰지 않는 데이터예요.',
   questionsPrivacy: '이름·연락처·대화 내용은 받지 않고, 공고·주제·일반화한 질문·날짜만 받아요.',
 } as const
 type Key = keyof typeof ko
 type Dictionary = Record<Key, string>
 const vi: Dictionary = {
-  brand: 'Chương trình cho trẻ em Osan', institution: 'Dành cho đơn vị', language: 'Ngôn ngữ', demo: 'Dữ liệu mô phỏng · Không phải phản hồi thực tế',
+  brand: 'Itda Osan', institution: 'Dành cho đơn vị', language: 'Ngôn ngữ', demo: 'Dữ liệu mô phỏng · Không phải phản hồi thực tế',
   pickerMore: 'Ngôn ngữ khác', pickerTitle: 'Chọn ngôn ngữ màn hình', pickerSearch: 'Tìm theo tên ngôn ngữ', close: 'Đóng', pickerCurrent: 'Đang dùng', pickerDraft: 'Bản dịch nháp', pickerInReview: 'Đang kiểm tra bản dịch', pickerNotOffered: 'Chưa hỗ trợ', pickerNoMatch: 'Không tìm thấy ngôn ngữ', draftNotice: 'Chữ trên màn hình bằng ngôn ngữ này là bản nháp chưa được kiểm tra. Chỉ chọn được trong bản phát triển và trình diễn.', skip: 'Chuyển đến nội dung chính', demandSummary: '{n} gia đình đã trả lời.', demandSummaryFiltered: 'Có {n} trong {total} gia đình phù hợp điều kiện.', demandPeak: 'Thời gian đông nhất: {slots}.', demandPeakHidden: 'Số theo giờ đã được ẩn để bảo vệ thông tin cá nhân.', showRecommend: 'Xem gợi ý', detailsOpen: 'Xem chi tiết phương án {n}', detailsTitle: 'Chi tiết phương án {n}', applyFilters: 'Áp dụng', nextStepTitle: 'Bước tiếp theo (chưa làm lần này)', nextStepBody: 'Đồng ý ẩn danh trên web phụ huynh → máy chủ tổng hợp, che số nhỏ → màn hình này', programQuestion: 'Bạn sẽ mở chương trình nào?', venuesSummary: '{m}/{n} nơi', baselineOnSummary: 'Bật', baselineOffSummary: 'Tắt',
   demandTab: 'Tổng quan nhu cầu', recommendTab: 'Lịch & địa điểm', guideTab: 'Thông tin dữ liệu',
   filterTitle: 'Chọn điều kiện', filterOpen: 'Đổi điều kiện', reset: 'Đặt lại', all: 'Tất cả', allFields: 'Mọi lĩnh vực', allLanguages: 'Mọi ngôn ngữ',
@@ -161,8 +161,8 @@ const vi: Dictionary = {
   confirmUnverified: 'Tôi đã tự đối chiếu {n} thông tin chưa có căn cứ với bản gốc', resetReview: 'Về chờ kiểm tra', resetDone: 'Đã chuyển về chờ kiểm tra. Thông báo sẽ bị gỡ khỏi màn hình phụ huynh.',
   reject: 'Từ chối', rejectNeedsNote: 'Hãy ghi lý do từ chối vào ghi chú', rejectDone: 'Đã từ chối.', approve: 'Duyệt và đăng', approveDone: 'Đã duyệt. Thông báo sẽ được đăng lên màn hình phụ huynh.',
   questionsByProgram: 'Câu hỏi theo thông báo', questionsAsked: '{n} câu hỏi', openCount: 'Chưa trả lời {n}', allAnswered: 'Đã trả lời hết', openReview: 'Màn hình kiểm tra thông báo', answeredBy: 'Đã trả lời bằng thông tin bổ sung · {date}',
-  planTab: 'Đề xuất lập chương trình AI', planLead: 'AI xem điều kiện phụ huynh để lại ẩn danh, câu hỏi chưa được trả lời và thông báo hiện có để viết đề xuất chương trình tiếp theo. Thời gian, địa điểm và con số do mã tính; người phụ trách quyết định.',
-  planDataTitle: 'Thống kê ẩn danh của phụ huynh', planDemo: 'Phản hồi mô phỏng', planDataLead: 'Thời gian rảnh do {n} gia đình để lại ẩn danh.', planTargetLead: 'Thời gian rảnh của {n} gia đình thuộc đối tượng {target} và các lớp (số) của đề xuất.', gradeRangeShort: 'Lớp {a}~{b}',
+  planTab: 'Đề xuất lập chương trình AI', planLead: 'AI xem điều kiện ẩn danh của phụ huynh (bản trình diễn dùng phản hồi mô phỏng), câu hỏi chưa được trả lời và thông báo hiện có để viết đề xuất chương trình tiếp theo. Thời gian, địa điểm và con số do mã tính; người phụ trách quyết định.',
+  planDataTitle: 'Thống kê ẩn danh của phụ huynh', planDemo: 'Phản hồi mô phỏng', virtualVenue: 'Địa điểm mô phỏng', planDataLead: 'Thời gian rảnh của {n} gia đình (phản hồi mô phỏng).', planTargetLead: 'Thời gian rảnh của {n} gia đình thuộc đối tượng {target} và các lớp (số) của đề xuất.', gradeRangeShort: 'Lớp {a}~{b}',
   planInterestTitle: 'Lĩnh vực quan tâm (gia đình đánh dấu)', planQuestionTitle: 'Chủ đề câu hỏi chưa tìm thấy (lượt)', planQuestionNone: 'Chưa có câu hỏi nào.',
   plannerTitle: 'Trợ lý lập chương trình', planAgentLead: 'Đọc thống kê, câu hỏi và thông báo hiện có bằng công cụ, chạy phép tính gợi ý rồi viết đề xuất: mở gì, cho ai, khi nào, ở đâu. Mã đối chiếu các con số trong lý do với kết quả công cụ.',
   planNeedsApi: 'Trợ lý lập chương trình cần máy chủ đã bật API quản trị.', planStart: 'Tạo đề xuất bằng AI', planRetry: 'Tạo lại', planRunning: 'Đang đọc thống kê, câu hỏi, thông báo và tính toán (thường 20~30 giây).',
@@ -178,11 +178,11 @@ const vi: Dictionary = {
   improvePassed: 'Đạt kiểm tra bằng mã ({n} lần) · ngoài chỗ trống không có số, ngày, số lượng hay câu khẳng định câu trả lời không có trong thông báo', improveNotPassed: 'Có mục chưa đạt kiểm tra bằng mã. Hãy xem lỗi và sửa.', improveUncovered: 'Câu hỏi bản nháp chưa xử lý: {list}',
   authorName: 'Người phụ trách xác nhận', fillBlanksFirst: 'Cần điền {n} chỗ trống trước khi bổ sung.', addendaPublishHint: 'Thông tin bổ sung kèm tên người phụ trách sẽ ngay lập tức làm căn cứ cho trợ lý AI của phụ huynh.', cancel: 'Đóng', addAddenda: 'Bổ sung {n} mục đã chọn',
   kindAlready: 'Đã có trong thông báo', kindAdd: 'Thông tin cần bổ sung', askedBy: '{n} người hỏi', quoteFromNotice: 'Câu gốc trong thông báo', draftSentence: 'Câu sẽ bổ sung (có thể sửa)', blankPlaceholder: 'Nội dung đơn vị quyết định', draftPreview: 'Câu sẽ được đăng', resolvesLegend: "Mục bỏ khỏi 'cần hỏi đơn vị' trên màn hình phụ huynh",
-  demandLead: 'Tổng hợp điều kiện phụ huynh để lại ẩn danh. Số nhỏ được che.', recommendLead: 'Đổi điều kiện thì gợi ý bên phải đổi ngay. Mã tính toán, dùng giả định và địa điểm mô phỏng.', guideLead: 'Dữ liệu màn hình này dùng và không dùng.',
+  demandLead: 'Tổng hợp ẩn danh điều kiện của phụ huynh (bản trình diễn dùng phản hồi mô phỏng). Số nhỏ được che.', recommendLead: 'Đổi điều kiện thì gợi ý bên phải đổi ngay. Mã tính toán, dùng giả định và địa điểm mô phỏng.', guideLead: 'Dữ liệu màn hình này dùng và không dùng.',
   questionsPrivacy: 'Không nhận tên, liên lạc hay nội dung trò chuyện; chỉ nhận thông báo, chủ đề, câu hỏi đã khái quát và ngày.',
 }
 const zh: Dictionary = {
-  brand: '乌山市儿童活动', institution: '机构端', language: '页面语言', demo: '模拟数据 · 并非真实家长反馈',
+  brand: 'Itda Osan', institution: '机构端', language: '页面语言', demo: '模拟数据 · 并非真实家长反馈',
   pickerMore: '其他语言', pickerTitle: '选择界面语言', pickerSearch: '按语言名称搜索', close: '关闭', pickerCurrent: '当前语言', pickerDraft: '翻译草稿', pickerInReview: '翻译审核中', pickerNotOffered: '暂不提供', pickerNoMatch: '没有找到该语言', draftNotice: '此语言的界面文字是未经审核的草稿，仅在开发和演示版本中可选。', skip: '跳到正文', demandSummary: '共有{n}户回答。', demandSummaryFiltered: '{total}户中有{n}户符合条件。', demandPeak: '人数最多的时间是{slots}。', demandPeakHidden: '为保护个人信息，各时段人数已隐藏。', showRecommend: '查看推荐', detailsOpen: '查看方案{n}详情', detailsTitle: '方案{n}详情', applyFilters: '应用', nextStepTitle: '下一步（本次不做）', nextStepBody: '家长网页匿名同意 → 服务器汇总并隐藏小数 → 本页面', programQuestion: '要开设什么活动？', venuesSummary: '{n}处中{m}处', baselineOnSummary: '开启', baselineOffSummary: '关闭',
   demandTab: '需求概览', recommendTab: '日程·地点推荐', guideTab: '数据说明',
   filterTitle: '选择条件', filterOpen: '更改条件', reset: '重置', all: '全部', allFields: '全部领域', allLanguages: '全部语言',
@@ -211,7 +211,7 @@ const zh: Dictionary = {
   morning: '上午', afternoon: '下午', evening: '晚上', householdCount: '家庭数', recommended: '推荐', existing: '原计划', dayMon: '一', dayTue: '二', dayWed: '三', dayThu: '四', dayFri: '五', daySat: '六', daySun: '日',
   levelBeginner: '初级', levelIntermediate: '中级', levelFluent: '流利', levelNone: '未回答', easyKorean: '简明韩语', vietnamese: '越南语', chinese: '中文',
   interestExperience: '体验·文化', interestKorean: '韩语', interestSports: '艺术·体育', interestCareer: '职业探索',
-  demoResultNote: '结果使用模拟假设和虚构地点。实际安排前请核实。', approximate: '组合过多，已使用近似推荐方法。',
+  demoResultNote: '结果使用模拟假设和虚拟场所。实际安排前请核实。', approximate: '组合过多，已使用近似推荐方法。',
   insights: '推荐理由与准备事项', insightSummary: '通过组合时段和地点，让更多家庭能够参加。', languageAdvice: '根据语言分布准备翻译资料和口译支持。', teachingAdvice: '根据孩子的韩语水平准备简明资料和辅助人员。', originalDetails: '韩语详细分析', originalNote: '以下分析内容仅提供韩语原文。',
   questionsTab: '家长提问', questionsLead: '家长在AI咨询中没能从公告找到答案，并匿名告诉机构的问题。', questionsTotal: '问题{n}条 · 公告{m}个',
   questionsLive: '含家长网页提交的问题{n}条', questionsDemo: '其中混有演示用的示例问题。', questionsEmpty: '还没有收到问题。',
@@ -248,8 +248,8 @@ const zh: Dictionary = {
   confirmUnverified: '我已亲自将 {n} 项无依据的信息与原文核对', resetReview: '退回待审核', resetDone: '已退回待审核，将从家长页面撤下。',
   reject: '驳回', rejectNeedsNote: '请在备注中填写驳回理由', rejectDone: '已驳回。', approve: '批准并发布', approveDone: '已批准，将发布到家长页面。',
   questionsByProgram: '按公告分类的提问', questionsAsked: '提问 {n} 条', openCount: '未回答 {n}', allAnswered: '已全部回答', openReview: '公告审核页面', answeredBy: '已用补充说明回答 · {date}',
-  planTab: 'AI编排建议', planLead: 'AI查看家长匿名留下的条件、未找到答案的提问和现有公告，撰写下一个项目的编排方案。时间、地点和数字由代码计算，由负责人决定。',
-  planDataTitle: '家长匿名统计', planDemo: '演示用模拟回答', planDataLead: '{n}户家庭匿名留下的可参加时间。', planTargetLead: '方案对象{target}的{n}户家庭可参加时间及方案的班级（编号）。', gradeRangeShort: '小{a}~{b}',
+  planTab: 'AI编排建议', planLead: 'AI查看家长匿名条件（演示使用模拟回答）、未找到答案的提问和现有公告，撰写下一个项目的编排方案。时间、地点和数字由代码计算，由负责人决定。',
+  planDataTitle: '家长匿名统计', planDemo: '演示用模拟回答', virtualVenue: '虚拟场所', planDataLead: '{n}户家庭的可参加时间（演示用模拟回答）。', planTargetLead: '方案对象{target}的{n}户家庭可参加时间及方案的班级（编号）。', gradeRangeShort: '小{a}~{b}',
   planInterestTitle: '关注领域（标记关注的家庭）', planQuestionTitle: '未找到答案的提问主题（件）', planQuestionNone: '还没有收集到提问。',
   plannerTitle: '编排助手', planAgentLead: '用工具读取统计、提问和现有公告，运行推荐计算，写出开什么、为谁、何时、何地的方案。代码会把理由中的数字与工具结果对照。',
   planNeedsApi: '编排助手需要开启管理员API的服务器。', planStart: '用AI生成编排方案', planRetry: '重新生成', planRunning: '正在读取统计、提问和公告并计算编排（通常20~30秒）。',
@@ -265,7 +265,7 @@ const zh: Dictionary = {
   improvePassed: '代码检查通过（检查 {n} 次）·空白之外没有公告中没有的数字、日期、数量或断定答案的表达', improveNotPassed: '有项目未通过代码检查，请查看问题并修改。', improveUncovered: '草稿未处理的提问：{list}',
   authorName: '确认的负责人', fillBlanksFirst: '需填写 {n} 处空白后才能补充。', addendaPublishHint: '补充说明会连同负责人姓名立即成为家长AI咨询的依据。', cancel: '关闭', addAddenda: '将所选 {n} 条补充到公告',
   kindAlready: '公告中已有', kindAdd: '需补充的说明', askedBy: '{n} 人提问', quoteFromNotice: '公告原文', draftSentence: '要补充的句子（可修改）', blankPlaceholder: '机构决定的内容', draftPreview: '将发布的句子', resolvesLegend: '从家长页面“需向机构确认事项”中移除的项目',
-  demandLead: '汇总家长匿名留下的期望条件。数量少的统计会被遮盖。', recommendLead: '修改条件后右侧推荐会立即变化。由代码计算，使用演示假设和虚拟场所。', guideLead: '本页面使用和不使用的数据。',
+  demandLead: '匿名汇总家长的期望条件（演示使用模拟回答）。数量少的统计会被遮盖。', recommendLead: '修改条件后右侧推荐会立即变化。由代码计算，使用演示假设和虚拟场所。', guideLead: '本页面使用和不使用的数据。',
   questionsPrivacy: '不收集姓名、联系方式和聊天内容，只收集公告、主题、概括后的问题和日期。',
 }
 const dictionaries: Record<Locale, Dictionary> = { 'ko-easy': ko, vi, zh }

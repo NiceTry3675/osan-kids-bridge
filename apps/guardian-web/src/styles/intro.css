@@ -1,15 +1,33 @@
 /* 01 첫 화면 */
-.intro { display: grid; gap: 10px; padding: 28px 22px 28px; min-height: calc(100dvh - 60px); align-content: start; }
+.intro { display: grid; gap: 9px; padding: 14px 22px 22px; min-height: calc(100dvh - 60px); align-content: start; }
 @media (min-width: 520px) { .intro { min-height: 720px; } }
-.intro-art { display: grid; place-items: center; height: 150px; border-radius: 24px; background: var(--action-soft); font-size: 72px; }
-.intro-title { margin-top: 10px; text-align: center; font-size: var(--text-xl); line-height: 1.3; font-weight: 900; letter-spacing: -0.03em; text-wrap: balance; }
-.intro-lead { text-align: center; color: var(--ink-2); font-size: var(--text-sm); }
-.intro-q { margin-top: 10px; font-size: var(--text-md); font-weight: 800; }
+.intro-title { margin-top: 6px; text-align: center; font-size: var(--text-xl); line-height: 1.3; font-weight: 900; letter-spacing: -0.03em; text-wrap: balance; }
+.intro-lead { text-align: center; color: var(--ink-2); font-size: var(--text-sm); text-wrap: balance; }
+
+/* 그림: 포스터의 '가'가 'A·中'으로. 장식이라 움직임을 줄이면 바로 끝 모습으로 보입니다. */
+.intro-art { height: 116px; border-radius: 24px; background: var(--coral-soft); overflow: hidden; }
+.intro-art svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.intro-art .art-glyph { font-family: var(--font); font-weight: 900; }
+.intro-art .art-arrow { animation: art-fade 320ms 80ms ease-out both; }
+.intro-art .art-new { transform-box: fill-box; transform-origin: center; animation: art-pop 420ms 160ms cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes art-fade { from { opacity: 0; } }
+@keyframes art-pop { from { opacity: 0; transform: scale(.82) rotate(-8deg); } }
+@media (prefers-reduced-motion: reduce) { .intro-art .art-arrow, .intro-art .art-new { animation: none; } }
+
+/* 이 서비스가 해 주는 세 가지 */
+.intro-values { display: grid; gap: 0; margin-top: 2px; padding: 5px 14px; border-radius: 18px; background: var(--canvas); }
+.intro-value { display: flex; align-items: center; gap: 12px; min-height: 38px; font-size: var(--text-sm); font-weight: 750; line-height: 1.35; }
+.intro-value-icon { display: grid; place-items: center; width: 30px; height: 30px; flex: none; border-radius: 10px; }
+.intro-value-icon .icon { width: 19px; height: 19px; }
+.intro-value--poster .intro-value-icon { background: var(--coral-soft); color: var(--warm); }
+.intro-value--fit .intro-value-icon, .intro-value--ask .intro-value-icon { background: var(--action-soft); color: var(--action); }
+
+.intro-q { margin-top: 6px; font-size: var(--text-md); font-weight: 800; }
 .intro-langs { display: grid; gap: 8px; }
-.intro-lang { display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 0 16px; border: 2px solid transparent; border-radius: 14px; background: var(--sunken); font-size: var(--text-md); font-weight: 750; text-align: left; }
+.intro-lang { display: flex; align-items: center; gap: 8px; min-height: 50px; padding: 0 16px; border: 2px solid transparent; border-radius: 14px; background: var(--sunken); font-size: var(--text-md); font-weight: 750; text-align: left; }
 .intro-lang small { padding: 1px 7px; border-radius: 99px; background: var(--status-unknown-soft); color: var(--status-unknown); font-size: 11px; font-weight: 700; }
 .intro-lang .icon { margin-left: auto; color: var(--action); }
 .intro-lang[aria-checked='true'] { border-color: var(--ink); background: var(--paper); }
-.intro-start { margin-top: 8px; }
+.intro-start { margin-top: 2px; }
 .shell--intro .lp-strip { display: none; }
 .shell--intro .lp--band { border: 0; background: none; }

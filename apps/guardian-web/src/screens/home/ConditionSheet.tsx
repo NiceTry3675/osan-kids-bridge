@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
+import type { MouseEvent } from 'react'
 import { useI18n } from '../../i18n'
 import type { AvailableWindow, Interest, SearchFilters, Weekday } from '../../data/types'
 import { emptyFilters } from '../../data/types'
-import { INTEREST_VISUAL } from '../../lib/content'
+import { InterestIcon } from '../intro/art'
 import { DONGS, formatWindow, GRADES, INTERESTS, validateWindow, WEEKDAYS } from '../../lib/filters'
 import { interestLabel, weekdayLabel } from '../../lib/format'
 import { Icon } from '../../components/Icon'
@@ -19,6 +20,12 @@ interface Props {
  * 03 조건 넣기: 아이 → 시간 → 먼저 보기 → 무료를 시트 한 장에. 모두 선택이며 적용 전까지 목록은 그대로입니다.
  * 입력 중인 시간이 있으면 ‘맞는 프로그램 보기’를 누를 때 함께 넣습니다.
  */
+/** 칸 안의 시계 단추는 숨겼으므로(sheet.css) 마우스로 누르면 시계를 직접 연다. 휴대폰은 누르면 원래 시계가 뜬다 */
+const openTimePicker = (event: MouseEvent<HTMLInputElement>) => {
+  if (!window.matchMedia?.('(pointer: fine)').matches) return
+  try { event.currentTarget.showPicker?.() } catch { /* 지원하지 않는 브라우저는 키보드로 입력 */ }
+}
+
 export function ConditionSheet({ open, filters, onClose, onApply }: Props) {
   const i18n = useI18n()
   const { t } = i18n
@@ -157,9 +164,9 @@ function TimeField({ draft, setDraft, pending, setPending }: TimeFieldProps) {
         </div>
       )}
       <div className="time-row">
-        <input type="time" step={60} className="input" aria-label={t('startField')} value={pending.start} onChange={(event) => set({ start: event.target.value })} />
+        <input type="time" step={60} className="input" aria-label={t('startField')} value={pending.start} onChange={(event) => set({ start: event.target.value })} onClick={openTimePicker} />
         <span aria-hidden="true">~</span>
-        <input type="time" step={60} className="input" aria-label={t('endField')} value={pending.end} onChange={(event) => set({ end: event.target.value })} />
+        <input type="time" step={60} className="input" aria-label={t('endField')} value={pending.end} onChange={(event) => set({ end: event.target.value })} onClick={openTimePicker} />
         <button type="button" className="btn btn--secondary" onClick={() => { const next = addWindow(draft, pending, setPending, i18n); if (next) setDraft(next) }}>{t('add')}</button>
       </div>
       {pending.error && <p className="field-error" role="alert">{pending.error}</p>}
@@ -195,7 +202,7 @@ function PreferField({ draft, setDraft }: Draft) {
       <div className="chips">
         {INTERESTS.map((interest) => (
           <button key={interest} type="button" className="chip chip--pick" aria-pressed={draft.interests.includes(interest)} onClick={() => toggle(interest)}>
-            <span aria-hidden="true">{INTEREST_VISUAL[interest].emoji}</span>{interestLabel(locale, interest)}
+            <InterestIcon interest={interest} />{interestLabel(locale, interest)}
           </button>
         ))}
       </div>

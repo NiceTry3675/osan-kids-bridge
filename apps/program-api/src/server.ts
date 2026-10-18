@@ -24,11 +24,17 @@ import { isPublished, publicSummaries } from './review/hash'
 import { approveRecord, rejectRecord, resetReview } from './review/lifecycle'
 import { isValidProgramId, recordWatcher, saveRecord } from './store'
 import type { Warn } from './store'
-import type { ProgramRecord, SearchFilters } from './types'
+import type { ProgramRecord, ProgramResponse, SearchFilters } from './types'
 
 // 보호자 웹이 쓰는 프로그램 API (명세 6장, guardian-web/src/api.ts). 게시(승인 + 사실 해시 일치)된 공고만 보인다.
 
 export const BODY_LIMIT_BYTES = 64 * 1024
+
+/** 목록·상세 응답의 공고마다 붙는 포스터 정보: 원본이 있는지, 보호자에게 보여 줄 수 있는 번역본 언어 (guardian-web Program.posters) */
+export interface ProgramPosters {
+  original: boolean
+  languages: PosterLanguage[]
+}
 
 export interface ServerOptions {
   /** 데이터 폴더 (기본: config의 dataDir) */
@@ -166,6 +172,11 @@ export function createServer(options: ServerOptions = {}): Server {
   const planner = options.planner ?? runPlanner
   const adminContext = (): AdminContext => ({ now: now(), dataDir: dataFolder, posterDir: posters, showMachineChecked })
   const posterLanguages = (id: string): PosterLanguage[] => POSTER_LANGUAGES.filter((language) => servablePoster(id, language, showMachineChecked, posters))
+  /** 보호자 웹 목록·상세가 포스터 썸네일을 고르도록 공고마다 붙인다. 번역본은 내보낼 수 있는 것만(번역본이 있으면 원본도 있다) */
+  const withPosters = (program: ProgramResponse): ProgramResponse & { posters: ProgramPosters } => {
+    const languages = posterLanguages(program.program_id)
+    return { ...program, posters: { original: languages.length > 0 || findSourcePoster(program.program_id, posters) !== null, languages } }
+  }
 
   // 파일이 바뀌어 다시 읽었을 때만 게시 여부(해시)와 내보낼 요약을 다시 계산한다
   interface Cache {
@@ -221,14 +232,15 @@ export function createServer(options: ServerOptions = {}): Server {
     if (path === '/programs/search') {
       if (method !== 'POST') throw methodNotAllowed('POST')
       const filters = parseFilters(await readBody(request))
-      return send(response, 200, searchPrograms(current().published, filters, now()))
+      const found = searchPrograms(current().published, filters, now())
+      return send(response, 200, { ...found, results: found.results.map(withPosters), needs_confirmation: found.needs_confirmation.map(withPosters) })
     }
 
     const detail = path.match(/^\/programs\/([^/]+)$/)
     if (detail) {
       if (method !== 'GET') throw methodNotAllowed('GET')
       // 공유 링크 단독 진입: 입력하지 않은 조건은 판정하지 않는다
-      return send(response, 200, evaluateProgram(publishedRecord(detail[1]), null, now()))
+      return send(response, 200, withPosters(evaluateProgram(publishedRecord(detail[1]), null, now())))
     }
 
     const evaluate = path.match(/^\/programs\/([^/]+)\/evaluate$/)
@@ -237,7 +249,7 @@ export function createServer(options: ServerOptions = {}): Server {
       // 본문을 다 받은 뒤 공고(404·410)를 먼저 확인하고 조건(400)을 검사한다
       const text = await readBody(request)
       const record = publishedRecord(evaluate[1])
-      return send(response, 200, evaluateProgram(record, parseFilters(text), now()))
+      return send(response, 200, withPosters(evaluateProgram(record, parseFilters(text), now())))
     }
 
     if (path === '/agent/chat') {

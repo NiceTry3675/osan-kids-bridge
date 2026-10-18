@@ -111,7 +111,7 @@ export function RecommendView({ form, setForm, initialRank = 1 }: Props) {
         <summary><span>{t('venues')}</span><small>{t('venuesSummary', { n: VENUES.length, m: form.venueIds.length })}</small></summary>
         <div className="fold-body">
           <div className="fold-actions"><button type="button" className="link-btn" onClick={() => update({ venueIds: VENUES.map((venue) => venue.id) })}>{t('selectAll')}</button><button type="button" className="link-btn" onClick={() => update({ venueIds: [] })}>{t('clearAll')}</button></div>
-          <ul className="check-list">{VENUES.map((venue) => <li key={venue.id}><label className="check-row"><input type="checkbox" checked={form.venueIds.includes(venue.id)} onChange={() => toggleVenue(venue.id)} /><span><strong>{localizedVenue(venue, locale)}</strong><small>{localizedDong(venue.dong, locale)} · {t('available', { n: venue.bookable.length })}</small></span></label></li>)}</ul>
+          <ul className="check-list">{VENUES.map((venue) => <li key={venue.id}><label className="check-row"><input type="checkbox" checked={form.venueIds.includes(venue.id)} onChange={() => toggleVenue(venue.id)} /><span><strong>{localizedVenue(venue, locale)} <span className="tag tag--virtual">{t('virtualVenue')}</span></strong><small>{localizedDong(venue.dong, locale)} · {t('available', { n: venue.bookable.length })}</small></span></label></li>)}</ul>
         </div>
       </details>
       <details className="fold">
@@ -141,7 +141,7 @@ export function RecommendView({ form, setForm, initialRank = 1 }: Props) {
             {current.classes.map((entry, at) => <li key={entry.option.slot + entry.option.venueId} className="class-item">
               <span className="class-index">{at + 1}</span>
               <div className="class-main">
-                <strong>{localizedSlot(entry.option.slot, t)} · {localizedVenue(entry.venue, locale)}</strong>
+                <strong>{localizedSlot(entry.option.slot, t)} · {localizedVenue(entry.venue, locale)} <span className="tag tag--virtual">{t('virtualVenue')}</span></strong>
                 <small>{localizedDong(entry.venue.dong, locale)}{entry.alternatives.length > 0 && <> · {t('sameEffect')}: {entry.alternatives.map((venue) => localizedVenue(venue, locale)).join(', ')}</>}</small>
                 <span className="class-metrics"><span>{t('added')} <b>{entry.marginalSafe.suppressed ? localizedCount(entry.marginalSafe, t) : '+' + localizedCount(entry.marginalSafe, t, 'short')}</b></span><span>{t('expected')} <b className={entry.overCapacity ? 'over' : undefined}>{localizedPeople(entry.expectedHeadcount, t)} / {t('people', { n: form.capacity })}</b></span></span>
               </div>

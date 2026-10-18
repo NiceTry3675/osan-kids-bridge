@@ -208,6 +208,15 @@ export interface Addendum {
   drafted_by_ai: boolean
 }
 
+/** 보호자 웹이 받는 기관 추가 안내 (guardian-web Program.addenda). 담당자 이름과 보호자 질문 원문은 보내지 않는다 */
+export interface GuardianAddendum {
+  topic: UncertainTopic
+  /** 담당자가 확정한 한국어 문장 */
+  text: string
+  /** 덧붙인 날 (서울 기준 YYYY-MM-DD). 보호자 웹 formatDate가 날짜만 받으므로 시각은 뺀다. 읽을 수 없으면 null */
+  added_at: string | null
+}
+
 /** 보호자 웹의 '기관에 확인할 점' 주제 (guardian-web UncertainItem.topic) */
 export type UncertainTopic = 'family_eligibility' | 'companion' | 'korean_level' | 'schedule' | 'age_grade' | 'materials' | 'other'
 
@@ -279,6 +288,8 @@ export interface ProgramResponse {
   inquiry_methods: InquiryMethod[]
   application_note: string | null
   notices: string[]
+  /** 게시 뒤 기관 담당자가 확인해 덧붙인 안내 (공고 원문이 아니다). 없으면 [] */
+  addenda: GuardianAddendum[]
   source_url: string | null
   verified_at: string | null
   /** 게시된 공고만 내보내므로 늘 current (승인 뒤 사실이 바뀐 공고는 410) */

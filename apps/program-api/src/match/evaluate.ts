@@ -1,4 +1,4 @@
-import type { CompanionRule, GuardianCompanionRule, MatchStatus, ProgramRecord, ProgramResponse, SearchFilters } from '../types'
+import type { CompanionRule, GuardianAddendum, GuardianCompanionRule, MatchStatus, ProgramRecord, ProgramResponse, SearchFilters } from '../types'
 import { applicationStatus } from './application'
 import { guardianMethods, guardianSummaries, guardianUncertainItems, representativeSession } from './contract'
 import { lastApplicationDay, seoulDateOf } from './dates'
@@ -92,6 +92,10 @@ export const supportInterpretation = (record: ProgramRecord) =>
 
 const companion = (rule: CompanionRule): GuardianCompanionRule => (rule === 'unknown' ? null : rule)
 
+/** 기관 추가 안내를 보호자 웹 모양으로: 주제·문장·덧붙인 날(서울 기준)만. 담당자 이름과 보호자 질문은 내보내지 않는다 */
+const guardianAddenda = (record: ProgramRecord): GuardianAddendum[] =>
+  (record.addenda ?? []).map(({ topic, text, added_at }) => ({ topic, text, added_at: seoulDateOf(added_at) }))
+
 /**
  * 저장된 공고 한 건을 요청 시점의 판정과 함께 응답 형식으로 바꾼다.
  * filters가 null이면 공유 링크 단독 진입: 입력이 필요한 판정은 not_applied, 일치 근거는 없다.
@@ -138,6 +142,7 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
     inquiry_methods: methods.inquiry,
     application_note: record.application_note ?? null,
     notices: record.notices ?? [],
+    addenda: guardianAddenda(record),
     source_url: record.source.url,
     verified_at: verifiedAt,
     review_state: 'current',
