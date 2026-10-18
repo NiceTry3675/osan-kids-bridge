@@ -181,7 +181,7 @@ function PlanCard({ proposal, onOpen }: { proposal: PlanProposal; onOpen: () => 
         const venue = VENUES.find((entry) => entry.id === item.venue_id)
         return <li key={item.n}>
           <span className="plan-class-n">{item.n}</span>
-          <span className="plan-class-main"><b>{localizedSlot(item.slot, t)}</b> · {venue ? localizedVenue(venue, locale) : item.venue}<small>{localizedDong(item.dong, locale)}</small></span>
+          <span className="plan-class-main"><b>{localizedSlot(item.slot, t)}</b> · {venue ? localizedVenue(venue, locale) : item.venue} <span className="tag tag--virtual">{t('virtualVenue')}</span><small>{localizedDong(item.dong, locale)}</small></span>
           <span className="plan-class-reach">{localizedCount(item.reach_count, t)}<small>{t('planExpected', { n: localizedPeople(item.expected_people, t) })}</small></span>
         </li>
       })}

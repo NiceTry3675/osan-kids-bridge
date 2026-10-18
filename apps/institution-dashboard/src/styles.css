@@ -107,6 +107,8 @@
 .tag--pending { background: var(--mark-soft); color: var(--mark-ink); }
 .tag--stale { background: var(--status-unknown-soft); color: var(--status-unknown); }
 .tag--rejected { background: var(--status-closed-soft); color: var(--status-closed); }
+/* 가상 장소·가상 응답처럼 실제가 아님을 밝히는 표시 */
+.tag--virtual { background: var(--sunken); color: var(--ink-2); font-weight: 700; vertical-align: middle; }
 .flag { display: inline-flex; align-items: center; gap: 5px; font-size: var(--text-xs); font-weight: 750; white-space: nowrap; }
 .flag .icon { width: 16px; height: 16px; }
 .flag--ok { color: var(--status-open); }
