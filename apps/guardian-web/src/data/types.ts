@@ -118,7 +118,7 @@ export interface Program {
   /** 시연용 가상 공고 */
   is_demo: boolean
   /** 공고가 나온 뒤 기관 담당자가 확인해 덧붙인 안내. 문장은 한국어, added_at은 YYYY-MM-DD(모르면 null). 예전 서버는 보내지 않습니다 */
-  addenda?: { topic: UncertainItem['topic']; text: string; added_at: string | null }[]
+  addenda?: { topic: UncertainItem['topic']; text: string; added_at: string | null; covers?: string[]; translations?: { vi?: string; zh?: string } }[]
 }
 
 export interface SearchResponse {

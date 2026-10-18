@@ -1,11 +1,17 @@
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; font-family: var(--font); }
+/*
+  중국어로 쓴 부분은 간체 서체를 먼저 씁니다. 한국어 서체(Apple SD Gothic Neo 등)의 한자는 한국식 자형이라,
+  그대로 두면 한 줄 안에서 그 서체에 있는 글자와 간체 서체로 넘어간 글자가 섞여 보입니다.
+  중국어 화면 안의 한국어 원문(lang="ko")은 다시 한국어 서체로 돌립니다. 서체는 html에서 물려받습니다.
+*/
+[lang|='zh'] { font-family: var(--font-zh); }
+[lang|='ko'] { font-family: var(--font); }
 body {
   margin: 0;
   min-width: 320px;
   background: var(--canvas);
   color: var(--ink);
-  font-family: var(--font);
   font-size: var(--text-md);
   line-height: 1.6;
   word-break: keep-all;
@@ -13,6 +19,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 :lang(vi), :lang(zh) { word-break: normal; }
+/* 베트남어·중국어 화면 안의 한국어 원문(장소·원문 표현·주소)은 다시 낱말 단위로 줄을 바꿉니다. */
+[lang|='ko'] { word-break: keep-all; }
 h1, h2, h3, p, dl, dd, ul, ol, figure { margin: 0; }
 ul, ol { padding: 0; list-style: none; }
 button, input, select, textarea { font: inherit; color: inherit; }

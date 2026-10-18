@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { serializeFilters } from '../data/api'
+import { posterThumbWidth } from '../data/agent'
 import { getMockProgram, searchMockPrograms, windowContains } from '../data/mock'
 import { emptyFilters } from '../data/types'
 import { programText } from '../lib/content'
-import { filterChips, removeChip, validateWindow } from '../lib/filters'
+import { DONGS, dongOption, filterChips, removeChip, validateWindow } from '../lib/filters'
 import { parseRoute, programPath } from '../lib/router'
 import { parseFilters } from '../lib/session'
 
@@ -29,6 +30,28 @@ describe('검색 입력', () => {
     const filters = { ...emptyFilters(), interests: ['experience_culture' as const], dong: '중앙동', free_only: true }
     expect(filterChips(filters, 'ko-easy').map((chip) => chip.label)).toEqual(['체험·문화 먼저', '중앙동 먼저', '무료만'])
     expect(removeChip(filters, 'dong')).toEqual({ ...filters, dong: undefined })
+  })
+
+  it('동 이름은 화면 언어로 보이고(대시보드와 같은 표기), 서버에 보내는 값은 한국어 그대로다', () => {
+    const filters = { ...emptyFilters(), dong: '신장동' }
+    expect(filterChips(filters, 'vi').map((chip) => chip.label)).toEqual(['Ưu tiên Sinjang-dong (신장동)'])
+    expect(filterChips(filters, 'zh').map((chip) => chip.label)).toEqual(['优先新场洞 (신장동)'])
+    expect(serializeFilters(filters, 'zh')).toEqual({ dong: '신장동', display_language: 'zh' })
+    // 고르는 칸에는 한국어 이름도 함께 적어 주소·간판과 맞춰 볼 수 있게
+    expect(DONGS.map((dong) => dongOption(dong, 'zh'))).toEqual(['中央洞 (중앙동)', '大院洞 (대원동)', '南村洞 (남촌동)', '新场洞 (신장동)', '洗马洞 (세마동)', '草坪洞 (초평동)'])
+    expect(dongOption('중앙동', 'vi')).toBe('Jungang-dong (중앙동)')
+    expect(dongOption('중앙동', 'ko-easy')).toBe('중앙동')
+    // 표에 없는 동(예전에 저장된 값)은 한국어 그대로
+    expect(filterChips({ ...emptyFilters(), dong: '궐동' }, 'vi').map((chip) => chip.label)).toEqual(['Ưu tiên 궐동'])
+  })
+})
+
+describe('포스터 썸네일 폭', () => {
+  it('화면 폭의 두 배를 덮는 가장 작은 서버 폭(128·256·384·512)으로 고르고, 512를 넘지 않는다', () => {
+    expect(posterThumbWidth(64)).toBe(128)
+    expect(posterThumbWidth(72)).toBe(256)
+    expect(posterThumbWidth(142)).toBe(384)
+    expect(posterThumbWidth(400)).toBe(512)
   })
 })
 

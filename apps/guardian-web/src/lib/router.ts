@@ -12,6 +12,8 @@ export type Route = { name: 'browse' } | { name: 'detail'; id: string }
 export interface HistoryState {
   /** 목록에서 눌러 들어온 상세인지(조건 적용 상세 판정에 씀) */
   fromList?: boolean
+  /** AI 상담이 권한 공고를 눌러 들어온 상세인지. 공유 링크가 아니므로 지금 넣은 조건으로 판정합니다(‘목록’은 홈으로) */
+  fromChat?: boolean
   /** 이 항목을 떠날 때의 스크롤 위치 */
   scrollY?: number
 }

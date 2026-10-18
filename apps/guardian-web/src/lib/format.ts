@@ -45,6 +45,10 @@ export function formatSessionPlace(session: ProgramSession | null, locale: Local
   return session.place_name ?? translate(locale, 'placeUnknown')
 }
 
+/** 장소 칸이 기관이 적은 한국어 장소 이름이면 'ko'. ‘온라인’·‘장소 확인 필요’는 화면 언어라 붙이지 않습니다. */
+export const placeLang = (session: ProgramSession | null): 'ko' | undefined =>
+  session && !session.online && session.place_name ? 'ko' : undefined
+
 export function formatCost(program: Pick<Program, 'cost_krw'>, locale: Locale): string {
   if (program.cost_krw === null) return translate(locale, 'costUnknown')
   if (program.cost_krw === 0) return translate(locale, 'free')

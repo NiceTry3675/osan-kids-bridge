@@ -7,6 +7,8 @@
   - action: 누를 수 있는 것(주요 버튼, 링크, 선택됨).
   - mark(형광펜 노랑): "아직 확인되지 않은 것". 장식으로 쓰지 않습니다.
   - status-*: 신청 상태 네 가지. 색만으로 뜻을 전하지 않고 항상 글자와 함께 씁니다.
+  - focus(키보드 초점 고리)와 field-border(입력 칸 테두리)는 흰 바탕·canvas·sunken 위에서 3:1 이상입니다(WCAG 1.4.11).
+    line-strong은 장식 선(칩·구분선)에만 씁니다.
 
   밝은 화면 하나만 씁니다. 기기가 다크 모드여도 같은 색으로 보입니다(형광펜·히트맵의 뜻을 지키기 위해).
   다크 모드는 이용자 요구가 확인되면 형광펜·히트맵 색을 따로 정해 다시 넣습니다.
@@ -21,12 +23,13 @@
   --sunken: #f4f5f1;
   --line: #e3e6e1;
   --line-strong: #cdd3cc;
+  --field-border: #7a857e;
 
   --action: #1f7a5c;
   --action-hover: #18654b;
   --action-soft: #e4f2ec;
   --action-ink: #ffffff;
-  --focus: #e8a400;
+  --focus: #a66f00;
 
   --mark: #ffe066;
   --mark-soft: #fff6cc;
@@ -57,6 +60,8 @@
   --heat-ink-strong: #ffffff;
 
   --font: 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Noto Sans SC', 'PingFang SC', 'Malgun Gothic', system-ui, sans-serif;
+  /* 중국어 화면: 한글·라틴 글자는 Pretendard 그대로, 한자는 간체 서체 먼저(base.css의 lang 규칙) */
+  --font-zh: 'Pretendard Variable', Pretendard, 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', system-ui, sans-serif;
   --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
   --text-md: 1.0625rem;

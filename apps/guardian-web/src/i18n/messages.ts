@@ -16,6 +16,7 @@ const ko = {
   close: '닫기',
   draftNotice: '화면 문구 번역은 검수 전 초안이에요',
   demoNotice: '시연용 가상 공고예요. 실제로 신청하거나 전화할 수 없어요.',
+  skip: '본문으로 건너뛰기',
 
   browseTitle: '아이와 갈 수 있는 프로그램',
   changeConditions: '조건 바꾸기',
@@ -125,6 +126,9 @@ const ko = {
   noConditionsNote: '아이 학년·시간을 넣지 않아 비교하지 않았어요. 목록에서 조건을 넣으면 비교해 드려요.',
   addendaTitle: '기관이 확인해 덧붙인 안내',
   addendumDate: '{date} 덧붙임',
+  addendumAi: 'AI 번역',
+  addendumOriginal: '한국어 원문: “{text}”',
+  costFromAddendum: '기관이 덧붙인 안내',
 
   participationTitle: '함께 가기와 한국어',
   rowGuardian: '보호자 동반',
@@ -300,6 +304,7 @@ const vi: Catalog = {
   close: 'Đóng',
   draftNotice: 'Bản dịch giao diện chưa được kiểm tra',
   demoNotice: 'Đây là thông báo mô phỏng. Bạn không thể đăng ký hay gọi điện thật.',
+  skip: 'Chuyển đến nội dung chính',
 
   browseTitle: 'Chương trình con có thể tham gia',
   changeConditions: 'Đổi điều kiện',
@@ -409,6 +414,9 @@ const vi: Catalog = {
   noConditionsNote: 'Chưa so sánh vì bạn chưa nhập lớp và thời gian của con. Nhập điều kiện ở danh sách để so sánh.',
   addendaTitle: 'Thông tin bổ sung đã được cơ quan xác nhận',
   addendumDate: 'Bổ sung {date}',
+  addendumAi: 'AI dịch',
+  addendumOriginal: 'Bản gốc tiếng Hàn: “{text}”',
+  costFromAddendum: 'Thông tin cơ quan bổ sung',
 
   participationTitle: 'Đi cùng và tiếng Hàn',
   rowGuardian: 'Người giám hộ đi cùng',
@@ -579,6 +587,7 @@ const zh: Catalog = {
   close: '关闭',
   draftNotice: '界面译文尚未审核',
   demoNotice: '这是演示用的虚拟公告，无法真正报名或拨打电话。',
+  skip: '跳到正文',
 
   browseTitle: '孩子可以参加的活动',
   changeConditions: '修改条件',
@@ -688,6 +697,9 @@ const zh: Catalog = {
   noConditionsNote: '还没有填写孩子的年级和时间，所以没有对比。在列表中填写条件即可对比。',
   addendaTitle: '机构确认后补充的说明',
   addendumDate: '{date}补充',
+  addendumAi: 'AI翻译',
+  addendumOriginal: '韩语原文：“{text}”',
+  costFromAddendum: '机构补充说明',
 
   participationTitle: '同行与韩语',
   rowGuardian: '监护人同行',

@@ -4,6 +4,7 @@ import { canApply } from '../../lib/content'
 import { formatDate, isSafeUrl, languageName } from '../../lib/format'
 import { Icon } from '../../components/Icon'
 import { Marked } from '../../components/feedback'
+import { SLOT, WithKorean } from '../../components/korean'
 import { ExternalLink, PhoneLink } from '../../components/links'
 import { Sheet } from '../../components/Sheet'
 import { agentAvailable } from '../../data/agent'
@@ -102,10 +103,10 @@ function Contact({ method, demo }: { method: InquiryMethod; demo: boolean }) {
   return (
     <li className="contact">
       {method.type === 'phone' && method.phone && <PhoneLink phone={method.phone} demo={demo}>{t('inquiryPhone', { phone: method.phone })}</PhoneLink>}
-      {method.type === 'visit' && <p className="action-visit"><Icon name="pin" /><span lang="ko">{t('inquiryVisit', { address: method.address ?? '' })}</span></p>}
+      {method.type === 'visit' && <p className="action-visit"><Icon name="pin" /><span><WithKorean template={t('inquiryVisit', { address: SLOT })} text={method.address ?? ''} /></span></p>}
       {method.type === 'online' && isSafeUrl(method.url) && <ExternalLink href={method.url} demo={demo} variant="secondary">{t('inquiryOnline')}</ExternalLink>}
       <ul className="contact-meta">
-        {method.hours && <li>{t('inquiryHours', { hours: method.hours })}</li>}
+        {method.hours && <li><WithKorean template={t('inquiryHours', { hours: SLOT })} text={method.hours} /></li>}
         <li>{method.languages ? t('inquiryLanguages', { languages: method.languages.map((code) => languageName(locale, code)).join(', ') }) : <Marked>{t('inquiryLanguagesUnknown')}</Marked>}</li>
         <li>{t('inquiryVerified', { date: formatDate(method.verified_at, locale) })}</li>
       </ul>

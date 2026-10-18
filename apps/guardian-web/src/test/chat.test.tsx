@@ -50,7 +50,7 @@ describe('상담 답의 모양', () => {
     serve(() => json(reply({ reply: '공고 기준으로 나이는 맞아요.\n- 기관에 확인할 것: 오산시 거주 조건\n- 10:00~13:00에 열려요' })))
     renderChat()
     await ask('갈 수 있나요?')
-    expect(screen.getByText('공고 기준으로 나이는 맞아요.').className).toBe('bubble-lead')
+    expect(screen.getByText('공고 기준으로 나이는 맞아요.', { selector: '.bubble p' }).className).toBe('bubble-lead')
     expect(screen.getByText('기관에 확인할 것:').tagName).toBe('STRONG')
     expect(screen.getByText('기관에 확인할 것:').parentElement!.textContent).toBe('기관에 확인할 것: 오산시 거주 조건')
     // 시각의 쌍점은 이름표가 아닙니다.
@@ -61,7 +61,7 @@ describe('상담 답의 모양', () => {
     serve(() => json(reply({ reply: '공고에 적힌 내용으로 답해요. 준비물은 공고에 없어요.' })))
     renderChat()
     await ask('준비물이 있나요?')
-    expect(screen.getByText('공고에 적힌 내용으로 답해요. 준비물은 공고에 없어요.').className).toBe('')
+    expect(screen.getByText('공고에 적힌 내용으로 답해요. 준비물은 공고에 없어요.', { selector: '.bubble p' }).className).toBe('')
   })
 
   it('대화가 시작되면 안내를 한 줄로 접는다', async () => {
@@ -103,6 +103,26 @@ describe('상담 답의 모양', () => {
     expect(title.getAttribute('lang')).toBe('ko')
     expect(title.parentElement!.textContent).toBe(`Thông báo đang xem: ${program.title}`)
     expect(title.parentElement!.getAttribute('lang')).toBeNull()
+  })
+})
+
+describe('읽기 프로그램 알림', () => {
+  it('알림 칸은 하나뿐이고, 기다리는 동안은 ‘확인하는 중’, 답이 오면 첫 줄(결론)만 알린다', async () => {
+    let answer!: () => void
+    serve(() => new Promise<Response>((resolve) => {
+      answer = () => resolve(json(reply({ reply: '**공고 기준으로 나이는 맞아요.**\n- 기관에 확인할 것: 오산시 거주 조건', citations: [{ program_id: 'p1', title: '운동회', quote: '대상: 초등학생' }] })))
+    }))
+    const { baseElement } = renderChat()
+    const live = () => [...baseElement.querySelectorAll('[aria-live], [role="status"], [role="log"], [role="alert"]')]
+    expect(live()).toHaveLength(1)
+    const input = screen.getByLabelText('궁금한 것을 쓰세요')
+    fireEvent.change(input, { target: { value: '갈 수 있나요?' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    await waitFor(() => expect(live()[0].textContent).toBe('공고를 확인하고 있어요'))
+    expect(live()).toHaveLength(1)
+    answer()
+    await waitFor(() => expect(live()[0].textContent).toBe('공고 기준으로 나이는 맞아요.'))
+    expect(live()).toHaveLength(1)
   })
 })
 
@@ -196,7 +216,11 @@ describe('기관에 물을 문장의 문의처', () => {
     serve(() => json(reply({ inquiry: inquiry([{ type: 'visit', address: '경기도 오산시 시청로 1' }, { type: 'online', url: 'https://example.org/ask' }]) })))
     renderChat()
     await ask('형제도 갈 수 있어요?')
-    expect(screen.getByText('방문 경기도 오산시 시청로 1')).toBeTruthy()
+    // 화면 언어 틀(‘방문’)은 그대로 두고 주소에만 lang="ko"
+    const address = screen.getByText('경기도 오산시 시청로 1')
+    expect(address.getAttribute('lang')).toBe('ko')
+    expect(address.parentElement!.textContent).toBe('방문 경기도 오산시 시청로 1')
+    expect(address.parentElement!.getAttribute('lang')).toBeNull()
     const link = screen.getByText('문의 페이지 열기').closest('a')!
     expect(link.getAttribute('href')).toBe('https://example.org/ask')
     expect(screen.queryByText('공고에서 확인된 문의처가 없어요.')).toBeNull()

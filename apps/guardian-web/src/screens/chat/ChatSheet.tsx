@@ -11,6 +11,7 @@ import { navigate, programPath } from '../../lib/router'
 import { Icon } from '../../components/Icon'
 import type { IconName } from '../../components/Icon'
 import { Notice } from '../../components/feedback'
+import { SLOT, WithKorean } from '../../components/korean'
 import { ExternalLink, PhoneLink } from '../../components/links'
 import { Sheet } from '../../components/Sheet'
 
@@ -82,6 +83,11 @@ export function ChatSheet({ open, onClose, program, suggestions }: Props) {
     }
   }
 
+  // 읽기 프로그램에는 하나의 알림 칸으로 ‘확인하는 중’과 새 답의 첫 줄(결론)만 알립니다.
+  // 대화 전체를 알림 칸으로 두면 단계·근거·한국어 문의문·버튼까지 한꺼번에 읽혀 답이 묻힙니다.
+  const last = turns.at(-1)
+  const announcement = pending ? t('chatThinking') : failed ? t('chatError') : last?.role === 'assistant' ? replyLead(last.reply.reply) : ''
+
   const footer = agentAvailable ? (
     <>
       <label className="visually-hidden" htmlFor="chat-input">{t('chatPlaceholder')}</label>
@@ -104,7 +110,8 @@ export function ChatSheet({ open, onClose, program, suggestions }: Props) {
       open={open} onClose={onClose} title={t('chatTitle')} tall footer={footer} onSubmit={() => void send(draft)}
       headerExtra={turns.length > 0 && <button type="button" className="btn btn--quiet chat-reset" onClick={reset}>{t('chatReset')}</button>}
     >
-      <div className="chat" aria-live="polite">
+      <p className="visually-hidden" role="status">{announcement}</p>
+      <div className="chat">
         {/* 대화가 시작되면 안내는 한 줄로 접어 질문·단계·답이 한 화면에 들어오게 합니다. */}
         {turns.length > 0 ? (
           <p className="chat-intro chat-intro--short"><span className="chat-badge" aria-hidden="true">AI</span>{t('chatIntroShort')}</p>
@@ -123,8 +130,8 @@ export function ChatSheet({ open, onClose, program, suggestions }: Props) {
         )}
         {turns.map((turn, index) => (turn.role === 'user'
           ? <p key={index} className="bubble bubble--user">{turn.text}</p>
-          : <AssistantTurn key={index} reply={turn.reply} viewing={viewing} onAsk={(question) => void send(question)} onOpenProgram={(id) => { onClose(); navigate(programPath(id)) }} />))}
-        {pending && <p className="bubble bubble--bot bubble--pending" role="status"><span className="spinner" aria-hidden="true" />{t('chatThinking')}</p>}
+          : <AssistantTurn key={index} reply={turn.reply} viewing={viewing} onAsk={(question) => void send(question)} onOpenProgram={(id) => { onClose(); navigate(programPath(id), { fromChat: true }) }} />))}
+        {pending && <p className="bubble bubble--bot bubble--pending"><span className="spinner" aria-hidden="true" />{t('chatThinking')}</p>}
         {failed && <Notice tone="warn" title={t('chatError')} />}
         <div ref={endRef} />
       </div>
@@ -165,6 +172,12 @@ function uniqueSteps(steps: AgentStep[]): AgentStep[] {
   return steps.filter((step, index) => index === 0 || step.tool !== steps[index - 1].tool || step.program_id !== steps[index - 1].program_id)
 }
 
+/** 답의 줄들: 강조 기호를 지우고 빈 줄은 뺍니다. */
+const replyLines = (text: string) => text.replace(/\*\*|__|^#+\s*/gm, '').split('\n').map((line) => line.trim()).filter(Boolean)
+
+/** 읽기 프로그램에 알릴 답의 첫 줄(결론). 목록 기호는 뺍니다. */
+const replyLead = (text: string) => replyLines(text)[0]?.replace(/^[-•]\s+/, '') ?? ''
+
 /** 첫 문단을 결론으로 굵게 보일 최대 길이. 모델이 형식을 지키지 않고 긴 문단을 쓰면 굵게 하지 않습니다. */
 const LEAD_MAX = 160
 /**
@@ -187,9 +200,7 @@ function ReplyLine({ line }: { line: string }) {
  */
 function ReplyText({ text }: { text: string }) {
   const blocks: { list: boolean; lines: string[] }[] = []
-  for (const raw of text.replace(/\*\*|__|^#+\s*/gm, '').split('\n')) {
-    const line = raw.trim()
-    if (!line) continue
+  for (const line of replyLines(text)) {
     const list = /^[-•]\s+/.test(line)
     const content = line.replace(/^[-•]\s+/, '')
     const last = blocks[blocks.length - 1]
@@ -302,7 +313,7 @@ const shownContact = (contact: InquiryContactInfo) =>
 function InquiryContact({ contact, demo }: { contact: InquiryContactInfo; demo: boolean }) {
   const { t } = useI18n()
   if (contact.type === 'phone') return <PhoneLink phone={contact.phone!} demo={demo}>{t('inquiryPhone', { phone: contact.phone! })}</PhoneLink>
-  if (contact.type === 'visit') return <p className="action-visit"><Icon name="pin" /><span lang="ko">{t('inquiryVisit', { address: contact.address! })}</span></p>
+  if (contact.type === 'visit') return <p className="action-visit"><Icon name="pin" /><span><WithKorean template={t('inquiryVisit', { address: SLOT })} text={contact.address!} /></span></p>
   return <ExternalLink href={contact.url!} demo={demo} variant="secondary">{t('inquiryOnline')}</ExternalLink>
 }
 

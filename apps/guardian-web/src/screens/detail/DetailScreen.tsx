@@ -20,7 +20,7 @@ import { AiEntry } from '../chat/AiEntry'
 
 interface Props {
   id: string
-  /** 목록에서 들어왔을 때만 조건을 넘깁니다. 공유 링크로 바로 열면 null. */
+  /** 목록이나 AI 상담에서 들어왔을 때만 조건을 넘깁니다. 공유 링크로 바로 열면 null. */
   filters: SearchFilters | null
 }
 
@@ -30,7 +30,7 @@ export function DetailScreen({ id, filters }: Props) {
   const [state, retry] = useProgram(id, filters, locale)
 
   return (
-    <main className="page page--detail" id="main">
+    <main className="page page--detail" id="main" tabIndex={-1}>
       <div className="bar-top">
         <button type="button" className="btn btn--quiet btn--back" onClick={backToList}><Icon name="back" />{t('back')}</button>
         {state.status === 'ready' && <CopyLink />}

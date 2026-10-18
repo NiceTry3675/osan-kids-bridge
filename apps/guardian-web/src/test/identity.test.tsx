@@ -42,6 +42,14 @@ describe('첫 화면', () => {
     expect(screen.getByRole('radiogroup')).toBeTruthy()
   })
 
+  it('언어 단추는 언어 이름에만 그 언어의 lang을 붙이고, ‘번역 초안’ 꼬리표는 지금 화면 언어로 둔다', () => {
+    render(<I18nProvider initial="vi"><IntroScreen onStart={() => {}} onMoreLanguages={() => {}} /></I18nProvider>)
+    const chinese = screen.getByRole('radio', { name: /中文/ })
+    expect(chinese.getAttribute('lang')).toBeNull()
+    expect(within(chinese).getByText('中文').getAttribute('lang')).toBe('zh')
+    expect(within(chinese).getByText('Bản dịch nháp').closest('[lang]')!.getAttribute('lang')).toBe('vi')
+  })
+
   it('번역 초안 안내는 세 언어 모두 한 문장이다', () => {
     for (const locale of ['ko-easy', 'vi', 'zh'] as Locale[]) {
       const notice = messages[locale].draftNotice

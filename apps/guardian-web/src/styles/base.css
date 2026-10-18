@@ -5,6 +5,7 @@
   공통 토큰(packages/ui/src/tokens.css)은 기관 대시보드도 쓰므로 여기서만 덮어씁니다.
   - 글자색 ink-3도 paper·canvas·sunken과 모든 *-soft 바탕 위에서 5:1 이상입니다.
   - 코랄(--coral)은 그림·장식에만 씁니다(흰 글자 대비 2.95:1). 따뜻한 글자는 --warm(코랄 바탕 위 4.8:1, 흰 바탕 위 5.8:1).
+  - 입력 칸 테두리(--field-border)는 흰 바탕 위 3.78:1, sunken 위 3.39:1. --line-strong은 장식 선에만 씁니다.
 */
 :root {
   --ink: #2b2420;
@@ -14,6 +15,7 @@
   --sunken: #f7f2ea;
   --line: #ece4d8;
   --line-strong: #d8ccbc;
+  --field-border: #8f8174;
   --coral: #e07a5f;
   --coral-soft: #fce6dc;
   --warm: #a9482a;
@@ -22,6 +24,8 @@
 }
 
 .page--detail { padding-bottom: 0; }
+/* 건너뛰기 링크로 초점만 받는 본문. 테두리는 그리지 않습니다 */
+main[tabindex="-1"]:focus { outline: none; }
 
 .tag-original { display: inline-block; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--line-strong); border-radius: 999px; color: var(--ink-3); font-size: 11px; font-weight: 600; vertical-align: 0.15em; white-space: nowrap; }
 
@@ -39,6 +43,9 @@
 }
 .shell .ribbon:has(+ .ribbon) { border-bottom-color: transparent; }
 .shell--intro .ribbon { padding-top: 8px; }
+
+/* 휴대폰에서 누르는 곳은 44px 이상(공통 칩·탭·작은 글자 단추는 대시보드에서 더 촘촘하게 쓰므로 여기서만 키웁니다) */
+.chip, .legend-link, .seg-btn { min-height: 44px; }
 
 /* 상단 줄 */
 .bar-top { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 6px; }

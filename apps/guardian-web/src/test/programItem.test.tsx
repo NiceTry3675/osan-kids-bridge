@@ -47,6 +47,32 @@ describe('목록 카드', () => {
     expect(container.querySelector('.item-checks')).toBeNull()
   })
 
+  it('기관이 덧붙인 안내가 답한 주제는 확인할 점 개수에서 빼고, 비용에 답했으면 비용 칸에 그 문장을 보인다', () => {
+    const addenda = [
+      { topic: 'companion' as const, text: '형제자매도 함께 올 수 있어요.', added_at: '2026-10-15', covers: ['companion'] },
+      { topic: 'other' as const, text: '참가비: 무료', added_at: '2026-10-15', covers: ['cost'], translations: { vi: 'Phí tham gia: Miễn phí' } },
+    ]
+    const { container } = renderItem(program({ cost_krw: null, cost_raw: null, addenda }), 'vi')
+    expect(container.querySelector('.item-check-count')!.textContent).toBe('1')
+    const cost = screen.getByText('Phí tham gia: Miễn phí')
+    expect(cost.closest('mark')).toBeNull()
+    expect(cost.closest('.item-fact')!.querySelector('b')!.textContent).toBe('Chi phí')
+    expect(screen.queryByText('Cần hỏi chi phí')).toBeNull()
+    cleanup()
+    // 안내가 없으면 그대로 ‘비용 확인 필요’ 형광펜
+    renderItem(program({ cost_krw: null, cost_raw: null }))
+    expect(screen.getByText('비용 확인 필요').tagName).toBe('MARK')
+  })
+
+  it('장소 칸은 기관이 적은 한국어 장소 이름에만 lang="ko"를 붙인다', () => {
+    const session = { id: 's1', date: '2026-10-24', start_time: '10:00', end_time: '12:00', place_name: '신장동 청소년문화의집', dong: '신장동', online: false }
+    renderItem(program({ next_session: session }), 'vi')
+    expect(screen.getByText('신장동 청소년문화의집').getAttribute('lang')).toBe('ko')
+    cleanup()
+    renderItem(program({ next_session: { ...session, place_name: null, online: true } }), 'vi')
+    expect(screen.getByText('Trực tuyến').getAttribute('lang')).toBeNull()
+  })
+
   it('시연용 가상 공고에만 ‘시연용 예시’ 꼬리표를 붙인다', () => {
     renderItem(program({ is_demo: true }), 'vi')
     expect(screen.getByText('Ví dụ mô phỏng').className).toContain('tag-demo')
@@ -67,28 +93,36 @@ describe('목록 카드 포스터 썸네일', () => {
     expect(listPoster(program(), 'vi')).toBeNull()
   })
 
-  it('번역본 썸네일에는 ‘AI 번역’ 표시를 달고, 원본에는 달지 않는다', () => {
+  it('번역본 썸네일에는 ‘AI 번역’ 표시를 달고, 원본에는 달지 않는다. 둘 다 64px 정사각형의 두 배 폭 썸네일을 받는다', () => {
     const { container } = renderItem(program({ posters }), 'vi')
     const image = container.querySelector('.item-poster img')!
-    expect(image.getAttribute('src')).toMatch(/\/posters\/demo-korean\/vi$/)
+    expect(image.getAttribute('src')).toMatch(/\/posters\/demo-korean\/vi\?w=128$/)
     expect(image.getAttribute('loading')).toBe('lazy')
-    expect([image.getAttribute('width'), image.getAttribute('height'), image.getAttribute('alt')]).toEqual(['64', '88', ''])
+    expect([image.getAttribute('width'), image.getAttribute('height'), image.getAttribute('alt')]).toEqual(['64', '64', ''])
     expect(container.querySelector('.item-poster-ai')!.textContent).toBe('AI dịch')
     expect(container.querySelector('.item-art')).toBeNull()
     cleanup()
     const original = renderItem(program({ posters }), 'ko-easy').container
-    expect(original.querySelector('.item-poster img')!.getAttribute('src')).toMatch(/\/posters\/demo-korean\/original$/)
+    expect(original.querySelector('.item-poster img')!.getAttribute('src')).toMatch(/\/posters\/demo-korean\/original\?w=128$/)
     expect(original.querySelector('.item-poster-ai')).toBeNull()
   })
 
-  it('포스터가 없거나 이미지를 불러오지 못하면 분야 그림을 보여 준다', () => {
+  it('번역본을 못 불러오면 한국어 원본으로, 원본도 못 불러오면 분야 그림을 보여 준다', () => {
     const { container } = renderItem(program())
     expect(container.querySelector('.item-poster')).toBeNull()
     expect(container.querySelector('.item-art .interest-icon')).toBeTruthy()
     cleanup()
     const broken = renderItem(program({ posters }), 'vi').container
     fireEvent.error(broken.querySelector('.item-poster img')!)
+    expect(broken.querySelector('.item-poster img')!.getAttribute('src')).toMatch(/\/original\?w=128$/)
+    expect(broken.querySelector('.item-poster-ai')).toBeNull()
+    fireEvent.error(broken.querySelector('.item-poster img')!)
     expect(broken.querySelector('.item-poster')).toBeNull()
     expect(broken.querySelector('.item-art')).toBeTruthy()
+    cleanup()
+    // 원본이 없으면 번역본 다음은 바로 분야 그림
+    const noOriginal = renderItem(program({ posters: { original: false, languages: ['vi'] } }), 'vi').container
+    fireEvent.error(noOriginal.querySelector('.item-poster img')!)
+    expect(noOriginal.querySelector('.item-art')).toBeTruthy()
   })
 })

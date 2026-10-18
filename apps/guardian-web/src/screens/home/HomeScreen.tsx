@@ -35,7 +35,7 @@ export function HomeScreen({ filters, onFiltersChange, restoreScrollY }: Props) 
   useRestoreScroll(search.status === 'ready', restoreScrollY)
 
   return (
-    <main className="page" id="main">
+    <main className="page" id="main" tabIndex={-1}>
       {hasConditions ? (
         <>
           <div className="bar-top">

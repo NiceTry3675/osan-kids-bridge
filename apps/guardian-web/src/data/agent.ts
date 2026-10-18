@@ -96,4 +96,15 @@ export async function getPosterInfo(id: string, signal?: AbortSignal): Promise<P
   return readJson<PosterInfo>(response)
 }
 
-export const posterUrl = (id: string, variant: PosterLanguage | 'original') => `${apiBaseUrl}/posters/${encodeURIComponent(id)}/${variant}`
+/** 서버가 줄여 보내는 썸네일 폭(px, 정사각형 WebP). 이 밖의 폭은 서버가 가장 가까운 값으로 맞춥니다. */
+export const POSTER_THUMB_WIDTHS = [128, 256, 384, 512] as const
+
+/** 화면에 그릴 폭(CSS px)의 두 배(고해상도 화면)를 덮는 가장 작은 썸네일 폭 */
+export const posterThumbWidth = (cssWidth: number) => POSTER_THUMB_WIDTHS.find((width) => width >= cssWidth * 2) ?? 512
+
+/**
+ * 포스터 이미지 주소. cssWidth를 주면 그 폭에 맞춘 썸네일(?w=)을, 없으면 원래 크기 이미지를 받습니다.
+ * 원래 크기는 1~3MB라 상세의 포스터 구역(크게 보기)에만 씁니다.
+ */
+export const posterUrl = (id: string, variant: PosterLanguage | 'original', cssWidth?: number) =>
+  `${apiBaseUrl}/posters/${encodeURIComponent(id)}/${variant}${cssWidth ? `?w=${posterThumbWidth(cssWidth)}` : ''}`

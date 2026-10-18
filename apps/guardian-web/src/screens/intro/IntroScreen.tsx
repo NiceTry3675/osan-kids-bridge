@@ -24,7 +24,7 @@ interface Props {
 export function IntroScreen({ onStart, onMoreLanguages }: Props) {
   const { locale, setLocale, t } = useI18n()
   return (
-    <main className="intro" id="main">
+    <main className="intro" id="main" tabIndex={-1}>
       <IntroArt />
       <h1 className="intro-title">{t('introTitle')}</h1>
       <p className="intro-lead">{t('introLead')}</p>
@@ -45,11 +45,11 @@ export function IntroScreen({ onStart, onMoreLanguages }: Props) {
             type="button"
             role="radio"
             aria-checked={locale === option.code}
-            lang={langAttr(option.code)}
             className="intro-lang"
             onClick={() => setLocale(option.code)}
           >
-            <span>{option.native}</span>
+            {/* 언어 이름만 그 언어로 읽고, ‘번역 초안’ 꼬리표는 지금 화면 언어 글자입니다. */}
+            <span lang={langAttr(option.code)}>{option.native}</span>
             {option.state === 'draft' && <small>{t('pickerDraft')}</small>}
             {locale === option.code && <Icon name="check" />}
           </button>

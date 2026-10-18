@@ -1,12 +1,13 @@
 /** 상세 페이지를 위에서 아래로 이루는 부분들. 순서는 DetailScreen이 정합니다. */
 import type { ReactNode } from 'react'
-import { useI18n } from '../../i18n'
-import type { CompanionRule, MatchStatus, Program, UncertainItem } from '../../data/types'
-import { itemsToCheck, placesDiffer } from '../../lib/content'
-import type { ProgramText } from '../../lib/content'
-import { formatCost, formatDate, formatSessionPlace, formatSessionWhen, formatStatus, languageName, screenLanguageName, topicLabel } from '../../lib/format'
+import { translate, useI18n } from '../../i18n'
+import type { CompanionRule, Locale, MatchStatus, Program, UncertainItem } from '../../data/types'
+import { addendumText, costAddendum, itemsToCheck, placesDiffer } from '../../lib/content'
+import type { Addendum, ProgramText } from '../../lib/content'
+import { formatCost, formatDate, formatSessionPlace, formatSessionWhen, formatStatus, languageName, placeLang, screenLanguageName, topicLabel } from '../../lib/format'
 import { Icon } from '../../components/Icon'
 import { Marked, Notice, StatusTag } from '../../components/feedback'
+import { SLOT, WithKorean } from '../../components/korean'
 
 type Props = { program: Program }
 
@@ -25,10 +26,10 @@ export function FactSheet({ program, text }: Props & { text: ProgramText }) {
         {session?.date ? formatSessionWhen(session, locale) : <Marked>{t('scheduleUnknown')}</Marked>}
       </FactRow>
       <FactRow label={t('place')}>
-        <span lang="ko">{formatSessionPlace(session, locale)}</span>
+        <span lang={placeLang(session)}>{formatSessionPlace(session, locale)}</span>
         {placesDiffer(program) && <span className="fact-sub">{t('placesDiffer')}</span>}
       </FactRow>
-      <FactRow label={t('cost')}>{program.cost_krw === null ? <Marked>{formatCost(program, locale)}</Marked> : formatCost(program, locale)}</FactRow>
+      <CostRow program={program} />
       <FactRow label={t('application')}>
         <StatusTag status={program.application_status}>{formatStatus(program, locale)}</StatusTag>
         {program.application_status === 'open' && program.application_end && <span className="fact-sub">{t('applyUntil', { date: formatDate(program.application_end, locale) })}</span>}
@@ -40,6 +41,29 @@ export function FactSheet({ program, text }: Props & { text: ProgramText }) {
 const FactRow = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className="fact-row"><dt>{label}</dt><dd>{children}</dd></div>
 )
+
+/**
+ * 비용 줄. 기관이 덧붙인 안내가 비용에 답했으면 그 문장을 보여 주고(화면 언어로 옮긴 것이 있으면 그것과 한국어 원문),
+ * 공고에도 안내에도 비용이 없을 때만 ‘비용 확인 필요’ 형광펜을 칠합니다.
+ */
+function CostRow({ program }: Props) {
+  const { locale, t } = useI18n()
+  const addendum = costAddendum(program)
+  if (!addendum) {
+    return <FactRow label={t('cost')}>{program.cost_krw === null ? <Marked>{formatCost(program, locale)}</Marked> : formatCost(program, locale)}</FactRow>
+  }
+  const shown = addendumText(addendum, locale)
+  return (
+    <FactRow label={t('cost')}>
+      {program.cost_krw !== null && <span>{formatCost(program, locale)}</span>}
+      <span lang={shown.lang}>{shown.text}</span>
+      <span className="fact-sub">
+        {t('costFromAddendum')}
+        {shown.original && <> · <WithKorean template={t('addendumOriginal', { text: SLOT })} text={shown.original} /></>}
+      </span>
+    </FactRow>
+  )
+}
 
 /** 신청 중이 아닐 때 다음 행동을 글로 알려 줍니다. */
 export function StatusNote({ program }: Props) {
@@ -55,9 +79,16 @@ export function StatusNote({ program }: Props) {
 /** 화면 언어 문구가 있는 주제. 서버가 모르는 주제를 보내면 주제 줄을 감춥니다. */
 const TOPICS: UncertainItem['topic'][] = ['family_eligibility', 'companion', 'korean_level', 'schedule', 'age_grade', 'materials', 'other']
 
+/** 안내 주제의 화면 언어 이름. ‘그 밖의 내용’이라도 비용에 답한 안내면 ‘비용’이라고 적고, 그 밖에는 주제 줄을 감춥니다. */
+function addendumTopic(addendum: Addendum, locale: Locale): string | null {
+  if (addendum.topic === 'other') return addendum.covers?.includes('cost') ? translate(locale, 'cost') : null
+  return TOPICS.includes(addendum.topic) ? topicLabel(locale, addendum.topic) : null
+}
+
 /**
  * 기관이 확인해 덧붙인 안내: 공고가 나온 뒤 담당자가 이름을 걸고 확정한 한국어 문장.
- * 공고 원문이 아니라는 것을 함께 적고, 화면 언어로는 무엇에 관한 안내인지(주제)와 덧붙인 날만 옮깁니다.
+ * 공고 원문이 아니라는 것을 함께 적고, 주제와 덧붙인 날은 화면 언어로 적습니다.
+ * 베트남어·중국어로 옮긴 문장이 있으면 그것을 ‘AI 번역’ 표시와 함께 보이고, 기관이 쓴 한국어 원문을 그 아래에 둡니다.
  */
 export function AddendaSection({ program }: Props) {
   const { locale, t } = useI18n()
@@ -68,17 +99,24 @@ export function AddendaSection({ program }: Props) {
       <h2 className="addenda-title"><Icon name="check" />{t('addendaTitle')}</h2>
       <p className="addenda-note">{t('chatAddendum')}</p>
       <ul className="addenda-list">
-        {addenda.map((addendum, index) => (
-          <li key={`${addendum.topic}-${index}`}>
-            <span className="addendum-meta">
-              {[
-                addendum.topic !== 'other' && TOPICS.includes(addendum.topic) ? topicLabel(locale, addendum.topic) : null,
-                addendum.added_at ? t('addendumDate', { date: formatDate(addendum.added_at, locale) }) : null,
-              ].filter(Boolean).join(' · ')}
-            </span>
-            <p className="addendum-text" lang="ko">{addendum.text}</p>
-          </li>
-        ))}
+        {addenda.map((addendum, index) => {
+          const shown = addendumText(addendum, locale)
+          return (
+            <li key={`${addendum.topic}-${index}`}>
+              <span className="addendum-meta">
+                {[
+                  addendumTopic(addendum, locale),
+                  addendum.added_at ? t('addendumDate', { date: formatDate(addendum.added_at, locale) }) : null,
+                ].filter(Boolean).join(' · ')}
+              </span>
+              <p className="addendum-text" lang={shown.lang}>
+                {shown.text}
+                {shown.original && <span className="addendum-ai">{t('addendumAi')}</span>}
+              </p>
+              {shown.original && <p className="addendum-original"><WithKorean template={t('addendumOriginal', { text: SLOT })} text={shown.original} /></p>}
+            </li>
+          )
+        })}
       </ul>
     </section>
   )
@@ -204,7 +242,7 @@ export function SessionsSection({ program }: Props) {
           return (
             <li key={session.id} className={matched ? 'session is-matched' : 'session'}>
               <span className="session-when">{formatSessionWhen(session, locale)}</span>
-              <span className="session-where" lang="ko">{formatSessionPlace(session, locale)}</span>
+              <span className="session-where" lang={placeLang(session)}>{formatSessionPlace(session, locale)}</span>
               {matched && <span className="session-flag"><Icon name="check" />{t('sessionMatched')}</span>}
             </li>
           )
@@ -280,13 +318,4 @@ const QuestionMark = () => <span className="q-mark" aria-hidden="true">?</span>
  */
 function Unknown({ children }: { children: ReactNode }) {
   return <span className="unknown"><QuestionMark />{children}</span>
-}
-
-/** 화면 언어 문장 틀에 끼워 넣을 자리 표시 */
-const SLOT = '\u0000'
-
-/** 화면 언어 문장 속 한국어 원문에만 lang="ko"를 붙입니다(‘원문 표현: “…”’). */
-function WithKorean({ template, text }: { template: string; text: string }) {
-  const [before, after = ''] = template.split(SLOT)
-  return <>{before}<span lang="ko">{text}</span>{after}</>
 }
