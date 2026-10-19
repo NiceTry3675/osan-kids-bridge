@@ -292,8 +292,8 @@ async function tidyScroll(page, { scroller = null, keys = [], bar = null, range 
     const texts = []
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (node) => (node.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) })
     while (walker.nextNode()) texts.push(walker.currentNode)
-    // 테두리가 있는 작은 것(단추·입력 칸·칩)도 반으로 잘리면 안 된다
-    const controls = [...root.querySelectorAll('button, input, select, textarea, [role="radio"], [role="tab"], [class*="chip"], [class*="pill"]')]
+    // 테두리가 있는 작은 것(단추·입력 칸·칩·상담 첫 안내 띠)도 반으로 잘리면 안 된다
+    const controls = [...root.querySelectorAll('button, input, select, textarea, [role="radio"], [role="tab"], [class*="chip"], [class*="pill"], .chat-intro')]
     const range = document.createRange()
     const across = (r, edge) => r.height > 0 && r.top < edge - 1 && r.bottom > edge + 1
     const outsideBar = (el) => !(barSel && el?.closest(barSel))

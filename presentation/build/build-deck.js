@@ -726,7 +726,7 @@ pres.addSection({ title: '해결' })
   const shot = { x: 0.75, y: 1.75, w: 7.7, h: 7.7 * (1397 / 2253) }
   picture(slide, img('dash-review-crop.png'), shot)
   // 칸 머리의 아이콘을 가리지 않게 그림 위쪽 끝에 걸쳐 둔다
-  ;[0.0, 0.33, 0.695].forEach((fx, index) => badge(slide, String(index + 1), { x: shot.x + shot.w * fx - 0.12, y: shot.y - 0.27, size: 0.42, fontSize: 14, fill: C.accent6 }))
+  ;[0.0, 0.33, 0.695].forEach((fx, index) => badge(slide, String(index + 1), { x: shot.x + shot.w * fx - 0.12, y: shot.y - 0.33, size: 0.42, fontSize: 14, fill: C.accent6 }))
   const blocks = [
     ['원본 그대로', '기관 공고의 포스터와 원문 글'],
     ['AI가 읽은 사실 + 근거', '원문 인용으로 확인되지 않은 사실은 노랗게\n직접 대조 표시가 있어야 승인'],
