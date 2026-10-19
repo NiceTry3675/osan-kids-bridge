@@ -15,6 +15,8 @@ const QA = process.env.DECK_QA === '1'
 const OUT = QA ? path.resolve(__dirname, 'render/deck-qa.pptx') : path.resolve(__dirname, '../osan-kids-bridge-deck.pptx')
 const img = (name) => path.join(ASSETS, name)
 /** PNG의 세로/가로 비율 (IHDR의 폭·높이). 캡처를 다시 찍어 크기가 바뀌어도 그림이 늘어나지 않게 */
+/** capture.js가 남긴 캡처 속 요소의 자리(비율). 없으면 각 슬라이드의 기본값을 쓴다 */
+const MARKS = (() => { try { return JSON.parse(fs.readFileSync(img('marks.json'), 'utf8')) } catch { return {} } })()
 const ratioOf = (name) => { const head = fs.readFileSync(img(name)).subarray(16, 24); return head.readUInt32BE(4) / head.readUInt32BE(0) }
 /** 편성 도우미의 실제 결과(capture.js plan이 받아 둔 것). 13번(편성)의 숫자를 캡처와 같은 결과에서 읽는다 */
 const PLAN_RESULT = (() => {
@@ -649,8 +651,10 @@ pres.addSection({ title: '해결' })
   // ③ 다음 보호자(중국어): 덧붙인 안내 카드, 그 안내를 근거로 단 답
   const three = [8.4 + 0.12, 8.4 + 0.12 + pw + 0.3].map((x) => ({ x, y: top, w: pw, h }))
   phone(slide, img('app-loop-addenda-zh.png'), three[0])
-  // 비용 줄이 덧붙인 안내를 보여 주며 길어져, 안내 카드는 그림 높이의 0.24~0.56 (2026-10-19 캡처)
-  mark(three[0], 0.035, 0.236, 0.93, 0.327, C.accent1)
+  // 덧붙인 안내 카드 자리는 capture.js가 찍을 때 잰 것(marks.json), 테두리는 카드보다 조금 크게
+  const card = MARKS['app-loop-addenda-zh.png']
+  if (card) mark(three[0], card.x - 0.013, card.y - 0.005, card.w + 0.026, card.h + 0.01, C.accent1)
+  else mark(three[0], 0.035, 0.236, 0.93, 0.327, C.accent1)
   phone(slide, img('app-loop-sources-zh.png'), three[1])
   mark(three[1], 0.075, 0.6, 0.85, 0.165, C.accent1)
   // 칸 사이 화살표

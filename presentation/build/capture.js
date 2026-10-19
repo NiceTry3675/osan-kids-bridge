@@ -26,6 +26,14 @@ const chosenLocales = (fallback) => {
 }
 /** 편성 도우미의 실제 결과를 한 번 받아 두는 파일. 발표자료 캡처와 시연영상이 같은 편성안을 쓴다(지우면 다시 받음) */
 const PLAN_FIXTURE = path.resolve(__dirname, 'render/plan-result.json')
+/** 캡처 속 요소의 자리(그림 크기에 대한 비율). build-deck.js가 그 위에 강조 테두리를 그린다 */
+const MARKS = path.join(OUT, 'marks.json')
+function saveMark(image, box) {
+  let marks = {}
+  try { marks = JSON.parse(fs.readFileSync(MARKS, 'utf8')) } catch { /* 처음 */ }
+  marks[image] = Object.fromEntries(Object.entries(box).map(([key, value]) => [key, Math.round(value * 10000) / 10000]))
+  fs.writeFileSync(MARKS, JSON.stringify(marks, null, 2))
+}
 /** record-demo.js가 녹화 전에 받아 둔 실제 결과(상담 답·공고 보완 초안·담당자가 채운 값). loop는 영상과 같은 보완 초안을 쓴다 */
 const PREFETCH_CACHE = path.resolve(__dirname, 'render/prefetch.json')
 const PROGRAM = 'osan-fc-sports-day'
@@ -113,6 +121,13 @@ async function journey(browser, locale) {
   await page.waitForSelector('.compare')
   await page.waitForFunction(() => [...document.querySelectorAll('.poster-thumb img')].every((image) => image.complete))
   await page.evaluate(() => window.scrollTo(0, 0))
+  // 비용 줄(공고 정보의 넷째 줄)이 아래 고정 버튼 줄(.action-bar)에 가리면 가린 만큼만 올린다 (중국어는 글꼴이 커서 걸린다)
+  await page.evaluate(() => {
+    const cost = document.querySelectorAll('.facts .fact-row')[3]
+    const bar = document.querySelector('.action-bar')
+    const hidden = cost && bar ? cost.getBoundingClientRect().bottom - bar.getBoundingClientRect().top + 8 : 0
+    if (hidden > 0) window.scrollBy(0, hidden)
+  })
   await page.waitForTimeout(400)
   await page.screenshot({ path: path.join(OUT, `app-${tag}-detail.png`) })
   await page.context().close()
@@ -317,10 +332,19 @@ async function loop(browser) {
     await page.waitForSelector('.addenda')
     await page.waitForFunction(() => [...document.querySelectorAll('.poster-thumb img')].every((image) => image.complete && image.naturalWidth > 0))
     await page.evaluate(() => Promise.all([...document.querySelectorAll('.poster-thumb img')].map((image) => image.decode().catch(() => {}))))
-    // 덧붙인 안내 카드가 화면 가운데쯤 오게
-    await page.evaluate(() => { const el = document.querySelector('.addenda'); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 200) })
+    // 장소 줄부터 찍는다: 비용 줄(덧붙인 안내로 바뀐 것)과 덧붙인 안내 카드가 함께 들어오고, 맨 위 줄이 반으로 잘리지 않게
+    await page.evaluate(() => {
+      const from = document.querySelectorAll('.facts .fact-row')[2] ?? document.querySelector('.addenda')
+      window.scrollTo(0, from.getBoundingClientRect().top + window.scrollY - 6)
+    })
     await page.waitForTimeout(400)
     await page.screenshot({ path: path.join(OUT, 'app-loop-addenda-zh.png') })
+    // 덱(12번)이 카드에 테두리를 그릴 자리: 그림 크기에 대한 비율
+    const card = await page.evaluate(() => {
+      const box = document.querySelector('.addenda').getBoundingClientRect()
+      return { x: box.x / innerWidth, y: box.y / innerHeight, w: box.width / innerWidth, h: box.height / innerHeight }
+    })
+    saveMark('app-loop-addenda-zh.png', card)
     await page.click('.ai-entry')
     await page.fill('#chat-input', LOOP_QUESTION_ZH)
     await page.keyboard.press('Enter')

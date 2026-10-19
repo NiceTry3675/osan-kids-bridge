@@ -1041,6 +1041,8 @@ async function record() {
       await wait(150)
       await atSay('여덟', -0.9)
       await tap(phone, PHONE, '.fit-card', { settle: 300 })
+      // 커서를 바로 감춘다: 카메라가 시트로 옮기면 그 자리에 남은 커서가 요일 칩(화)을 누르는 것처럼 보인다
+      await hideCursor()
       await phone.waitForSelector('dialog[open] .legend-link')
       // 시트가 열리기 시작한 뒤에 카메라를 옮긴다 (반투명한 시트가 찍히지 않게)
       await wait(150)
@@ -1441,7 +1443,8 @@ async function record() {
       const padBottom = gap == null ? 2 : Math.round(Math.max(1, Math.min(8, gap - 5)))
       await ringApp('answer', PHONE, lead, 'ok', `중국어 답: 참가비 ${FILL.other}\n${FILL.materials}`, { pad: 8, padBottom, at: 'left', edge: PHONE_EDGE })
       mark(`답 문장 테두리 (아래 ${padBottom}px)`)
-      await wait(1600)
+      // 두 화면이면 근거로 옮기는 데 약 0.5초가 더 걸린다. 근거 테두리가 '그 안내를 보고'에 오게 그만큼 일찍 옮긴다
+      await wait(oneShot ? 1600 : 1100)
       if (!oneShot) {
         const moved = await scrollTo(phone, '.chat-sources', 40, SHEET)
         await unringAll()

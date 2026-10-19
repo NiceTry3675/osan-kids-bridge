@@ -65,7 +65,8 @@ async function main() {
     if (fs.existsSync(file)) await sharp(file).extract(box).png().toFile(path.join(OUT, to))
     else console.warn(`${from}이 없어 ${to}를 만들지 않았습니다. node capture.js 다음에 이 스크립트를 한 번 더 실행하세요.`)
   }
-  for (const name of fs.readdirSync(OUT).sort()) {
+  // 그림만 (capture.js가 남기는 marks.json 등은 뺀다)
+  for (const name of fs.readdirSync(OUT).filter((file) => /\.(png|jpe?g|webp)$/i.test(file)).sort()) {
     const { width, height } = await sharp(path.join(OUT, name)).metadata()
     console.log(name.padEnd(30), `${width}x${height}`)
   }
