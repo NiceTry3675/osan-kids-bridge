@@ -329,6 +329,12 @@ const STAGE = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><style
     r.classList.remove('go'); void r.offsetWidth; r.classList.add('go')
   }
   window.hideCursor = () => $('cursor').classList.remove('on')
+  /** 커서와 누름 표시를 서서히가 아니라 바로 없앤다 (카메라가 옮겨 갈 때 그 자리에 흐린 커서가 남지 않게) */
+  window.dropCursor = () => {
+    const c = $('cursor'), r = $('ripple')
+    c.style.transition = 'none'; c.classList.remove('on'); r.classList.remove('go')
+    void c.offsetWidth; c.style.transition = ''
+  }
   /** 휴대폰 테두리(베젤 포함) 왼쪽 끝의 화면 x (카메라가 가는 곳 기준). 휴대폰을 확대한 샷에서 왼쪽 위 표시가 베젤에 얹히지 않게 이보다 왼쪽에 둔다 */
   window.phoneLeft = () => ${PHONE.x - 9} * window.cam.s + window.cam.tx
   /** 말풍선(왼쪽 28px)의 너비를 휴대폰 왼쪽 빈 곳에 맞춘다 (넓으면 250px까지) */
@@ -1041,8 +1047,8 @@ async function record() {
       await wait(150)
       await atSay('여덟', -0.9)
       await tap(phone, PHONE, '.fit-card', { settle: 300 })
-      // 커서를 바로 감춘다: 카메라가 시트로 옮기면 그 자리에 남은 커서가 요일 칩(화)을 누르는 것처럼 보인다
-      await hideCursor()
+      // 커서를 바로 없앤다: 카메라가 시트로 옮기면 그 자리에 남은 커서·누름 표시가 요일 칩(화)을 누르는 것처럼 보인다
+      await stage(() => window.dropCursor())
       await phone.waitForSelector('dialog[open] .legend-link')
       // 시트가 열리기 시작한 뒤에 카메라를 옮긴다 (반투명한 시트가 찍히지 않게)
       await wait(150)
@@ -1431,7 +1437,8 @@ async function record() {
       if (oneShot) await focusPhone(answer.y - 18, sources.y + sources.h + 10 - (answer.y - 18), 600)
       else await focusPhone(answer.y - 18, Math.min(lead.y + lead.h + 60 - answer.y, 360), 600)
       mark(`답 도착 (${oneShot ? '한 화면' : '두 화면'})`)
-      await wait(400)
+      // 두 화면이면 근거로 옮기는 데 시간이 더 들어, 답 이름표를 조금 일찍 띄워 충분히 보이게 한다
+      await wait(oneShot ? 400 : 200)
       // 두 번째 답은 녹화 전에 같은 추가 안내(FILL)를 저장해 받은 실제 중국어 답이고, 첫 문장이 그 두 값을 말한다(prefetch가 확인)
       // 이름표는 그 문장의 한국어 뜻. 휴대폰 왼쪽 빈 캔버스에 두 줄로 (답 위는 화면 끝이라 잘리고, 아래는 다음 항목 글자).
       // 테두리는 위·옆은 넉넉히, 아래는 다음 줄(첫 항목) 위에서 멈춘다 (문장과 첫 항목 사이는 8px뿐)
@@ -1443,13 +1450,13 @@ async function record() {
       const padBottom = gap == null ? 2 : Math.round(Math.max(1, Math.min(8, gap - 5)))
       await ringApp('answer', PHONE, lead, 'ok', `중국어 답: 참가비 ${FILL.other}\n${FILL.materials}`, { pad: 8, padBottom, at: 'left', edge: PHONE_EDGE })
       mark(`답 문장 테두리 (아래 ${padBottom}px)`)
-      // 두 화면이면 근거로 옮기는 데 약 0.5초가 더 걸린다. 근거 테두리가 '그 안내를 보고'에 오게 그만큼 일찍 옮긴다
-      await wait(oneShot ? 1600 : 1100)
+      // 두 화면이면 근거로 옮기는 데 약 0.55초가 더 든다. 근거 테두리가 '그 안내를 보고'에 오게 그만큼 일찍 옮긴다 (답 이름표는 약 1.3초)
+      await wait(oneShot ? 1600 : 1300)
       if (!oneShot) {
         const moved = await scrollTo(phone, '.chat-sources', 40, SHEET)
         await unringAll()
-        await focusPhone(moved.y - 36, Math.min(moved.h + 64, 450), 550)
-        await wait(350)
+        await focusPhone(moved.y - 36, Math.min(moved.h + 64, 450), 400)
+        await wait(50)
         await settled(phone)
       }
       const cited = await rectsIn(phone, '.chat-sources blockquote:has(.chat-source-note)')

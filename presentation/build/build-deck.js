@@ -656,7 +656,10 @@ pres.addSection({ title: '해결' })
   if (card) mark(three[0], card.x - 0.013, card.y - 0.005, card.w + 0.026, card.h + 0.01, C.accent1)
   else mark(three[0], 0.035, 0.236, 0.93, 0.327, C.accent1)
   phone(slide, img('app-loop-sources-zh.png'), three[1])
-  mark(three[1], 0.075, 0.6, 0.85, 0.165, C.accent1)
+  // 기관 안내를 인용한 근거 자리도 capture.js가 잰 것 (없으면 예전 캡처의 자리)
+  const cited = MARKS['app-loop-sources-zh.png']
+  if (cited) mark(three[1], cited.x - 0.013, cited.y - 0.005, cited.w + 0.026, cited.h + 0.01, C.accent1)
+  else mark(three[1], 0.075, 0.6, 0.85, 0.165, C.accent1)
   // 칸 사이 화살표
   const midY = top + h / 2
   arrow(slide, { x: one.x + pw + 0.14, y: midY, w: 3.85 - 0.1 - (one.x + pw + 0.14), color: C.accent6, width: 2.5 })

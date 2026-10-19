@@ -121,13 +121,9 @@ async function journey(browser, locale) {
   await page.waitForSelector('.compare')
   await page.waitForFunction(() => [...document.querySelectorAll('.poster-thumb img')].every((image) => image.complete))
   await page.evaluate(() => window.scrollTo(0, 0))
-  // 비용 줄(공고 정보의 넷째 줄)이 아래 고정 버튼 줄(.action-bar)에 가리면 가린 만큼만 올린다 (중국어는 글꼴이 커서 걸린다)
-  await page.evaluate(() => {
-    const cost = document.querySelectorAll('.facts .fact-row')[3]
-    const bar = document.querySelector('.action-bar')
-    const hidden = cost && bar ? cost.getBoundingClientRect().bottom - bar.getBoundingClientRect().top + 8 : 0
-    if (hidden > 0) window.scrollBy(0, hidden)
-  })
+  // 비용 줄(공고 정보의 넷째 줄)까지 아래 고정 버튼 줄(.action-bar) 위에 보이게, 맨 위·아래 글줄이 반으로 잘리지 않는 가장 가까운 자리로
+  // (중국어는 글꼴이 커서 맨 위에서는 비용 줄이 버튼 줄에 걸린다)
+  if (!(await tidyScroll(page, { keys: ['.facts .fact-row:nth-child(4)'], bar: '.action-bar' }))) console.warn(`${tag} 상세: 비용 줄이 다 보이는 자리를 찾지 못했습니다.`)
   await page.waitForTimeout(400)
   await page.screenshot({ path: path.join(OUT, `app-${tag}-detail.png`) })
   await page.context().close()
@@ -157,16 +153,30 @@ async function main() {
     if (which === 'all' || which === 'chat') {
       for (const locale of chosenLocales(['vi', 'zh'])) {
         if (!CHAT_QUESTION[locale]) throw new Error(`상담 캡처 질문이 없는 언어: ${locale}`)
-        const page = await phone(browser, locale)
-        await page.goto(GUARDIAN + `/programs/${PROGRAM}`)
-        await page.click('.ai-entry')
-        await page.fill('#chat-input', CHAT_QUESTION[locale])
-        await page.keyboard.press('Enter')
-        await page.waitForSelector('.bot-turn', { timeout: 90_000 })
+        // 모델 답이 가끔 90초 넘게 오지 않는다. 그때는 새 화면에서 한 번 더 묻는다
+        let page
+        for (let attempt = 1; ; attempt++) {
+          page = await phone(browser, locale)
+          await page.goto(GUARDIAN + `/programs/${PROGRAM}`)
+          await page.click('.ai-entry')
+          await page.fill('#chat-input', CHAT_QUESTION[locale])
+          await page.keyboard.press('Enter')
+          try {
+            await page.waitForSelector('.bot-turn', { timeout: 90_000 })
+            break
+          } catch (error) {
+            await page.context().close()
+            if (attempt >= 2) throw error
+            console.warn(`${locale}: 상담 답이 90초 안에 오지 않아 다시 묻습니다.`)
+          }
+        }
         await page.waitForTimeout(600)
         const shoot = sheetShooter(page)
         await shoot('.bubble--user', `app-chat-answer-${locale}.png`, 120)
-        if (await page.$('.chat-inquiry')) await shoot('.chat-inquiry', `app-chat-inquiry-${locale}.png`, 60)
+        if (await page.$('.chat-inquiry')) {
+          // 답 길이가 매번 달라, 아래 입력 줄에 글줄(노란 카드 제목 등)이 반으로 걸리지 않는 자리로 다듬어 찍는다
+          await shoot('.chat-inquiry', `app-chat-inquiry-${locale}.png`, 60, { keys: ['.chat-inquiry'] })
+        }
         else console.warn(`${locale}: 답에 문의문이 없어 app-chat-inquiry-${locale}.png를 찍지 않았습니다.`)
         // '기관에 알리기'는 누르지 않는다(시연 상태를 바꾸지 않게). 알리는 장면은 loop가 찍고 되돌린다
         await page.context().close()
@@ -252,12 +262,67 @@ async function main() {
 }
 
 /** 시트(상담 창) 안에서 selector가 위에서 offset만큼 떨어지게 스크롤하고 찍는다 */
-const sheetShooter = (page) => async (selector, file, offset = 12) => {
+/**
+ * 지금 스크롤 자리에서 가장 가까운, 글줄이 위·아래 끝에 반으로 잘리지 않고 keys(선택자, 모두)가 다 보이는 자리로 옮긴다.
+ * scroller가 없으면 페이지 전체, bar는 화면 아래에 붙은 버튼 줄(그 위까지만 보인다고 본다). 그런 자리가 없으면 그대로 두고 false
+ */
+async function tidyScroll(page, { scroller = null, keys = [], bar = null, range = 240 } = {}) {
+  return page.evaluate(([scrollerSel, keySels, barSel, reach]) => {
+    const box = scrollerSel ? document.querySelector(scrollerSel) : document.scrollingElement
+    const root = scrollerSel ? box : document.body
+    const edges = () => {
+      const r = scrollerSel ? box.getBoundingClientRect() : { top: 0, bottom: innerHeight }
+      const foot = barSel && document.querySelector(barSel)
+      return { top: r.top, bottom: foot ? Math.min(r.bottom, foot.getBoundingClientRect().top) : r.bottom }
+    }
+    const texts = []
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (node) => (node.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) })
+    while (walker.nextNode()) texts.push(walker.currentNode)
+    // 테두리가 있는 작은 것(단추·입력 칸·칩)도 반으로 잘리면 안 된다
+    const controls = [...root.querySelectorAll('button, input, select, textarea, [role="radio"], [role="tab"], [class*="chip"], [class*="pill"]')]
+    const range = document.createRange()
+    const across = (r, edge) => r.height > 0 && r.top < edge - 1 && r.bottom > edge + 1
+    const outsideBar = (el) => !(barSel && el?.closest(barSel))
+    const cuts = (edge) => texts.some((node) => {
+      if (!outsideBar(node.parentElement)) return false
+      range.selectNodeContents(node)
+      return [...range.getClientRects()].some((line) => across(line, edge))
+    }) || controls.some((el) => outsideBar(el) && el.getClientRects().length > 0 && across(el.getBoundingClientRect(), edge))
+    const shown = (e) => keySels.every((sel) => [...document.querySelectorAll(sel)].every((el) => {
+      const r = el.getBoundingClientRect()
+      return r.top >= e.top - 0.5 && r.bottom <= e.bottom + 0.5
+    }))
+    const start = box.scrollTop
+    for (let d = 0; d <= reach; d += 2) {
+      for (const at of d ? [start + d, start - d] : [start]) {
+        if (at < 0) continue
+        box.scrollTop = at
+        if (Math.abs(box.scrollTop - at) > 0.5) continue
+        const e = edges()
+        if (shown(e) && !cuts(e.top) && !cuts(e.bottom)) return true
+      }
+    }
+    box.scrollTop = start
+    return false
+  }, [scroller, keys, bar, range])
+}
+
+/** 캡처 속 요소들(선택자)을 감싸는 자리, 그림 크기에 대한 비율 */
+const boxOf = (page, selector) => page.evaluate((sel) => {
+  const rects = [...document.querySelectorAll(sel)].map((el) => el.getBoundingClientRect())
+  const x = Math.min(...rects.map((r) => r.left)), y = Math.min(...rects.map((r) => r.top))
+  const right = Math.max(...rects.map((r) => r.right)), bottom = Math.max(...rects.map((r) => r.bottom))
+  return { x: x / innerWidth, y: y / innerHeight, w: (right - x) / innerWidth, h: (bottom - y) / innerHeight }
+}, selector)
+
+const sheetShooter = (page) => async (selector, file, offset = 12, tidy = null) => {
   await page.evaluate(([sel, off]) => {
     const body = document.querySelector('dialog[open] .sheet-body')
     const el = document.querySelector(sel)
     body.scrollTop = el.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - off
   }, [selector, offset])
+  // tidy가 있으면 글줄이 시트 위·아래 끝에 반으로 잘리지 않고 tidy.keys가 다 보이는 가장 가까운 자리로
+  if (tidy && !(await tidyScroll(page, { scroller: 'dialog[open] .sheet-body', ...tidy }))) console.warn(`${file}: 글줄이 잘리지 않는 자리를 찾지 못해 그대로 찍습니다.`)
   await page.waitForTimeout(300)
   await page.screenshot({ path: path.join(OUT, file) })
 }
@@ -337,14 +402,11 @@ async function loop(browser) {
       const from = document.querySelectorAll('.facts .fact-row')[2] ?? document.querySelector('.addenda')
       window.scrollTo(0, from.getBoundingClientRect().top + window.scrollY - 6)
     })
+    await tidyScroll(page, { keys: ['.facts .fact-row:nth-child(4)', '.addenda'], bar: '.action-bar' })
     await page.waitForTimeout(400)
     await page.screenshot({ path: path.join(OUT, 'app-loop-addenda-zh.png') })
     // 덱(12번)이 카드에 테두리를 그릴 자리: 그림 크기에 대한 비율
-    const card = await page.evaluate(() => {
-      const box = document.querySelector('.addenda').getBoundingClientRect()
-      return { x: box.x / innerWidth, y: box.y / innerHeight, w: box.width / innerWidth, h: box.height / innerHeight }
-    })
-    saveMark('app-loop-addenda-zh.png', card)
+    saveMark('app-loop-addenda-zh.png', await boxOf(page, '.addenda'))
     await page.click('.ai-entry')
     await page.fill('#chat-input', LOOP_QUESTION_ZH)
     await page.keyboard.press('Enter')
@@ -353,7 +415,15 @@ async function loop(browser) {
     if (!(await page.$('.chat-sources .chat-source-note'))) throw new Error('중국어 답이 기관이 덧붙인 안내를 인용하지 않았습니다. 다시 실행하세요.')
     const shoot = sheetShooter(page)
     await shoot('.bubble--user', 'app-loop-answer-zh.png', 40)
-    await shoot('.chat-sources', 'app-loop-sources-zh.png', 300)
+    // 답 첫 문장부터 기관 안내를 인용한 근거까지 한 화면에 (답이 길면 첫 문장 대신 근거가 다 보이게), 글줄이 잘리지 않게
+    const CITED = '.chat-sources blockquote:has(.chat-source-note)'
+    await page.evaluate(() => { const body = document.querySelector('dialog[open] .sheet-body'); const lead = document.querySelector('.bot-turn .bubble--bot'); body.scrollTop += lead.getBoundingClientRect().top - body.getBoundingClientRect().top - 8 })
+    if (!(await tidyScroll(page, { scroller: 'dialog[open] .sheet-body', keys: ['.bot-turn .bubble-lead', CITED], range: 400 }))) {
+      await tidyScroll(page, { scroller: 'dialog[open] .sheet-body', keys: [CITED], range: 600 })
+    }
+    await page.waitForTimeout(300)
+    await page.screenshot({ path: path.join(OUT, 'app-loop-sources-zh.png') })
+    saveMark('app-loop-sources-zh.png', await boxOf(page, CITED))
     await page.context().close()
     await context.close()
   } finally {
