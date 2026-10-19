@@ -47,10 +47,12 @@ describe('검색 입력', () => {
 })
 
 describe('포스터 썸네일 폭', () => {
-  it('화면 폭의 두 배를 덮는 가장 작은 서버 폭(128·256·384·512)으로 고르고, 512를 넘지 않는다', () => {
-    expect(posterThumbWidth(64)).toBe(128)
+  it('화면 폭의 세 배(3배율 휴대폰)를 덮는 가장 작은 서버 폭(128·256·384·512)으로 고르고, 512를 넘지 않는다', () => {
+    expect(posterThumbWidth(40)).toBe(128)
+    expect(posterThumbWidth(64)).toBe(256)
     expect(posterThumbWidth(72)).toBe(256)
-    expect(posterThumbWidth(142)).toBe(384)
+    expect(posterThumbWidth(128)).toBe(384)
+    expect(posterThumbWidth(142)).toBe(512)
     expect(posterThumbWidth(400)).toBe(512)
   })
 })

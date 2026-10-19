@@ -213,8 +213,9 @@ describe('기관이 확인해 덧붙인 안내', () => {
     renderDetail('zh')
     const card = (await screen.findByRole('heading', { name: '机构确认后补充的说明' })).closest('section')!
     const item = within(card).getByText('参加费：免费').closest('li')!
-    expect(within(item).getByText('AI翻译')).toBeTruthy()
-    expect(item.querySelector('.addendum-meta')!.textContent).toMatch(/^费用 · /)
+    // ‘AI 번역’ 표시는 머리줄 끝에 (문장이 줄을 꽉 채워도 표시만 따로 떨어지지 않게)
+    expect(item.querySelector('.addendum-meta .addendum-ai')!.textContent).toBe('AI翻译')
+    expect(item.querySelector('.addendum-meta')!.textContent).toMatch(/^费用 · .*AI翻译$/)
     const original = within(item).getByText('참가비: 무료')
     expect(original.getAttribute('lang')).toBe('ko')
     expect(original.parentElement!.textContent).toBe('韩语原文：“참가비: 무료”')

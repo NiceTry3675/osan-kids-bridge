@@ -103,16 +103,15 @@ export function AddendaSection({ program }: Props) {
           const shown = addendumText(addendum, locale)
           return (
             <li key={`${addendum.topic}-${index}`}>
+              {/* ‘AI 번역’ 표시는 머리줄 끝에: 문장 끝에 붙이면 문장이 줄을 꽉 채울 때 표시만 다음 줄로 떨어집니다 */}
               <span className="addendum-meta">
                 {[
                   addendumTopic(addendum, locale),
                   addendum.added_at ? t('addendumDate', { date: formatDate(addendum.added_at, locale) }) : null,
                 ].filter(Boolean).join(' · ')}
-              </span>
-              <p className="addendum-text" lang={shown.lang}>
-                {shown.text}
                 {shown.original && <span className="addendum-ai">{t('addendumAi')}</span>}
-              </p>
+              </span>
+              <p className="addendum-text" lang={shown.lang}>{shown.text}</p>
               {shown.original && <p className="addendum-original"><WithKorean template={t('addendumOriginal', { text: SLOT })} text={shown.original} /></p>}
             </li>
           )

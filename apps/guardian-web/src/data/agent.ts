@@ -99,8 +99,8 @@ export async function getPosterInfo(id: string, signal?: AbortSignal): Promise<P
 /** 서버가 줄여 보내는 썸네일 폭(px, 정사각형 WebP). 이 밖의 폭은 서버가 가장 가까운 값으로 맞춥니다. */
 export const POSTER_THUMB_WIDTHS = [128, 256, 384, 512] as const
 
-/** 화면에 그릴 폭(CSS px)의 두 배(고해상도 화면)를 덮는 가장 작은 썸네일 폭 */
-export const posterThumbWidth = (cssWidth: number) => POSTER_THUMB_WIDTHS.find((width) => width >= cssWidth * 2) ?? 512
+/** 화면에 그릴 폭(CSS px)의 세 배(3배율 휴대폰 화면)를 덮는 가장 작은 썸네일 폭. 두 배로는 3배율 화면에서 흐리게 보입니다 */
+export const posterThumbWidth = (cssWidth: number) => POSTER_THUMB_WIDTHS.find((width) => width >= cssWidth * 3) ?? 512
 
 /**
  * 포스터 이미지 주소. cssWidth를 주면 그 폭에 맞춘 썸네일(?w=)을, 없으면 원래 크기 이미지를 받습니다.

@@ -93,17 +93,17 @@ describe('목록 카드 포스터 썸네일', () => {
     expect(listPoster(program(), 'vi')).toBeNull()
   })
 
-  it('번역본 썸네일에는 ‘AI 번역’ 표시를 달고, 원본에는 달지 않는다. 둘 다 64px 정사각형의 두 배 폭 썸네일을 받는다', () => {
+  it('번역본 썸네일에는 ‘AI 번역’ 표시를 달고, 원본에는 달지 않는다. 둘 다 64px 정사각형의 세 배 폭을 덮는 썸네일을 받는다', () => {
     const { container } = renderItem(program({ posters }), 'vi')
     const image = container.querySelector('.item-poster img')!
-    expect(image.getAttribute('src')).toMatch(/\/posters\/demo-korean\/vi\?w=128$/)
+    expect(image.getAttribute('src')).toMatch(/\/posters\/demo-korean\/vi\?w=256$/)
     expect(image.getAttribute('loading')).toBe('lazy')
     expect([image.getAttribute('width'), image.getAttribute('height'), image.getAttribute('alt')]).toEqual(['64', '64', ''])
     expect(container.querySelector('.item-poster-ai')!.textContent).toBe('AI dịch')
     expect(container.querySelector('.item-art')).toBeNull()
     cleanup()
     const original = renderItem(program({ posters }), 'ko-easy').container
-    expect(original.querySelector('.item-poster img')!.getAttribute('src')).toMatch(/\/posters\/demo-korean\/original\?w=128$/)
+    expect(original.querySelector('.item-poster img')!.getAttribute('src')).toMatch(/\/posters\/demo-korean\/original\?w=256$/)
     expect(original.querySelector('.item-poster-ai')).toBeNull()
   })
 
@@ -114,7 +114,7 @@ describe('목록 카드 포스터 썸네일', () => {
     cleanup()
     const broken = renderItem(program({ posters }), 'vi').container
     fireEvent.error(broken.querySelector('.item-poster img')!)
-    expect(broken.querySelector('.item-poster img')!.getAttribute('src')).toMatch(/\/original\?w=128$/)
+    expect(broken.querySelector('.item-poster img')!.getAttribute('src')).toMatch(/\/original\?w=256$/)
     expect(broken.querySelector('.item-poster-ai')).toBeNull()
     fireEvent.error(broken.querySelector('.item-poster img')!)
     expect(broken.querySelector('.item-poster')).toBeNull()

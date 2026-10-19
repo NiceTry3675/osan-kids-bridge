@@ -124,3 +124,30 @@ describe('본문으로 건너뛰기', () => {
     expect(calls).toHaveLength(fetched)
   })
 })
+
+describe('목록에서 상세 열기', () => {
+  it('방금 찾은 목록의 판정으로 상세를 바로 보여 주고(불러오는 화면 없이), 서버에서 다시 받는다', async () => {
+    sessionStorage.setItem('guardian-search-v2', JSON.stringify({ ...emptyFilters(), child_grade: 2 }))
+    const calls = serve()
+    const served = vi.mocked(fetch).getMockImplementation()!
+    // 상세 다시 받기는 끝나지 않게 둔다: 그래도 목록의 판정으로 상세가 보여야 한다
+    vi.mocked(fetch).mockImplementation((url, init) => (String(url).endsWith('/evaluate') ? new Promise(() => {}) : served(url as string, init)))
+    const { container } = render(<I18nProvider initial="ko-easy"><App /></I18nProvider>)
+    await waitFor(() => expect(container.querySelector('a[href="/programs/demo-korean"]')).toBeTruthy())
+    fireEvent.click(container.querySelector('a[href="/programs/demo-korean"]')!)
+
+    expect(window.location.pathname).toBe('/programs/demo-korean')
+    expect(screen.getByRole('heading', { name: '우리 아이 조건과 비교' })).toBeTruthy()
+    expect(screen.queryByText('공고를 불러오고 있어요')).toBeNull()
+    await waitFor(() => expect(vi.mocked(fetch).mock.calls.some(([url]) => url === 'http://api.test/programs/demo-korean/evaluate')).toBe(true))
+    expect(calls.some((call) => call.url === 'http://api.test/programs/search')).toBe(true)
+  })
+
+  it('조건 없이 연 상세(공유 링크)는 목록 판정을 쓰지 않고 불러온다', async () => {
+    serve()
+    window.history.replaceState(null, '', '/programs/demo-korean')
+    render(<I18nProvider initial="ko-easy"><App /></I18nProvider>)
+    expect(screen.getByText('공고를 불러오고 있어요')).toBeTruthy()
+    expect(await screen.findByRole('heading', { level: 1 })).toBeTruthy()
+  })
+})
