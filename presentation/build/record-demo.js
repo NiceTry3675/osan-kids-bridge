@@ -537,15 +537,23 @@ async function prefetch() {
   // render/는 gitignore라 새로 받은 저장소에는 없다. 실제 API를 부르기 전에 만들어 둬야 받은 답을 버리지 않는다
   fs.mkdirSync(path.dirname(PREFETCH_CACHE), { recursive: true })
   await resetState()
-  if (process.env.FRESH !== '1' && fs.existsSync(PREFETCH_CACHE) && fs.existsSync(PLAN_FIXTURE)) {
+  // FRESH=improve: 첫 상담 답(베트남어)은 저장해 둔 것을 쓰고, 공고 보완 초안과 두 번째 답(중국어)만 새로 받는다
+  const freshImprove = process.env.FRESH === 'improve' && fs.existsSync(PREFETCH_CACHE)
+  if (process.env.FRESH !== '1' && !freshImprove && fs.existsSync(PREFETCH_CACHE) && fs.existsSync(PLAN_FIXTURE)) {
     const cached = JSON.parse(fs.readFileSync(PREFETCH_CACHE, 'utf8'))
     if (cached.againLocale !== 'zh') throw new Error('render/prefetch.json의 두 번째 상담 답이 중국어가 아닙니다(지난 판). FRESH=1 node record-demo.js로 새로 받으세요.')
     console.log('저장해 둔 실제 결과(render/prefetch.json, render/plan-result.json)를 씁니다.')
     await warmTranslations(filledItems(JSON.parse(cached.improve), cached.chosen))
     return { ...cached, plan: fs.readFileSync(PLAN_FIXTURE, 'utf8') }
   }
-  console.log('상담 API에서 실제 답을 받는 중…')
-  const reply = await chat(QUESTION, 'vi')
+  let reply
+  if (freshImprove) {
+    console.log('첫 상담 답은 저장해 둔 것(render/prefetch.json)을 쓰고, 보완 초안과 두 번째 답만 새로 받습니다.')
+    reply = JSON.parse(fs.readFileSync(PREFETCH_CACHE, 'utf8')).reply
+  } else {
+    console.log('상담 API에서 실제 답을 받는 중…')
+    reply = await chat(QUESTION, 'vi')
+  }
   const parsed = JSON.parse(reply)
   if (!parsed.inquiry || !parsed.unanswered?.length || !parsed.steps?.length) throw new Error('첫 상담 답에 문의문·못 찾은 질문·단계가 모두 있어야 합니다. 다시 실행하세요.')
   // 대시보드가 보낼 질문 목록과 같게: 시연용 예시 + 영상에서 보호자가 알릴 질문 (같은 문장은 하나로)
@@ -725,8 +733,10 @@ async function record() {
     let desk = await frameOf(DASHBOARD, 'questions')
     await phone.waitForSelector('.intro-start', { timeout: 20_000 })
     await phone.addStyleTag({ content: PHONE_CSS })
-    // 보호자 화면에 나올 번역 포스터(베트남어·중국어)를 미리 받아 둔다 (홈 띠·목록 썸네일·상세 포스터가 비지 않게)
-    const posterUrls = fs.readdirSync(TRANSLATED).map((name) => name.match(/^([a-z0-9-]+)\.(vi|zh)\.json$/)).filter(Boolean).map(([, id, language]) => `${API}/posters/${id}/${language}`)
+    // 보호자 화면에 나올 번역 포스터(베트남어·중국어)를 미리 받아 둔다 (홈 띠·목록 썸네일·상세 포스터가 비지 않게).
+    // 띠·썸네일은 폭을 줄인 webp(?w=128~512), 상세 포스터 구역은 원래 크기를 쓴다
+    const posterUrls = fs.readdirSync(TRANSLATED).map((name) => name.match(/^([a-z0-9-]+)\.(vi|zh)\.json$/)).filter(Boolean)
+      .flatMap(([, id, language]) => [`${API}/posters/${id}/${language}`, ...[128, 256, 384, 512].map((width) => `${API}/posters/${id}/${language}?w=${width}`)])
     await phone.evaluate((urls) => Promise.all(urls.map((url) => { const image = new Image(); image.src = url; return image.decode().catch(() => {}) })), posterUrls)
     await desk.waitForSelector('.question-list', { timeout: 20_000 })
     /**
@@ -1014,14 +1024,14 @@ async function record() {
       // '베트남어로 해 볼게요': 커서를 옮기고, 누르기 바로 전에 테두리를 내린다 (누르면 첫 화면이 베트남어로 바뀌며 줄 위치가 달라져 테두리가 엉뚱한 줄을 감싸게 된다)
       await atSay('베트남어로', 0)
       await settled(phone)
-      const vi = await rectIn(phone, '.intro-lang[lang="vi"]')
+      const vi = await rectIn(phone, '.intro-lang:has(> span[lang="vi"])')
       const viAt = toWorld(PHONE, { x: vi.x + Math.min(vi.w / 2, 60), y: vi.y + vi.h / 2, w: 0, h: 0 })
       await stage(([x, y]) => window.pointTo(x, y), [viAt.x, viAt.y])
       await wait(400)
       await unringAll()
       await stage(() => window.ripple())
       await wait(160)
-      await phone.evaluate(() => document.querySelector('.intro-lang[lang="vi"]')?.click())
+      await phone.evaluate(() => document.querySelector('.intro-lang:has(> span[lang="vi"])')?.click())
       mark('베트남어 고름')
       await wait(350)
       await tap(phone, PHONE, '.intro-start', { settle: 300 })
@@ -1070,8 +1080,10 @@ async function record() {
       await ringApp('compare', PHONE, await rectIn(phone, '.compare-pills') ?? compare, 'ok', '', { pad: 4 })
       mark('상세 첫 화면')
       await wait(450)
-      await phone.waitForSelector('#poster img', { timeout: 10_000 })
+      // 상세 포스터는 loading="lazy"라 화면 아래에 있으면 받지 않는다. 썸네일을 누르기 전에 받아 그려 둔다
+      await phone.waitForSelector('#poster img', { state: 'attached', timeout: 10_000 })
       await imagesReady(phone, '#poster img')
+      await phone.waitForSelector('#poster img', { timeout: 10_000 })
       await atSay('포스터도', -0.6)
       await tap(phone, PHONE, '.poster-thumb', { settle: 400 })
       mark('썸네일 누름')

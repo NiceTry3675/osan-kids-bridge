@@ -649,7 +649,8 @@ pres.addSection({ title: '해결' })
   // ③ 다음 보호자(중국어): 덧붙인 안내 카드, 그 안내를 근거로 단 답
   const three = [8.4 + 0.12, 8.4 + 0.12 + pw + 0.3].map((x) => ({ x, y: top, w: pw, h }))
   phone(slide, img('app-loop-addenda-zh.png'), three[0])
-  mark(three[0], 0.035, 0.268, 0.93, 0.255, C.accent1)
+  // 비용 줄이 덧붙인 안내를 보여 주며 길어져, 안내 카드는 그림 높이의 0.24~0.56 (2026-10-19 캡처)
+  mark(three[0], 0.035, 0.236, 0.93, 0.327, C.accent1)
   phone(slide, img('app-loop-sources-zh.png'), three[1])
   mark(three[1], 0.075, 0.6, 0.85, 0.165, C.accent1)
   // 칸 사이 화살표
