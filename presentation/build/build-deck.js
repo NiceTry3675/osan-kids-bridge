@@ -466,7 +466,8 @@ pres.addSection({ title: '해결' })
   steps.forEach(([file, language, title, note], index) => {
     const x = left + index * (w + gap)
     phone(slide, img(file), { x, y, h })
-    badge(slide, String(index + 1), { x: x - 0.24, y: y - 0.3, size: 0.44, fontSize: 14, fill: C.accent6 })
+    // 휴대폰 화면 왼쪽 위(뒤로·정보 아이콘)를 가리지 않게 모서리 바깥쪽으로
+    badge(slide, String(index + 1), { x: x - 0.28, y: y - 0.34, size: 0.44, fontSize: 14, fill: C.accent6 })
     // 화면 언어 표시: 휴대폰 위쪽 가운데의 작은 꼬리표
     card(slide, { x: x + w / 2 - 0.62, y: y - 0.36, w: 1.24, h: 0.28, fill: language === '쉬운 한국어' ? SAND : C.accent5, shadow: false })
     text(slide, language, { x: x + w / 2 - 0.62, y: y - 0.36, w: 1.24, h: 0.28, fontSize: 11, bold: true, color: language === '쉬운 한국어' ? C.text1 : C.accent1, align: 'center', valign: 'middle' })
@@ -724,7 +725,8 @@ pres.addSection({ title: '해결' })
   // 사이드바·제목을 뺀 세 칸만 잘라 크게(prepare-assets.js의 dash-review-crop.png, 2253×1397)
   const shot = { x: 0.75, y: 1.75, w: 7.7, h: 7.7 * (1397 / 2253) }
   picture(slide, img('dash-review-crop.png'), shot)
-  ;[0.0, 0.33, 0.695].forEach((fx, index) => badge(slide, String(index + 1), { x: shot.x + shot.w * fx - 0.12, y: shot.y - 0.2, size: 0.42, fontSize: 14, fill: C.accent6 }))
+  // 칸 머리의 아이콘을 가리지 않게 그림 위쪽 끝에 걸쳐 둔다
+  ;[0.0, 0.33, 0.695].forEach((fx, index) => badge(slide, String(index + 1), { x: shot.x + shot.w * fx - 0.12, y: shot.y - 0.27, size: 0.42, fontSize: 14, fill: C.accent6 }))
   const blocks = [
     ['원본 그대로', '기관 공고의 포스터와 원문 글'],
     ['AI가 읽은 사실 + 근거', '원문 인용으로 확인되지 않은 사실은 노랗게\n직접 대조 표시가 있어야 승인'],

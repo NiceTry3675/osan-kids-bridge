@@ -110,6 +110,8 @@ async function journey(browser, locale) {
   const toCard = (offset) => page.evaluate((off) => { const card = document.querySelector('a.item[href="/programs/osan-fc-sports-day"]'); if (card) window.scrollTo(0, card.getBoundingClientRect().top + window.scrollY - off) }, offset)
   await toCard(230)
   await page.waitForFunction(() => [...document.querySelectorAll('.item-poster img')].every((image) => image.complete))
+  // 맨 위·아래 글줄이 반으로 잘리지 않게 (운동회 카드는 다 보이게)
+  if (!(await tidyScroll(page, { keys: ['a.item[href="/programs/osan-fc-sports-day"]'] }))) console.warn(`${tag} 목록: 글줄이 잘리지 않는 자리를 찾지 못했습니다.`)
   await page.waitForTimeout(400)
   await page.screenshot({ path: path.join(OUT, `app-${tag}-results-top.png`) })
   await toCard(12)
@@ -172,7 +174,7 @@ async function main() {
         }
         await page.waitForTimeout(600)
         const shoot = sheetShooter(page)
-        await shoot('.bubble--user', `app-chat-answer-${locale}.png`, 120)
+        await shoot('.bubble--user', `app-chat-answer-${locale}.png`, 120, { keys: ['.bubble--user'] })
         if (await page.$('.chat-inquiry')) {
           // 답 길이가 매번 달라, 아래 입력 줄에 글줄(노란 카드 제목 등)이 반으로 걸리지 않는 자리로 다듬어 찍는다
           await shoot('.chat-inquiry', `app-chat-inquiry-${locale}.png`, 60, { keys: ['.chat-inquiry'] })
@@ -235,6 +237,18 @@ async function main() {
       await page.goto(DASHBOARD + '/#programs/osan-fc-sports-day')
       await page.waitForSelector('.review-grid .poster-img')
       await page.waitForFunction(() => [...document.querySelectorAll('.poster-img')].every((image) => image.complete && image.naturalWidth > 0))
+      // 세 칸(원문·AI가 읽은 사실·번역)의 스크롤 영역 아래 끝에 반쯤 걸린 글줄은 가린다 (그 칸을 스크롤하면 보이는 줄)
+      await page.evaluate(() => document.querySelectorAll('.pane-body').forEach((body) => {
+        const bottom = body.getBoundingClientRect().bottom
+        const range = document.createRange()
+        const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
+        let cut = Infinity
+        while (walker.nextNode()) {
+          range.selectNodeContents(walker.currentNode)
+          for (const line of range.getClientRects()) if (line.height > 0 && line.top < bottom - 1 && line.bottom > bottom + 1) cut = Math.min(cut, line.top)
+        }
+        if (cut !== Infinity) body.style.clipPath = `inset(0 0 ${Math.ceil(bottom - cut + 2)}px 0)`
+      }))
       await page.waitForTimeout(400)
       await page.screenshot({ path: path.join(OUT, 'dash-review.png') })
       // 공고 보완 도우미: 실제 에이전트를 부른다(10~20초). 빈칸은 채우지 않은 채로 찍어 'AI가 값을 정하지 않는다'를 보인다
@@ -283,11 +297,16 @@ async function tidyScroll(page, { scroller = null, keys = [], bar = null, range 
     const range = document.createRange()
     const across = (r, edge) => r.height > 0 && r.top < edge - 1 && r.bottom > edge + 1
     const outsideBar = (el) => !(barSel && el?.closest(barSel))
+    // 글줄은 1px까지 봐주고, 테두리가 있는 것은 조금만 걸쳐도 잘린 것으로 본다 (1px 테두리 조각도 보인다)
     const cuts = (edge) => texts.some((node) => {
       if (!outsideBar(node.parentElement)) return false
       range.selectNodeContents(node)
       return [...range.getClientRects()].some((line) => across(line, edge))
-    }) || controls.some((el) => outsideBar(el) && el.getClientRects().length > 0 && across(el.getBoundingClientRect(), edge))
+    }) || controls.some((el) => {
+      if (!outsideBar(el) || el.getClientRects().length === 0) return false
+      const r = el.getBoundingClientRect()
+      return r.height > 0 && r.top < edge - 0.25 && r.bottom > edge + 0.25
+    })
     const shown = (e) => keySels.every((sel) => [...document.querySelectorAll(sel)].every((el) => {
       const r = el.getBoundingClientRect()
       return r.top >= e.top - 0.5 && r.bottom <= e.bottom + 0.5

@@ -258,7 +258,7 @@ const STAGE = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><style
   #ripple { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: rgba(224,122,95,.5); z-index: 19; opacity: 0; pointer-events: none; }
   #ripple.go { animation: rip .55s ease-out; }
   @keyframes rip { 0% { opacity: .9; transform: scale(.3); } 100% { opacity: 0; transform: scale(1.4); } }
-  #prompter { display: none; position: absolute; left: 0; right: 0; bottom: 0; height: 120px; padding: 14px 40px; background: rgba(28,22,19,.88); color: #fff; font-size: 23px; line-height: 1.45; z-index: 30; }
+  #prompter { display: none; position: absolute; left: 0; right: 0; bottom: 0; height: 120px; padding: 14px 40px; background: rgba(28,22,19,.88); color: #fff; font-size: 23px; line-height: 1.45; z-index: 30; word-break: keep-all; overflow-wrap: anywhere; }
   body.prompter #prompter { display: block; }
 </style></head><body>
   <div id="world">
@@ -1046,13 +1046,17 @@ async function record() {
       await focusPhone(88, 450, 700)
       await wait(150)
       await atSay('여덟', -0.9)
-      await tap(phone, PHONE, '.fit-card', { settle: 300 })
-      // 커서를 바로 없앤다: 카메라가 시트로 옮기면 그 자리에 남은 커서·누름 표시가 요일 칩(화)을 누르는 것처럼 보인다
+      // 누름 표시까지 보인 뒤 화면을 덮어 두고 누른다: 시트가 반투명하게 열리는 중간(화면 기록이 가끔 멈추면 홈과 시트가 겹쳐 남는다)은 찍지 않고,
+      // 다 열린 시트로 겹쳐 바꾼다. 커서·누름 표시는 덮인 동안 없앤다 (그 자리에 남으면 요일 칩(화)을 누르는 것처럼 보인다)
+      await tap(phone, PHONE, '.fit-card', { settle: 300, click: false })
+      await freeze()
+      await phone.evaluate(() => document.querySelector('.fit-card')?.click())
       await stage(() => window.dropCursor())
       await phone.waitForSelector('dialog[open] .legend-link')
-      // 시트가 열리기 시작한 뒤에 카메라를 옮긴다 (반투명한 시트가 찍히지 않게)
-      await wait(150)
-      await focusPhone(150, 662, 600)
+      await phone.evaluate(() => Promise.all(document.querySelector('dialog[open]').getAnimations({ subtree: true }).map((animation) => animation.finished.catch(() => {}))))
+      await focusPhone(150, 662, 0)
+      await wait(80)
+      await unfreeze(300)
       mark('조건 시트')
       await tap(phone, PHONE, 'dialog[open] .legend-link', { settle: 400 })
       await phone.locator('dialog[open] .input--short').pressSequentially('8', { delay: 50 })
