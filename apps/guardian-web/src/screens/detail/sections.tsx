@@ -101,15 +101,19 @@ export function AddendaSection({ program }: Props) {
       <ul className="addenda-list">
         {addenda.map((addendum, index) => {
           const shown = addendumText(addendum, locale)
+          const meta = [
+            addendumTopic(addendum, locale),
+            addendum.added_at ? t('addendumDate', { date: formatDate(addendum.added_at, locale) }) : null,
+          ].filter((part): part is string => !!part)
+          const last = meta.pop()
           return (
             <li key={`${addendum.topic}-${index}`}>
-              {/* ‘AI 번역’ 표시는 머리줄 끝에: 문장 끝에 붙이면 문장이 줄을 꽉 채울 때 표시만 다음 줄로 떨어집니다 */}
+              {/* ‘AI 번역’ 표시는 머리줄 끝에, 마지막 마디(덧붙인 날)와 함께 줄바꿈합니다: 표시만 따로 다음 줄로 떨어지지 않게 */}
               <span className="addendum-meta">
-                {[
-                  addendumTopic(addendum, locale),
-                  addendum.added_at ? t('addendumDate', { date: formatDate(addendum.added_at, locale) }) : null,
-                ].filter(Boolean).join(' · ')}
-                {shown.original && <span className="addendum-ai">{t('addendumAi')}</span>}
+                {meta.map((part) => `${part} · `).join('')}
+                {(last || shown.original) && (
+                  <span className="addendum-when">{last}{shown.original && <span className="addendum-ai">{t('addendumAi')}</span>}</span>
+                )}
               </span>
               <p className="addendum-text" lang={shown.lang}>{shown.text}</p>
               {shown.original && <p className="addendum-original"><WithKorean template={t('addendumOriginal', { text: SLOT })} text={shown.original} /></p>}

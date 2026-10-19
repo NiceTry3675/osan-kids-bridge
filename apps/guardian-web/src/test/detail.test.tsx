@@ -172,7 +172,7 @@ describe('기관이 확인해 덧붙인 안내', () => {
     const card = (await screen.findByRole('heading', { name: 'Thông tin bổ sung đã được cơ quan xác nhận' })).closest('section')!
     expect(within(card).getByText(/Không phải bản gốc/)).toBeTruthy()
     expect(within(card).getByText('준비물 및 복장: 운동하기 편한 옷과 운동화').getAttribute('lang')).toBe('ko')
-    expect(within(card).getByText('Đồ cần mang và chi phí thêm · Bổ sung T5, 15/10')).toBeTruthy()
+    expect(card.querySelector('.addendum-meta')!.textContent).toBe('Đồ cần mang và chi phí thêm · Bổ sung T5, 15/10')
     expect(within(card).getByText('참가비: 무료').getAttribute('lang')).toBe('ko')
     const toCheck = screen.getByRole('heading', { name: 'Cần hỏi cơ quan' }).closest('section')!
     expect(card.compareDocumentPosition(toCheck) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
@@ -216,6 +216,8 @@ describe('기관이 확인해 덧붙인 안내', () => {
     // ‘AI 번역’ 표시는 머리줄 끝에 (문장이 줄을 꽉 채워도 표시만 따로 떨어지지 않게)
     expect(item.querySelector('.addendum-meta .addendum-ai')!.textContent).toBe('AI翻译')
     expect(item.querySelector('.addendum-meta')!.textContent).toMatch(/^费用 · .*AI翻译$/)
+    // 덧붙인 날과 표시는 한 덩어리로 줄바꿈한다
+    expect(item.querySelector('.addendum-when')!.textContent).toMatch(/^10月15日.*AI翻译$/)
     const original = within(item).getByText('참가비: 무료')
     expect(original.getAttribute('lang')).toBe('ko')
     expect(original.parentElement!.textContent).toBe('韩语原文：“참가비: 무료”')
