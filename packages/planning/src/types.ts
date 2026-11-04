@@ -28,7 +28,7 @@ export type GuardianAvailableWindow =
   | { day_of_week: Weekday; start_time: string; end_time: string }
   | { date: string; start_time: string; end_time: string }
 
-/** 기관이 고를 수 있는 후보 장소(시연용 가상 장소) */
+/** 기관이 고를 수 있는 후보 장소(이름은 실제 시설, 대관 가능 칸은 시연용 가정) */
 export interface Venue {
   id: string
   name: string

@@ -192,7 +192,7 @@ read_notice(공고 사실·원문 인용·확인할 점) → read_questions(질�
 
 ### 편성 도우미 (`POST /admin/planning/propose`)
 
-**편성 도우미**(`src/admin/planner.ts`)는 보호자 익명 통계·못 찾은 질문·지금 공고를 보고 다음 프로그램을 **무엇을·누구에게·언제·어디서** 열지 편성안을 쓰는 에이전트입니다. 통계는 `@osan-kids-bridge/planning`의 합성 응답 400가정(시연용)이고, 기관 대시보드 화면과 같은 데이터·같은 계산을 씁니다.
+**편성 도우미**(`src/admin/planner.ts`)는 보호자 익명 통계·못 찾은 질문·지금 공고를 보고 다음 프로그램을 **무엇을·누구에게·언제·어디서** 열지 편성안을 쓰는 에이전트입니다. 통계는 `@osan-kids-bridge/planning`의 합성 응답 180가정(시연용)이고, 기관 대시보드 화면과 같은 데이터·같은 계산을 씁니다.
 
 ```text
 read_demand(학년대·분야별 익명 통계) · read_questions(질문·주제별 건수) · read_programs(운영 중인 초등 아이 대상 공고)

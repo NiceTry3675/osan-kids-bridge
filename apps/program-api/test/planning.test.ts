@@ -128,8 +128,8 @@ describe('편성 도우미의 도구', () => {
   it('닿는 가정이 가려진(1~4) 칸이면 비율·차이도 내지 않아, 빼거나 곱해서 가린 값을 알아낼 수 없다', () => {
     const ledger = new FactLedger()
     const simulations = new Map<string, Simulation>()
-    // 초6 · 체험·문화 · 1개 반: 지금처럼 토요일 오전에 열면 닿는 가정이 5 미만
-    const output = simulatePlan({ interest: 'experience_culture', grade_range: [6, 6], class_count: 1, capacity: 15 }, ledger, simulations) as { baseline: { covered: unknown; coverage_pct: unknown }; options: Record<string, unknown>[] }
+    // 초4 · 체험·문화 · 1개 반: 지금처럼 토요일 오전에 열면 닿는 가정이 5 미만
+    const output = simulatePlan({ interest: 'experience_culture', grade_range: [4, 4], class_count: 1, capacity: 15 }, ledger, simulations) as { baseline: { covered: unknown; coverage_pct: unknown }; options: Record<string, unknown>[] }
     expect(output.baseline).toMatchObject({ covered: '5가정 미만', coverage_pct: '가림' })
     expect(ledger.get('s1.base.pct')).toBeUndefined()
     expect(output.options.every((option) => option.more_than_baseline === undefined && option.less_than_baseline === undefined)).toBe(true)
@@ -141,8 +141,8 @@ describe('편성 도우미의 도구', () => {
     expect(withoutNumbers('중국어 안내 필요(가정 수는 가림): 통역 연락처를 준비하세요.')).toBe('중국어 안내 필요: 통역 연락처를 준비하세요.')
     expect(withoutNumbers('한국어 수준 응답 중 초급이 46%예요. 보조교사를 두세요.')).toBe('한국어 수준 응답 중 초급 비율이 높아요. 보조교사를 두세요.')
     const ledger = new FactLedger()
-    const output = simulatePlan({ interest: 'all', grade_range: [1, 6], class_count: 2, capacity: 12 }, ledger, new Map()) as { capacity: { fact: string }; options: { classes: { expected_signups: unknown; over_capacity: boolean }[]; language_needs: string[]; teaching: string[] }[] }
-    expect(ledger.get(output.capacity.fact)).toMatchObject({ value: 12, unit: '명' })
+    const output = simulatePlan({ interest: 'all', grade_range: [1, 6], class_count: 2, capacity: 5 }, ledger, new Map()) as { capacity: { fact: string }; options: { classes: { expected_signups: unknown; over_capacity: boolean }[]; language_needs: string[]; teaching: string[] }[] }
+    expect(ledger.get(output.capacity.fact)).toMatchObject({ value: 5, unit: '명' })
     expect(output.options[0].classes.some((item) => item.over_capacity)).toBe(true)
     expect(JSON.stringify(output.options.map((option) => [option.language_needs, option.teaching]))).not.toMatch(/\d/)
   })
@@ -150,7 +150,7 @@ describe('편성 도우미의 도구', () => {
   it('지금 관행보다 덜 닿으면 차이를 loss로, 크기만 남긴다', () => {
     const ledger = new FactLedger()
     const simulations = new Map<string, Simulation>()
-    simulatePlan({ interest: 'sports_arts', grade_range: [1, 1], class_count: 1, capacity: 15 }, ledger, simulations)
+    simulatePlan({ interest: 'korean_study', grade_range: [5, 6], class_count: 1, capacity: 15 }, ledger, simulations)
     const result = simulations.get('s1')!.result
     const lower = result.recommendations.find((item) => item.baselineDelta !== undefined && item.baselineDelta < 0)!
     expect(ledger.get(`s1.r${lower.rank}.loss`)?.value).toBe(-lower.baselineDelta!)

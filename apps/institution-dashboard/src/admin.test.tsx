@@ -200,13 +200,13 @@ describe('공고 보완 도우미', () => {
 
 describe('AI 편성 제안', () => {
   const PLAN: PlanResult = {
-    passed: true, rounds: 2, model: 'test', data_note: '시연용 가상 응답 400가정 · 가상 장소 9곳 (실제 통계 아님)',
+    passed: true, rounds: 2, model: 'test', data_note: '시연용 가상 응답 180가정 · 장소 9곳의 대관 가능 시간은 가정 (실제 통계 아님)',
     steps: [{ tool: 'read_demand', ok: true, label: '초1~6' }, { tool: 'read_questions', ok: true }, { tool: 'read_programs', ok: true }, { tool: 'simulate_plan', ok: true, label: '초1~4 · 한국어' }, { tool: 'check_plan', ok: false, problems: 1 }, { tool: 'submit_plan', ok: true, problems: 0 }],
     proposals: [{
       id: 'plan-1', rank: 2, title: '초등 1~4학년 한국어 놀이 교실', interest: 'korean_study', interest_label: '한국어', grade_range: [1, 4], class_count: 2, capacity: 12,
       classes: [
-        { n: 1, slot: 'wed-evening', when: '수요일 저녁', venue_id: 'v-sinjang-gym', venue: '신장동 체육관', dong: '신장동', reach: '33가정', reach_count: { suppressed: false, value: 33 }, expected: '약 9명', expected_people: 9.2, over_capacity: false },
-        { n: 2, slot: 'mon-evening', when: '월요일 저녁', venue_id: 'v-sinjang-family', venue: '신장동 가족센터', dong: '신장동', reach: '30가정', reach_count: { suppressed: false, value: 30 }, expected: '약 8명', expected_people: 8.4, over_capacity: false },
+        { n: 1, slot: 'wed-evening', when: '수요일 저녁', venue_id: 'v-yangsan-library', venue: '양산도서관', dong: '세마동', reach: '33가정', reach_count: { suppressed: false, value: 33 }, expected: '약 9명', expected_people: 9.2, over_capacity: false },
+        { n: 2, slot: 'mon-evening', when: '월요일 저녁', venue_id: 'v-sinjang-center', venue: '신장1동 행정복지센터', dong: '신장동', reach: '30가정', reach_count: { suppressed: false, value: 30 }, expected: '약 8명', expected_people: 8.4, over_capacity: false },
       ],
       eligible: 131, covered: '54가정', covered_count: { suppressed: false, value: 54 }, coverage_pct: 41, baseline: { label: '지금처럼 모두 토요일 오전', covered: '29가정', coverage_pct: 22 }, gain: 25,
       language_support: [{ language: 'vi', label: '베트남어' }], language_needs: [], teaching: [], warnings: [],

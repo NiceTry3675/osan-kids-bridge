@@ -9,8 +9,8 @@ import type { DayPart, Dong, Grade, Interest, KoreanLevel, ProgramPlan, ScreenLa
 /** 시연용 가정: 고정 시드. 새로고침해도 같은 합성 데이터가 나옵니다. */
 export const DEMO_SEED = 20261014
 
-/** 시연용 가정: 합성 응답(가정) 수 */
-export const DEMO_RECORD_COUNT = 400
+/** 시연용 가정: 합성 응답(가정) 수. 한 가족센터가 초등 자녀를 둔 다문화가정에게서 모을 만한 규모로 잡았습니다. */
+export const DEMO_RECORD_COUNT = 180
 
 /** 오산시 6개 행정동(화면 표시 순서) */
 export const DONGS: Dong[] = ['중앙동', '대원동', '남촌동', '신장동', '세마동', '초평동']
@@ -123,8 +123,8 @@ export const DEFAULT_PLAN: Omit<ProgramPlan, 'venueIds'> = {
   classCount: 3,
   capacity: 15,
   baseline: [
-    { slot: 'sat-morning', venueId: 'v-jungang-library' },
-    { slot: 'sat-morning', venueId: 'v-sema-culture' },
-    { slot: 'sat-morning', venueId: 'v-namchon-library' },
+    { slot: 'sat-morning', venueId: 'v-jungang-center' },
+    { slot: 'sat-morning', venueId: 'v-kkumdure-library' },
+    { slot: 'sat-morning', venueId: 'v-cheonghak-library' },
   ],
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_PLAN, DONGS, DONG_ADJACENCY, ENROLLMENT_RATE, MIN_CAPACITY } from '../src/assumptions'
-import { DEMO_RESPONSES, mulberry32 } from '../src/generate'
+import { DEFAULT_PLAN, DEMO_SEED, DONGS, DONG_ADJACENCY, ENROLLMENT_RATE, MIN_CAPACITY } from '../src/assumptions'
+import { DEMO_RESPONSES, generateDemand, mulberry32 } from '../src/generate'
 import { VENUES } from '../src/venues'
 import { roundPeople, suppress } from '../src/aggregate'
 import { GRADES, INTERESTS, KOREAN_LEVELS, LANGUAGES } from '../src/labels'
@@ -11,6 +11,10 @@ import type { DemandResponse, Dong, Grade, Interest, KoreanLevel, ProgramPlan, R
 
 // ── 독립 무차별 대입 기준값: 비트셋·묶음 없이 정의 그대로 계산 ──────────────────────────
 interface RawOption { slot: SlotKey; venue: Venue }
+
+
+// 규칙 검사용 큰 표본: 같은 시드로 400가정을 만든다(시연 화면은 DEMO_RESPONSES 그대로)
+const SAMPLE = generateDemand(DEMO_SEED, 400)
 
 const eligibleOf = (responses: DemandResponse[], plan: ProgramPlan) => responses.filter((response) => {
   const [low, high] = [Math.min(...plan.gradeRange), Math.max(...plan.gradeRange)]
@@ -151,13 +155,13 @@ describe('최대 커버리지 추천: 정확 탐색', () => {
     expect(overTwoWords).toBeGreaterThanOrEqual(20)
   })
 
-  it('실제 시연 데이터(최대 400가정, 장소 9곳 전체)에서도 무차별 대입과 1~3위가 같다', () => {
+  it('실제 시연 데이터(합성 응답 전체, 장소 9곳 전체)에서도 무차별 대입과 1~3위가 같다', () => {
     for (const interest of ['experience_culture', 'all', 'career'] as const) {
       for (const classCount of [1, 2, 3]) {
         const plan: ProgramPlan = { interest, gradeRange: [1, 6], classCount, capacity: 15, venueIds: VENUES.map((venue) => venue.id) }
-        const result = recommend(DEMO_RESPONSES, VENUES, plan)
+        const result = recommend(SAMPLE, VENUES, plan)
         expect(result.eligibleCount).toBeGreaterThan(64)
-        expect(result.recommendations.map((item) => item.covered), `${interest} k=${classCount}`).toEqual(bruteTopCoverages(DEMO_RESPONSES, VENUES, plan))
+        expect(result.recommendations.map((item) => item.covered), `${interest} k=${classCount}`).toEqual(bruteTopCoverages(SAMPLE, VENUES, plan))
       }
     }
   })
@@ -177,10 +181,10 @@ describe('최대 커버리지 추천: 정확 탐색', () => {
     expect(result.recommendations.map((item) => item.covered)).toEqual([17, 17, 12])
     expect(result.recommendations[2].options).toEqual([{ slot: 'sat-morning', venueId: 'a' }, { slot: 'sat-morning', venueId: 'a2' }])
     expect(result.recommendations[2].warnings.some((line) => line.includes('새로 더하는 가정이 없어요'))).toBe(true)
-    // 시연 데이터 예: 진로 · 1학년 · 가상 남촌동 작은도서관만 · 2개 반 → 3위는 토 오후 + 토 오전(6가정)
-    const namchon: ProgramPlan = { interest: 'career', gradeRange: [1, 1], classCount: 2, capacity: 15, venueIds: ['v-namchon-library'] }
-    const demo = recommend(DEMO_RESPONSES, VENUES, namchon)
-    expect(demo.recommendations.map((item) => item.covered)).toEqual(bruteTopCoverages(DEMO_RESPONSES, VENUES, namchon))
+    // 시연 데이터 예: 진로 · 1학년 · 청학도서관(남촌동)만 · 2개 반 → 3위는 토 오후 + 목 저녁(6가정)
+    const namchon: ProgramPlan = { interest: 'career', gradeRange: [1, 1], classCount: 2, capacity: 15, venueIds: ['v-cheonghak-library'] }
+    const demo = recommend(SAMPLE, VENUES, namchon)
+    expect(demo.recommendations.map((item) => item.covered)).toEqual(bruteTopCoverages(SAMPLE, VENUES, namchon))
     expect(demo.recommendations[2].covered).toBe(6)
   })
 
@@ -298,8 +302,8 @@ describe('기존 계획 비교와 예외 상황', () => {
     const result = recommend(fixture, fixtureVenues, fixturePlan({ baseline: [{ slot: 'mon-morning', venueId: 'a' }] }))
     expect(result.baseline).toMatchObject({ covered: 0, classes: [{ bookable: false }] })
     expect(result.notices.some((notice) => notice.includes('가상 중앙동 도서관은 월요일 오전에 대관 가능으로 등록되어 있지 않아'))).toBe(true)
-    const center = recommend(DEMO_RESPONSES, VENUES, { ...DEFAULT_PLAN, venueIds: VENUES.map((venue) => venue.id), baseline: [{ slot: 'sat-morning', venueId: 'v-sinjang-family' }] })
-    expect(center.notices.some((notice) => notice.includes('신장동 가족센터는 토요일 오전에'))).toBe(true)
+    const center = recommend(DEMO_RESPONSES, VENUES, { ...DEFAULT_PLAN, venueIds: VENUES.map((venue) => venue.id), baseline: [{ slot: 'sat-morning', venueId: 'v-sinjang-center' }] })
+    expect(center.notices.some((notice) => notice.includes('신장1동 행정복지센터는 토요일 오전에'))).toBe(true)
     expect(center.notices.join(' ')).not.toContain('센터은')
   })
 
@@ -348,13 +352,13 @@ describe('기존 계획 비교와 예외 상황', () => {
   })
 
   it('정원 초과 경고는 표와 같은 반올림 값으로 판단하고, 경고 속 인원은 언제나 정원보다 크다', () => {
-    const at16 = recommend(DEMO_RESPONSES, VENUES, { ...DEFAULT_PLAN, capacity: 16, venueIds: VENUES.map((venue) => venue.id) })
+    const at16 = recommend(SAMPLE, VENUES, { ...DEFAULT_PLAN, capacity: 16, venueIds: VENUES.map((venue) => venue.id) })
     const first = at16.recommendations[0].classes[0]
     expect(roundPeople(first.expectedHeadcount)).toBe(16)
     expect(first.overCapacity).toBe(false)
     expect(at16.recommendations[0].warnings.join(' ')).not.toContain('정원 16명을 넘어요')
     for (let capacity = MIN_CAPACITY; capacity <= 30; capacity++) {
-      const result = recommend(DEMO_RESPONSES, VENUES, { ...DEFAULT_PLAN, capacity, venueIds: VENUES.map((venue) => venue.id) })
+      const result = recommend(SAMPLE, VENUES, { ...DEFAULT_PLAN, capacity, venueIds: VENUES.map((venue) => venue.id) })
       for (const item of result.recommendations) {
         for (const line of item.warnings.filter((warning) => warning.includes('정원'))) {
           const people = Number(/예상 신청 약 (\d+)명/.exec(line)?.[1])

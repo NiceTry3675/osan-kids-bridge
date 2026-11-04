@@ -101,7 +101,7 @@ const MAX_TURNS = 12
 /** 편성 도우미 전체의 마감. 넘으면 더 묻지 않고 마지막으로 검사한 편성안을 돌려준다 */
 const DEADLINE_MS = 120_000
 export const MAX_SIMULATIONS = 4
-export const DATA_NOTE = `시연용 가상 응답 ${DEMO_RECORD_COUNT}가정 · 가상 장소 9곳 (실제 통계 아님)`
+export const DATA_NOTE = `시연용 가상 응답 ${DEMO_RECORD_COUNT}가정 · 장소 ${VENUES.length}곳의 대관 가능 시간은 가정 (실제 통계 아님)`
 
 export const TOPIC_LABELS: Record<UncertainTopic, string> = {
   family_eligibility: '참여 자격', companion: '동반', korean_level: '한국어 수준·통역', schedule: '일정·참석 방식',
@@ -145,7 +145,7 @@ const PROPOSALS_PARAMETERS = {
 export const PLAN_TOOLS: FunctionDeclaration[] = [
   {
     name: 'read_demand',
-    description: '보호자 익명 수요 통계를 읽는다(시연은 가상 응답 400가정이고, 보호자 웹의 조건을 모으는 기능은 아직 없다): 응답 가정 수, 요일·시간대별 가능 가정(21칸), 동·화면 언어·한국어 수준 분포, 분야별 관심 가정. 1~4가정인 칸은 가려서 숫자가 없다.',
+    description: `보호자 익명 수요 통계를 읽는다(시연은 가상 응답 ${DEMO_RECORD_COUNT}가정이고, 보호자 웹의 조건을 모으는 기능은 아직 없다): 응답 가정 수, 요일·시간대별 가능 가정(21칸), 동·화면 언어·한국어 수준 분포, 분야별 관심 가정. 1~4가정인 칸은 가려서 숫자가 없다.`,
     parametersJsonSchema: {
       type: 'object',
       properties: {
