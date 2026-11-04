@@ -1,5 +1,7 @@
+import type { PosterLanguage } from './poster/tokens'
+
 // 공고 구조화 데이터와 보호자 웹 API의 데이터 계약.
-// API 응답(ProgramResponse)은 보호자 웹(apps/guardian-web/src/data/types.ts)의 Program을 그대로 만족하고
+// API 응답(ProgramListing·SearchResponse)은 보호자 웹(apps/guardian-web/src/data/types.ts)의 Program·SearchResponse를 그대로 만족하고
 // (test/contract.test.ts가 타입으로 확인), 보호자 명세 v2.2 6장의 추가 필드를 덧붙인다.
 
 export type MatchStatus = 'matched' | 'not_matched' | 'unknown' | 'not_applied'
@@ -206,7 +208,17 @@ export interface Addendum {
   added_at: string
   /** AI 초안에서 시작했는가 */
   drafted_by_ai: boolean
+  /** 저장할 때 옮긴 베트남어·중국어. 숫자·날짜·시각·전화번호가 원문과 같은 번역만 남긴다. 번역하지 못했으면 없다 */
+  translations?: AddendumTranslations
 }
+
+export interface AddendumTranslations {
+  vi?: string
+  zh?: string
+}
+
+/** 추가 안내가 답한 주제: '기관에 확인할 점' 주제와 비용(보호자 웹의 비용 행) */
+export type AddendumCover = UncertainTopic | 'cost'
 
 /** 보호자 웹이 받는 기관 추가 안내 (guardian-web Program.addenda). 담당자 이름과 보호자 질문 원문은 보내지 않는다 */
 export interface GuardianAddendum {
@@ -215,6 +227,10 @@ export interface GuardianAddendum {
   text: string
   /** 덧붙인 날 (서울 기준 YYYY-MM-DD). 보호자 웹 formatDate가 날짜만 받으므로 시각은 뺀다. 읽을 수 없으면 null */
   added_at: string | null
+  /** 이 안내가 답한 주제: 안내의 주제(기타 제외), 푼 '기관에 확인할 점'의 주제(uncertain_items와 같은 분류), 비용을 다루면 'cost' */
+  covers: AddendumCover[]
+  /** text의 베트남어·중국어 번역 (있는 언어만) */
+  translations?: AddendumTranslations
 }
 
 /** 보호자 웹의 '기관에 확인할 점' 주제 (guardian-web UncertainItem.topic) */
@@ -320,9 +336,22 @@ export interface ProgramResponse {
   source_evidence: Pick<Evidence, 'field' | 'quote'>[]
 }
 
-export interface SearchResponse {
-  results: ProgramResponse[]
-  needs_confirmation: ProgramResponse[]
+/** 공고마다 붙는 포스터 정보: 원본이 있는지, 보호자에게 보여 줄 수 있는 번역본 언어 (guardian-web Program.posters) */
+export interface ProgramPosters {
+  original: boolean
+  /** 승인됐거나 시연 설정에서 자동 검증을 통과했고, 번역한 뒤 원본이 바뀌지 않은 번역본만 */
+  languages: PosterLanguage[]
+}
+
+/** 보호자 웹 API가 내보내는 공고 한 건 (목록·상세·조건 판정): 판정 결과에 포스터 정보를 붙인 것 */
+export interface ProgramListing extends ProgramResponse {
+  posters: ProgramPosters
+}
+
+/** 검색 결과. 서버는 공고마다 포스터 정보를 붙여 SearchResponse<ProgramListing>으로 내보낸다 */
+export interface SearchResponse<T extends ProgramResponse = ProgramListing> {
+  results: T[]
+  needs_confirmation: T[]
 }
 
 export const OSAN_DONGS = ['중앙동', '대원동', '남촌동', '신장동', '세마동', '초평동'] as const

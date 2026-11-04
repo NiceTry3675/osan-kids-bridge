@@ -5,14 +5,15 @@ import type { AddressInfo } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
-import { checkDraft, checkItem, claimsIn, newTokens, parseDraftItems, sourceTexts } from '../src/admin/check'
+import { checkDraft, checkItem, claimsIn, exampleInBlank, newTokens, parseDraftItems, sourceTexts } from '../src/admin/check'
 import type { CheckContext, DraftItem } from '../src/admin/check'
 import { parseImproveRequest, runImprover } from '../src/admin/improve'
 import type { ImproveInput, ImproveResult } from '../src/admin/improve'
 import { addAddenda, adminFacts, parseAddenda, parseReviewRequest } from '../src/admin/programs'
+import { clearTranslationMemo, keepsFixedValues, translateAddenda } from '../src/admin/translate-addenda'
 import { verifiedCitations } from '../src/agent/agent'
 import { noticeFacts } from '../src/agent/tools'
-import { generateWithTools } from '../src/llm/gemini'
+import { generateJson, generateWithTools } from '../src/llm/gemini'
 import { evaluateProgram } from '../src/match'
 import { factsHash, isPublished } from '../src/review/hash'
 import { approveRecord } from '../src/review/lifecycle'
@@ -22,6 +23,7 @@ import type { ProgramRecord } from '../src/types'
 
 vi.mock('../src/llm/gemini', () => ({ generateWithTools: vi.fn(), generateJson: vi.fn(), generateText: vi.fn(), modelName: () => 'test-model' }))
 const mockedTurn = vi.mocked(generateWithTools)
+const mockedJson = vi.mocked(generateJson)
 
 // 2026-10-15(목) 12:00, Asia/Seoul
 const NOW = new Date('2026-10-15T03:00:00Z')
@@ -93,15 +95,35 @@ function context(record: ProgramRecord): CheckContext {
 }
 
 const item = (overrides: Partial<DraftItem>): DraftItem => ({
-  kind: 'add_notice', topic: 'other', questions: ['참가비가 있나요?'], quote: null, draft: '참가비: {{참가비 (예: 무료)}}', resolves_items: ['참가비'], reason: '9명이 물음', ...overrides,
+  kind: 'add_notice', topic: 'other', questions: ['참가비가 있나요?'], quote: null, draft: '참가비: {{참가비}}', resolves_items: ['참가비'], reason: '9명이 물음', ...overrides,
 })
 
 describe('공고 보완 초안의 코드 검사', () => {
   const record = base('sports')
 
-  it('기관이 정할 값을 빈칸으로 남긴 초안은 통과한다 (빈칸 안의 예시는 검사하지 않는다)', () => {
+  it('기관이 정할 값을 이름만 적은 빈칸으로 남긴 초안은 통과한다', () => {
     expect(checkItem(item({}), context(record))).toEqual([])
-    expect(checkItem(item({ draft: '참가비: {{1인 5,000원 또는 무료}}' }), context(record))).toEqual([])
+    expect(checkItem(item({ draft: '형제자매도 함께 올 수 있는지: {{가능 여부와 조건}}' }), context(record))).toEqual([])
+  })
+
+  it('빈칸 이름에 예시나 답을 넣으면 잡고 이름만 쓰게 알려 준다 (담당자가 AI의 값을 옮겨 적지 않게)', () => {
+    expect(checkItem(item({ draft: '참가비: {{참가비 (예: 무료)}}' }), context(record))).toEqual(['빈칸 이름에 예시나 답을 넣음 {{참가비 (예: 무료)}} → 채울 항목의 이름만 {{참가비}}'])
+    expect(checkItem(item({ draft: '준비물: {{준비물 및 복장 안내 (예: 운동화, 편한 복장, 개인 물병 등)}}' }), context(record)))
+      .toEqual(['빈칸 이름에 예시나 답을 넣음 {{준비물 및 복장 안내 (예: 운동화, 편한 복장, 개인 물병 등)}} → 채울 항목의 이름만 {{준비물 및 복장 안내}}'])
+    expect(checkItem(item({ draft: '참가비: {{1인 5,000원 또는 무료}}' }), context(record))).toEqual(['빈칸 이름에 예시나 답을 넣음 {{1인 5,000원 또는 무료}} → 채울 항목의 이름만 (예: {{참가비}})'])
+    for (const name of ['참가비 예시', '준비물 (운동화, 물병 등)', '동반 (가능/불가)', '복장 e.g. 운동복', '무료', '필요 없음']) expect([name, exampleInBlank(name)]).toEqual([name, true])
+    // 묻는 꼴의 이름과 설명을 덧붙인 이름은 예시가 아니다
+    for (const name of ['참가비', '가능 여부와 조건', '무료 여부', '불가능 여부', '형제자매도 괜찮은지', '예약 방법', '통역 지원 언어', '집합 장소 (실내)']) expect([name, exampleInBlank(name)]).toEqual([name, false])
+  })
+
+  it('빈칸 이름에 공고에 없는 금액·시각·전화를 넣거나 값을 붙이면 잡는다', () => {
+    const problems = (draft: string) => checkItem(item({ draft }), context(record))
+    expect(problems('참가비: {{참가비 5,000원}}')).toEqual(['빈칸 이름에 공고에 없는 값 5000원을 넣음 → 채울 항목의 이름만 (예: {{참가비}})'])
+    expect(problems('집결: {{집결 시각 오전 9시 30분}}')).toHaveLength(1)
+    expect(problems('집결: {{집결 시각 오전 9시 30분}}')[0]).toMatch(/^빈칸 이름에 공고에 없는 값 .*9/)
+    expect(problems('문의: {{담당 전화 031-123-4567}}')).toEqual(['빈칸 이름에 공고에 없는 값 031-123-4567을 넣음 → 채울 항목의 이름만 (예: {{참가비}})'])
+    expect(problems('참가비: {{참가비: 무료}}')).toEqual(['빈칸 이름에 예시나 답을 넣음 {{참가비: 무료}} → 채울 항목의 이름만 {{참가비}}'])
+    expect(problems('형제자매 동반: {{가능}}').join()).toContain('빈칸 이름에 예시나 답을 넣음 {{가능}}')
   })
 
   it('공고에 없는 금액·날짜·전화·수량을 빈칸 밖에 쓰면 잡는다', () => {
@@ -182,12 +204,26 @@ describe('공고 보완 도우미 (에이전트)', () => {
     expect(result.passed).toBe(true)
     expect(result.rounds).toBe(3)
     expect(result.steps.map((step) => `${step.tool}:${step.ok}`)).toEqual(['read_notice:true', 'read_questions:true', 'check_draft:false', 'check_draft:true', 'submit:true'])
-    expect(result.items.map((entry) => [entry.id, entry.blanks, entry.asked, entry.problems])).toEqual([['item-1', ['참가비 (예: 무료)'], 9, []], ['item-2', [], 2, []]])
+    expect(result.items.map((entry) => [entry.id, entry.blanks, entry.asked, entry.problems])).toEqual([['item-1', ['참가비'], 9, []], ['item-2', [], 2, []]])
     expect(result.uncovered).toEqual([])
     // 코드 검사의 문제 목록이 모델에 돌아갔다
     const feedback = JSON.stringify(mockedTurn.mock.calls[2][0].contents)
     expect(feedback).toContain("공고에 없는 답을 단정함 '무료'")
     expect(mockedTurn.mock.calls[0][0].system).toContain('{{빈칸 이름}}')
+    // 프롬프트의 예시도 빈칸 이름에 답을 넣지 않는다
+    expect(mockedTurn.mock.calls[0][0].system).toContain('"참가비: {{참가비}}"')
+    expect(mockedTurn.mock.calls[0][0].system).not.toMatch(/\{\{[^}]*예:/)
+  })
+
+  it('빈칸 이름에 예시를 넣은 초안은 검사에서 돌려보내고, 이름만 쓴 초안을 받는다', async () => {
+    mockedTurn
+      .mockResolvedValueOnce(turn([{ name: 'check_draft', args: { items: [{ ...good[0], draft: '참가비: {{참가비 (예: 무료)}}' }, good[1]] } }]))
+      .mockResolvedValueOnce(turn([{ name: 'submit', args: { items: good } }]))
+    const result = await runImprover({ record, questions: QUESTIONS, now: NOW })
+    expect(result.passed).toBe(true)
+    expect(result.steps.map((step) => `${step.tool}:${step.ok}`)).toEqual(['check_draft:false', 'submit:true'])
+    expect(JSON.stringify(mockedTurn.mock.calls[1][0].contents)).toContain('빈칸 이름에 예시나 답을 넣음')
+    expect(result.items[0].blanks).toEqual(['참가비'])
   })
 
   it('문제가 남은 초안을 제출하면 받지 않고, 끝내 통과하지 못하면 문제와 함께 돌려준다', async () => {
@@ -233,13 +269,61 @@ describe('기관 추가 안내', () => {
   })
 })
 
+describe('기관 추가 안내 번역', () => {
+  beforeEach(() => { mockedJson.mockReset(); clearTranslationMemo() })
+
+  it('숫자·날짜·시각·전화번호가 원문과 같고 한국어가 남지 않은 번역만 받는다', () => {
+    expect(keepsFixedValues('참가비: 무료', 'Phí tham gia: Miễn phí', 'vi')).toBe(true)
+    expect(keepsFixedValues('10월 31일(토) 10:00까지 031-376-3428로 문의', 'Liên hệ 031-376-3428 trước 10:00 ngày 31/10 (T7)', 'vi')).toBe(true)
+    expect(keepsFixedValues('10월 31일(토) 10:00까지 031-376-3428로 문의', '10月31日（周六）10:00前请致电031-376-3428咨询', 'zh')).toBe(true)
+    expect(keepsFixedValues('재료비 1인 5,000원', 'Phí nguyên liệu 5.000 won/1 người', 'vi')).toBe(true)
+    // 일/월을 바꿔 쓴 날짜, 바뀐 금액, 남은 한국어는 받지 않는다 (기관·장소 이름의 괄호 속 한국어는 괜찮다)
+    expect(keepsFixedValues('10월 31일까지', 'trước ngày 10/31', 'vi')).toBe(false)
+    expect(keepsFixedValues('재료비 1인 5,000원', '材料费每人3000韩元', 'zh')).toBe(false)
+    expect(keepsFixedValues('참가비: 무료', 'Phí tham gia: 무료', 'vi')).toBe(false)
+    expect(keepsFixedValues('오산시가족센터 2층', 'Tầng 2 Trung tâm Gia đình Osan (오산시가족센터)', 'vi')).toBe(true)
+  })
+
+  it('문장들을 한 번에 옮기고, 대조를 통과하지 못한 언어는 빼며, 모델이 실패하면 번역 없이 돌려준다', async () => {
+    mockedJson.mockResolvedValueOnce({
+      items: [
+        { index: 0, vi: 'Phí tham gia: Miễn phí', zh: '参加费：免费' },
+        { index: 1, vi: 'Tập trung lúc 09:30', zh: '9点50分集合' },
+      ],
+    })
+    expect(await translateAddenda(['참가비: 무료', '09:30까지 모여 주세요.', '주차는 할 수 없습니다.'])).toEqual([
+      { vi: 'Phí tham gia: Miễn phí', zh: '参加费：免费' },
+      { vi: 'Tập trung lúc 09:30' },
+      null,
+    ])
+    expect(mockedJson.mock.calls[0][0].parts[0]).toMatchObject({ text: expect.stringContaining('"ko":"참가비: 무료"') })
+    mockedJson.mockRejectedValueOnce(new Error('model down'))
+    expect(await translateAddenda(['준비물: 운동화'])).toEqual([null])
+    expect(await translateAddenda([])).toEqual([])
+  })
+
+  it('대조를 통과한 번역은 기억해 두고, 같은 문장을 다시 저장할 때 모델을 부르지 않는다', async () => {
+    mockedJson.mockResolvedValueOnce({ items: [{ index: 0, vi: 'Phí tham gia: Miễn phí', zh: '参加费：免费' }] })
+    expect(await translateAddenda(['참가비: 무료'])).toEqual([{ vi: 'Phí tham gia: Miễn phí', zh: '参加费：免费' }])
+    mockedJson.mockResolvedValueOnce({ items: [{ index: 0, vi: 'Mang giày thể thao', zh: '请穿运动鞋' }] })
+    expect(await translateAddenda(['참가비: 무료', '준비물: 운동화'])).toEqual([
+      { vi: 'Phí tham gia: Miễn phí', zh: '参加费：免费' },
+      { vi: 'Mang giày thể thao', zh: '请穿运动鞋' },
+    ])
+    expect(mockedJson).toHaveBeenCalledTimes(2)
+    expect(mockedJson.mock.calls[1][0].parts[0].text).not.toContain('참가비')
+    expect(await translateAddenda(['준비물: 운동화'])).toEqual([{ vi: 'Mang giày thể thao', zh: '请穿运动鞋' }])
+    expect(mockedJson).toHaveBeenCalledTimes(2)
+  })
+})
+
 describe('검수 화면 데이터', () => {
   it('사실마다 값·근거 인용·확인 상태를 보여 준다', () => {
     const facts = adminFacts(base('sports', { cost_krw: 10000, cost_raw: '1만원' }))
     const byLabel = (label: string) => facts.find((fact) => fact.label === label)
     expect(byLabel('정원')).toEqual({ label: '정원', value: '200명', status: 'verified', quotes: ['모집인원: 200명'] })
     expect(byLabel('비용')).toMatchObject({ value: '10,000원', status: 'unverified', quotes: [] })
-    expect(byLabel('나이 범위')).toMatchObject({ status: 'verified' })
+    expect(byLabel('나이 범위')).toMatchObject({ value: '5세 이상', status: 'verified' })
     expect(byLabel('보호자 동반')).toMatchObject({ value: '공고에 없음', status: 'not_stated' })
   })
 
@@ -355,6 +439,27 @@ describe('관리자 API', () => {
     expect((await call(port, 'DELETE', '/admin/programs/sports/addenda/add-9')).status).toBe(404)
   })
 
+  it('추가 안내를 저장할 때 번역을 함께 남기고, 보호자 상세에 답한 주제·번역과 함께 보낸다 (번역이 실패해도 저장한다)', async () => {
+    clearTranslationMemo()
+    mockedJson.mockReset().mockResolvedValueOnce({ items: [{ index: 0, vi: 'Phí tham gia: Miễn phí', zh: '参加费：免费' }] })
+    const saved = await call(port, 'POST', '/admin/programs/sports/addenda', { author: '김담당', items: [{ topic: 'other', text: '참가비: 무료', resolves_items: ['참가비'], resolves_questions: ['참가비가 있나요?'], drafted_by_ai: true }] })
+    expect(saved.status).toBe(200)
+    expect(saved.body.addenda[0]).toMatchObject({ text: '참가비: 무료', translations: { vi: 'Phí tham gia: Miễn phí', zh: '参加费：免费' } })
+    expect(loadRecord('sports', dir)?.addenda?.[0].translations).toEqual({ vi: 'Phí tham gia: Miễn phí', zh: '参加费：免费' })
+    const program = await call(port, 'GET', '/programs/sports')
+    expect(program.body.addenda).toEqual([{ topic: 'other', text: '참가비: 무료', added_at: '2026-10-15', covers: ['cost'], translations: { vi: 'Phí tham gia: Miễn phí', zh: '参加费：免费' } }])
+
+    mockedJson.mockRejectedValueOnce(new Error('model down'))
+    const plain = await call(port, 'POST', '/admin/programs/sports/addenda', { author: '김담당', items: [{ topic: 'materials', text: '준비물: 운동하기 편한 옷과 운동화' }] })
+    expect(plain.status).toBe(200)
+    expect(plain.body.addenda[1]).not.toHaveProperty('translations')
+    // 형식이 틀린 요청은 번역하지 않고 바로 거절한다
+    mockedJson.mockClear()
+    expect((await call(port, 'POST', '/admin/programs/sports/addenda', { author: '김담당', items: [{ topic: 'other', text: '{{금액}}' }] })).status).toBe(400)
+    expect(mockedJson).not.toHaveBeenCalled()
+    for (const id of ['add-1', 'add-2']) await call(port, 'DELETE', `/admin/programs/sports/addenda/${id}`)
+  })
+
   it('공고 보완 도우미는 질문 목록을 검사한 뒤 에이전트에 넘기고, 실패하면 503', async () => {
     expect((await call(port, 'POST', '/admin/programs/sports/improve', { questions: [] })).status).toBe(400)
     const reply = await call(port, 'POST', '/admin/programs/sports/improve', { questions: QUESTIONS })
@@ -369,5 +474,20 @@ describe('관리자 API', () => {
     expect((await call(port, 'POST', '/admin/posters/sports/vi/approve', {})).status).toBe(400)
     expect((await call(port, 'GET', '/admin/posters/sports/original')).status).toBe(404)
     expect((await call(port, 'GET', '/admin/posters/sports/vi-2')).status).toBe(404)
+  })
+
+  it('번역 포스터 검증 기록은 내부 날짜 표기 없이 담당자가 읽는 말로 보인다 (예전 기록 포함)', async () => {
+    mkdirSync(join(posters, 'translated'), { recursive: true })
+    writeFileSync(join(posters, 'translated', 'sports.zh.json'), JSON.stringify({
+      program_id: 'sports', language: 'zh', source_file: 'poster.png', source_sha256: 'x', status: 'failed', created_at: NOW.toISOString(),
+      models: { image: 'm', check: 'm' }, table: [], table_repairs: 0, table_issues: [], qr: null, chosen_attempt: null,
+      attempts: [{ n: 1, file: 'sports.zh.attempt-1.png', readback: '', duration_ms: 1, issues: [
+        { kind: 'tokens', message: '빠진 날짜 10-31 · 원래 없던 날짜 invalid:10/31/2026' },
+        { kind: 'segment', message: '다르게 적힘: 기대 "31/10/2026"' },
+      ] }],
+    }))
+    const detail = await call(port, 'GET', '/admin/programs/sports')
+    const zh = detail.body.poster_list.find((entry: any) => entry.language === 'zh')
+    expect(zh.attempt_list[0].issues.map((issue: any) => issue.message)).toEqual(['빠진 날짜 10월 31일 · 날짜를 읽지 못함 (10/31/2026)', '다르게 적힘: 기대 "31/10/2026"'])
   })
 })

@@ -40,13 +40,31 @@ export const hasMatchConditions = (filters: SearchFilters) =>
 
 const pause = () => new Promise((resolve) => setTimeout(resolve, 120))
 
+/**
+ * 마지막 찾기 결과의 공고들(조건·화면 언어별). 찾기 결과는 상세와 같은 판정이라, 목록에서 상세를 열면 이것을 먼저 보여 주고
+ * 서버에서 다시 받아 바꿉니다(불러오는 동안 빈 화면이 번쩍이지 않게).
+ */
+let lastSearch: { key: string; programs: Map<string, Program> } | null = null
+const searchKey = (filters: SearchFilters, locale: Locale) => JSON.stringify(serializeFilters(filters, locale))
+
+function remember(filters: SearchFilters, locale: Locale, found: SearchResponse): SearchResponse {
+  lastSearch = { key: searchKey(filters, locale), programs: new Map([...found.results, ...found.needs_confirmation].map((program) => [program.program_id, program])) }
+  return found
+}
+
+/** 같은 조건·화면 언어로 방금 찾은 목록에 있던 공고. 조건 없이 여는 상세(공유 링크 등)는 판정이 달라 쓰지 않습니다 */
+export function listedProgram(id: string, filters: SearchFilters | null, locale: Locale): Program | null {
+  if (!filters || !hasMatchConditions(filters) || lastSearch?.key !== searchKey(filters, locale)) return null
+  return lastSearch.programs.get(id) ?? null
+}
+
 export async function searchPrograms(filters: SearchFilters, locale: Locale, signal?: AbortSignal): Promise<SearchResponse> {
-  if (usingDemoData) { await pause(); return searchMockPrograms(filters) }
+  if (usingDemoData) { await pause(); return remember(filters, locale, searchMockPrograms(filters)) }
   const response = await fetch(`${baseUrl()}/programs/search`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(serializeFilters(filters, locale)), signal,
   })
-  return readJson<SearchResponse>(response)
+  return remember(filters, locale, await readJson<SearchResponse>(response))
 }
 
 /**

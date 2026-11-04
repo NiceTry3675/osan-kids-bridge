@@ -11,6 +11,10 @@ import { SLOTS, SLOT_INDEX } from '../src/slots'
 
 const sum = (record: Record<string | number, number>) => Object.values(record).reduce((total, value) => total + value, 0)
 
+
+// 규칙 검사용 큰 표본: 같은 시드로 400가정을 만든다(시연 화면은 DEMO_RESPONSES 그대로)
+const SAMPLE = generateDemand(DEMO_SEED, 400)
+
 describe('시연용 가정', () => {
   it('동 인접 관계는 대칭이고 자기 자신을 포함하지 않는다', () => {
     for (const dong of DONGS) {
@@ -79,7 +83,7 @@ describe('합성 수요 생성기', () => {
   })
 
   it('평일 저녁과 토요일 오전·오후에 수요가 몰리고 평일 오전은 적다', () => {
-    const counts = countSlots(DEMO_RESPONSES)
+    const counts = countSlots(SAMPLE)
     const weekdays = ['mon', 'tue', 'wed', 'thu', 'fri'] as const
     const average = (part: 'morning' | 'evening') => weekdays.reduce((total, day) => total + counts[`${day}-${part}`], 0) / weekdays.length
     expect(average('evening')).toBeGreaterThan(average('morning') * 3)

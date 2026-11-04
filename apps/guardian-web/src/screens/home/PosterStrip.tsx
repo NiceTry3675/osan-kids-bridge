@@ -1,15 +1,18 @@
-import { useId, useState } from 'react'
+import { useId } from 'react'
 import type { MouseEvent } from 'react'
 import { useI18n } from '../../i18n'
 import type { Locale, Program } from '../../data/types'
-import { posterUrl } from '../../data/agent'
 import type { PosterLanguage } from '../../data/agent'
 import { INTEREST_VISUAL, programText } from '../../lib/content'
 import { languageName } from '../../lib/format'
+import { usePosterImage } from '../../lib/poster'
 import { hrefFor, navigate, programPath } from '../../lib/router'
 import { ValueIcon } from '../intro/art'
 
 const POSTER_LANGUAGES: PosterLanguage[] = ['vi', 'zh']
+
+/** 띠의 포스터 한 장이 그려지는 가장 넓은 폭(CSS px): 480px 틀에서 세 장이 한 줄일 때. 썸네일은 이 폭의 두 배로 받습니다. */
+const STRIP_POSTER_WIDTH = 142
 
 export interface PosterPick {
   program: Program
@@ -58,7 +61,8 @@ export function PosterStrip({ programs }: { programs: Program[] }) {
 
 function PosterCard({ program, variant, eager }: PosterPick & { eager: boolean }) {
   const { locale, t } = useI18n()
-  const [failed, setFailed] = useState(false)
+  // 번역본을 못 불러오면 한국어 원본으로, 원본도 안 되면 포스터 그림으로 바꿉니다.
+  const { shown, onError } = usePosterImage(program.program_id, variant, !!program.posters?.original, STRIP_POSTER_WIDTH)
   const text = programText(program, locale)
   const path = programPath(program.program_id)
 
@@ -72,10 +76,10 @@ function PosterCard({ program, variant, eager }: PosterPick & { eager: boolean }
     <li>
       <a className="home-poster" href={hrefFor(path)} onClick={open}>
         <span className={`home-poster-thumb tone-${INTEREST_VISUAL[program.category].tone}`}>
-          {failed
-            ? <span className="home-poster-fallback"><ValueIcon name="poster" /></span>
-            : <img src={posterUrl(program.program_id, variant)} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" onError={() => setFailed(true)} />}
-          {variant !== 'original'
+          {shown
+            ? <img src={shown.src} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" onError={onError} />
+            : <span className="home-poster-fallback"><ValueIcon name="poster" /></span>}
+          {(shown?.variant ?? variant) !== 'original'
             ? <span className="home-poster-badge"><ValueIcon name="spark" />{t('homePosterAi')}</span>
             : locale !== 'ko-easy' && <span className="home-poster-badge home-poster-badge--original">{t('originalTag')}</span>}
         </span>

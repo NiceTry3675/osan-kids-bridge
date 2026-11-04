@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { DONGS } from '../src/assumptions'
-import { DEMO_RESPONSES } from '../src/generate'
+import { DEMO_SEED, DONGS } from '../src/assumptions'
+import { DEMO_RESPONSES, generateDemand } from '../src/generate'
 import {
   defaultFilters, filterResponses, formatCount, formatHouseholds, formatPeople, heatLegend, heatLevel, safePercent, summarize, suppress, suppressPartition,
 } from '../src/aggregate'
@@ -11,6 +11,10 @@ import { recoverableCells, subtractableCells } from '../src/testing/disclosure'
 import type { DemandResponse, Dong, Grade, KoreanLevel, SlotKey } from '../src/types'
 
 let serial = 0
+
+// 규칙 검사용 큰 표본: 같은 시드로 400가정을 만든다(시연 화면은 DEMO_RESPONSES 그대로)
+const SAMPLE = generateDemand(DEMO_SEED, 400)
+
 const household = (overrides: Partial<DemandResponse> = {}): DemandResponse => ({
   id: `t-${serial++}`, dong: '중앙동', child_grade: 3, available_slots: ['sat-morning'], interests: [], screen_language: 'vi', ...overrides,
 })
@@ -130,7 +134,7 @@ describe('수요 현황: 화면 숫자로 가린 칸을 역산할 수 없다', (
     let checked = 0
     let maskedStates = 0
     for (const filters of demandStates()) {
-      const responses = filterResponses(DEMO_RESPONSES, filters)
+      const responses = filterResponses(SAMPLE, filters)
       const summary = summarize(responses, filters)
       if (summary.status !== 'ok') continue
       checked += 1
@@ -188,12 +192,12 @@ describe('수요 현황: 화면 숫자로 가린 칸을 역산할 수 없다', (
   })
 
   it('가정당 가능 칸 평균은 보이는 히트맵 숫자로 계산하고 가린 칸은 2.5로 어림한다', () => {
-    const all = summarize(DEMO_RESPONSES)
+    const all = summarize(SAMPLE)
     if (all.status !== 'ok') throw new Error('expected ok')
     expect(all.averageSlotsEstimated).toBe(false)
-    expect(all.averageSlots).toBeCloseTo(DEMO_RESPONSES.reduce((sum, response) => sum + response.available_slots.length, 0) / DEMO_RESPONSES.length, 9)
+    expect(all.averageSlots).toBeCloseTo(SAMPLE.reduce((sum, response) => sum + response.available_slots.length, 0) / SAMPLE.length, 9)
     const filters: DemandFilters = { dongs: ['초평동'], gradeRange: [1, 6], interest: 'all', language: 'zh' }
-    const small = summarize(filterResponses(DEMO_RESPONSES, filters), filters)
+    const small = summarize(filterResponses(SAMPLE, filters), filters)
     if (small.status !== 'ok') throw new Error('expected ok')
     const visible = SLOTS.filter((slot) => !small.slots[slot].suppressed)
     const expected = (visible.reduce((sum, slot) => { const count = small.slots[slot]; return count.suppressed ? sum : sum + count.value }, 0) + (SLOTS.length - visible.length) * 2.5) / small.total

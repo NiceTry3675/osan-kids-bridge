@@ -2,6 +2,8 @@
 // node capture.js [all|home|detail|chat|journey|dashboard|plan|loop] [언어...]  (dashboard·plan·loop는 관리자 API가 켜진 npm run demo에서)
 //   journey·chat 뒤에 언어(ko-easy|vi|zh)를 주면 그 언어만 찍는다. 기본: journey는 세 언어, chat은 베트남어·중국어
 //   loop: 질문 하나가 공고를 바꾸기까지(12번). 베트남어 보호자가 알린 질문에 담당자가 빈칸을 채워 덧붙이고, 중국어 보호자가 그 안내와 그 안내를 인용한 답을 본다. 끝나면(실패해도) 덧붙인 안내·알린 질문을 지운다
+//         record-demo.js가 받아 둔 render/prefetch.json이 있어야 한다. all에서는 맨 끝에 찍고, 그 파일이 없으면 알리고 건너뛴다(앞의 캡처는 그대로 남는다)
+//   record-demo.js와 같은 시연 서버 상태(덧붙인 안내·알린 질문)를 바꾸므로 녹화 중에는 실행하지 않는다
 const { chromium } = require('playwright-core')
 const fs = require('node:fs')
 const path = require('node:path')
@@ -12,7 +14,9 @@ const API = 'http://127.0.0.1:8787'
 const GUARDIAN = 'http://127.0.0.1:5173'
 const DASHBOARD = 'http://127.0.0.1:5174'
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+const MODES = ['all', 'home', 'detail', 'chat', 'journey', 'dashboard', 'plan', 'loop']
 const which = process.argv[2] ?? 'all'
+if (!MODES.includes(which)) throw new Error(`모르는 캡처: ${which} (${MODES.join('|')})`)
 const LOCALES = ['ko-easy', 'vi', 'zh']
 const chosenLocales = (fallback) => {
   const asked = process.argv.slice(3)
@@ -22,6 +26,14 @@ const chosenLocales = (fallback) => {
 }
 /** 편성 도우미의 실제 결과를 한 번 받아 두는 파일. 발표자료 캡처와 시연영상이 같은 편성안을 쓴다(지우면 다시 받음) */
 const PLAN_FIXTURE = path.resolve(__dirname, 'render/plan-result.json')
+/** 캡처 속 요소의 자리(그림 크기에 대한 비율). build-deck.js가 그 위에 강조 테두리를 그린다 */
+const MARKS = path.join(OUT, 'marks.json')
+function saveMark(image, box) {
+  let marks = {}
+  try { marks = JSON.parse(fs.readFileSync(MARKS, 'utf8')) } catch { /* 처음 */ }
+  marks[image] = Object.fromEntries(Object.entries(box).map(([key, value]) => [key, Math.round(value * 10000) / 10000]))
+  fs.writeFileSync(MARKS, JSON.stringify(marks, null, 2))
+}
 /** record-demo.js가 녹화 전에 받아 둔 실제 결과(상담 답·공고 보완 초안·담당자가 채운 값). loop는 영상과 같은 보완 초안을 쓴다 */
 const PREFETCH_CACHE = path.resolve(__dirname, 'render/prefetch.json')
 const PROGRAM = 'osan-fc-sports-day'
@@ -98,6 +110,8 @@ async function journey(browser, locale) {
   const toCard = (offset) => page.evaluate((off) => { const card = document.querySelector('a.item[href="/programs/osan-fc-sports-day"]'); if (card) window.scrollTo(0, card.getBoundingClientRect().top + window.scrollY - off) }, offset)
   await toCard(230)
   await page.waitForFunction(() => [...document.querySelectorAll('.item-poster img')].every((image) => image.complete))
+  // 맨 위·아래 글줄이 반으로 잘리지 않게 (운동회 카드는 다 보이게)
+  if (!(await tidyScroll(page, { keys: ['a.item[href="/programs/osan-fc-sports-day"]'] }))) console.warn(`${tag} 목록: 글줄이 잘리지 않는 자리를 찾지 못했습니다.`)
   await page.waitForTimeout(400)
   await page.screenshot({ path: path.join(OUT, `app-${tag}-results-top.png`) })
   await toCard(12)
@@ -109,6 +123,9 @@ async function journey(browser, locale) {
   await page.waitForSelector('.compare')
   await page.waitForFunction(() => [...document.querySelectorAll('.poster-thumb img')].every((image) => image.complete))
   await page.evaluate(() => window.scrollTo(0, 0))
+  // 비용 줄(공고 정보의 넷째 줄)까지 아래 고정 버튼 줄(.action-bar) 위에 보이게, 맨 위·아래 글줄이 반으로 잘리지 않는 가장 가까운 자리로
+  // (중국어는 글꼴이 커서 맨 위에서는 비용 줄이 버튼 줄에 걸린다)
+  if (!(await tidyScroll(page, { keys: ['.facts .fact-row:nth-child(4)'], bar: '.action-bar' }))) console.warn(`${tag} 상세: 비용 줄이 다 보이는 자리를 찾지 못했습니다.`)
   await page.waitForTimeout(400)
   await page.screenshot({ path: path.join(OUT, `app-${tag}-detail.png`) })
   await page.context().close()
@@ -138,16 +155,30 @@ async function main() {
     if (which === 'all' || which === 'chat') {
       for (const locale of chosenLocales(['vi', 'zh'])) {
         if (!CHAT_QUESTION[locale]) throw new Error(`상담 캡처 질문이 없는 언어: ${locale}`)
-        const page = await phone(browser, locale)
-        await page.goto(GUARDIAN + `/programs/${PROGRAM}`)
-        await page.click('.ai-entry')
-        await page.fill('#chat-input', CHAT_QUESTION[locale])
-        await page.keyboard.press('Enter')
-        await page.waitForSelector('.bot-turn', { timeout: 90_000 })
+        // 모델 답이 가끔 90초 넘게 오지 않는다. 그때는 새 화면에서 한 번 더 묻는다
+        let page
+        for (let attempt = 1; ; attempt++) {
+          page = await phone(browser, locale)
+          await page.goto(GUARDIAN + `/programs/${PROGRAM}`)
+          await page.click('.ai-entry')
+          await page.fill('#chat-input', CHAT_QUESTION[locale])
+          await page.keyboard.press('Enter')
+          try {
+            await page.waitForSelector('.bot-turn', { timeout: 90_000 })
+            break
+          } catch (error) {
+            await page.context().close()
+            if (attempt >= 2) throw error
+            console.warn(`${locale}: 상담 답이 90초 안에 오지 않아 다시 묻습니다.`)
+          }
+        }
         await page.waitForTimeout(600)
         const shoot = sheetShooter(page)
-        await shoot('.bubble--user', `app-chat-answer-${locale}.png`, 120)
-        if (await page.$('.chat-inquiry')) await shoot('.chat-inquiry', `app-chat-inquiry-${locale}.png`, 60)
+        await shoot('.bubble--user', `app-chat-answer-${locale}.png`, 120, { keys: ['.bubble--user'] })
+        if (await page.$('.chat-inquiry')) {
+          // 답 길이가 매번 달라, 아래 입력 줄에 글줄(노란 카드 제목 등)이 반으로 걸리지 않는 자리로 다듬어 찍는다
+          await shoot('.chat-inquiry', `app-chat-inquiry-${locale}.png`, 60, { keys: ['.chat-inquiry'] })
+        }
         else console.warn(`${locale}: 답에 문의문이 없어 app-chat-inquiry-${locale}.png를 찍지 않았습니다.`)
         // '기관에 알리기'는 누르지 않는다(시연 상태를 바꾸지 않게). 알리는 장면은 loop가 찍고 되돌린다
         await page.context().close()
@@ -156,7 +187,6 @@ async function main() {
     if (which === 'all' || which === 'journey') {
       for (const locale of chosenLocales(LOCALES)) await journey(browser, locale)
     }
-    if (which === 'all' || which === 'loop') await loop(browser)
     if (which === 'all' || which === 'plan') {
       // AI 편성 제안: 실제 편성 도우미를 부른다(20~30초). 위(통계·도우미)와 아래(편성안 카드·근거)를 따로 찍는다
       const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 })
@@ -207,6 +237,18 @@ async function main() {
       await page.goto(DASHBOARD + '/#programs/osan-fc-sports-day')
       await page.waitForSelector('.review-grid .poster-img')
       await page.waitForFunction(() => [...document.querySelectorAll('.poster-img')].every((image) => image.complete && image.naturalWidth > 0))
+      // 세 칸(원문·AI가 읽은 사실·번역)의 스크롤 영역 아래 끝에 반쯤 걸린 글줄은 가린다 (그 칸을 스크롤하면 보이는 줄)
+      await page.evaluate(() => document.querySelectorAll('.pane-body').forEach((body) => {
+        const bottom = body.getBoundingClientRect().bottom
+        const range = document.createRange()
+        const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
+        let cut = Infinity
+        while (walker.nextNode()) {
+          range.selectNodeContents(walker.currentNode)
+          for (const line of range.getClientRects()) if (line.height > 0 && line.top < bottom - 1 && line.bottom > bottom + 1) cut = Math.min(cut, line.top)
+        }
+        if (cut !== Infinity) body.style.clipPath = `inset(0 0 ${Math.ceil(bottom - cut + 2)}px 0)`
+      }))
       await page.waitForTimeout(400)
       await page.screenshot({ path: path.join(OUT, 'dash-review.png') })
       // 공고 보완 도우미: 실제 에이전트를 부른다(10~20초). 빈칸은 채우지 않은 채로 찍어 'AI가 값을 정하지 않는다'를 보인다
@@ -222,18 +264,84 @@ async function main() {
       await page.waitForTimeout(400)
       await page.screenshot({ path: path.join(OUT, 'dash-improve-drafts.png') })
     }
+    // loop는 맨 끝에. record-demo.js의 render/prefetch.json이 없으면 all은 앞의 캡처를 남기고 건너뛴다(loop만 부르면 멈춘다)
+    if (which === 'loop') await loop(browser)
+    else if (which === 'all') {
+      if (fs.existsSync(PREFETCH_CACHE)) await loop(browser)
+      else console.warn('loop를 건너뜁니다: render/prefetch.json이 없습니다. node record-demo.js를 한 번 실행한 뒤 node capture.js loop로 1·12번 그림을 찍으세요.')
+    }
   } finally {
     await browser.close()
   }
 }
 
 /** 시트(상담 창) 안에서 selector가 위에서 offset만큼 떨어지게 스크롤하고 찍는다 */
-const sheetShooter = (page) => async (selector, file, offset = 12) => {
+/**
+ * 지금 스크롤 자리에서 가장 가까운, 글줄이 위·아래 끝에 반으로 잘리지 않고 keys(선택자, 모두)가 다 보이는 자리로 옮긴다.
+ * scroller가 없으면 페이지 전체, bar는 화면 아래에 붙은 버튼 줄(그 위까지만 보인다고 본다). 그런 자리가 없으면 그대로 두고 false
+ */
+async function tidyScroll(page, { scroller = null, keys = [], bar = null, range = 240 } = {}) {
+  return page.evaluate(([scrollerSel, keySels, barSel, reach]) => {
+    const box = scrollerSel ? document.querySelector(scrollerSel) : document.scrollingElement
+    const root = scrollerSel ? box : document.body
+    const edges = () => {
+      const r = scrollerSel ? box.getBoundingClientRect() : { top: 0, bottom: innerHeight }
+      const foot = barSel && document.querySelector(barSel)
+      return { top: r.top, bottom: foot ? Math.min(r.bottom, foot.getBoundingClientRect().top) : r.bottom }
+    }
+    const texts = []
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (node) => (node.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT) })
+    while (walker.nextNode()) texts.push(walker.currentNode)
+    // 테두리가 있는 작은 것(단추·입력 칸·칩·상담 첫 안내 띠)도 반으로 잘리면 안 된다
+    const controls = [...root.querySelectorAll('button, input, select, textarea, [role="radio"], [role="tab"], [class*="chip"], [class*="pill"], .chat-intro')]
+    const range = document.createRange()
+    const across = (r, edge) => r.height > 0 && r.top < edge - 1 && r.bottom > edge + 1
+    const outsideBar = (el) => !(barSel && el?.closest(barSel))
+    // 글줄은 1px까지 봐주고, 테두리가 있는 것은 조금만 걸쳐도 잘린 것으로 본다 (1px 테두리 조각도 보인다)
+    const cuts = (edge) => texts.some((node) => {
+      if (!outsideBar(node.parentElement)) return false
+      range.selectNodeContents(node)
+      return [...range.getClientRects()].some((line) => across(line, edge))
+    }) || controls.some((el) => {
+      if (!outsideBar(el) || el.getClientRects().length === 0) return false
+      const r = el.getBoundingClientRect()
+      return r.height > 0 && r.top < edge - 0.25 && r.bottom > edge + 0.25
+    })
+    const shown = (e) => keySels.every((sel) => [...document.querySelectorAll(sel)].every((el) => {
+      const r = el.getBoundingClientRect()
+      return r.top >= e.top - 0.5 && r.bottom <= e.bottom + 0.5
+    }))
+    const start = box.scrollTop
+    for (let d = 0; d <= reach; d += 2) {
+      for (const at of d ? [start + d, start - d] : [start]) {
+        if (at < 0) continue
+        box.scrollTop = at
+        if (Math.abs(box.scrollTop - at) > 0.5) continue
+        const e = edges()
+        if (shown(e) && !cuts(e.top) && !cuts(e.bottom)) return true
+      }
+    }
+    box.scrollTop = start
+    return false
+  }, [scroller, keys, bar, range])
+}
+
+/** 캡처 속 요소들(선택자)을 감싸는 자리, 그림 크기에 대한 비율 */
+const boxOf = (page, selector) => page.evaluate((sel) => {
+  const rects = [...document.querySelectorAll(sel)].map((el) => el.getBoundingClientRect())
+  const x = Math.min(...rects.map((r) => r.left)), y = Math.min(...rects.map((r) => r.top))
+  const right = Math.max(...rects.map((r) => r.right)), bottom = Math.max(...rects.map((r) => r.bottom))
+  return { x: x / innerWidth, y: y / innerHeight, w: (right - x) / innerWidth, h: (bottom - y) / innerHeight }
+}, selector)
+
+const sheetShooter = (page) => async (selector, file, offset = 12, tidy = null) => {
   await page.evaluate(([sel, off]) => {
     const body = document.querySelector('dialog[open] .sheet-body')
     const el = document.querySelector(sel)
     body.scrollTop = el.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - off
   }, [selector, offset])
+  // tidy가 있으면 글줄이 시트 위·아래 끝에 반으로 잘리지 않고 tidy.keys가 다 보이는 가장 가까운 자리로
+  if (tidy && !(await tidyScroll(page, { scroller: 'dialog[open] .sheet-body', ...tidy }))) console.warn(`${file}: 글줄이 잘리지 않는 자리를 찾지 못해 그대로 찍습니다.`)
   await page.waitForTimeout(300)
   await page.screenshot({ path: path.join(OUT, file) })
 }
@@ -308,10 +416,16 @@ async function loop(browser) {
     await page.waitForSelector('.addenda')
     await page.waitForFunction(() => [...document.querySelectorAll('.poster-thumb img')].every((image) => image.complete && image.naturalWidth > 0))
     await page.evaluate(() => Promise.all([...document.querySelectorAll('.poster-thumb img')].map((image) => image.decode().catch(() => {}))))
-    // 덧붙인 안내 카드가 화면 가운데쯤 오게
-    await page.evaluate(() => { const el = document.querySelector('.addenda'); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 200) })
+    // 장소 줄부터 찍는다: 비용 줄(덧붙인 안내로 바뀐 것)과 덧붙인 안내 카드가 함께 들어오고, 맨 위 줄이 반으로 잘리지 않게
+    await page.evaluate(() => {
+      const from = document.querySelectorAll('.facts .fact-row')[2] ?? document.querySelector('.addenda')
+      window.scrollTo(0, from.getBoundingClientRect().top + window.scrollY - 6)
+    })
+    await tidyScroll(page, { keys: ['.facts .fact-row:nth-child(4)', '.addenda'], bar: '.action-bar' })
     await page.waitForTimeout(400)
     await page.screenshot({ path: path.join(OUT, 'app-loop-addenda-zh.png') })
+    // 덱(12번)이 카드에 테두리를 그릴 자리: 그림 크기에 대한 비율
+    saveMark('app-loop-addenda-zh.png', await boxOf(page, '.addenda'))
     await page.click('.ai-entry')
     await page.fill('#chat-input', LOOP_QUESTION_ZH)
     await page.keyboard.press('Enter')
@@ -320,7 +434,15 @@ async function loop(browser) {
     if (!(await page.$('.chat-sources .chat-source-note'))) throw new Error('중국어 답이 기관이 덧붙인 안내를 인용하지 않았습니다. 다시 실행하세요.')
     const shoot = sheetShooter(page)
     await shoot('.bubble--user', 'app-loop-answer-zh.png', 40)
-    await shoot('.chat-sources', 'app-loop-sources-zh.png', 300)
+    // 답 첫 문장부터 기관 안내를 인용한 근거까지 한 화면에 (답이 길면 첫 문장 대신 근거가 다 보이게), 글줄이 잘리지 않게
+    const CITED = '.chat-sources blockquote:has(.chat-source-note)'
+    await page.evaluate(() => { const body = document.querySelector('dialog[open] .sheet-body'); const lead = document.querySelector('.bot-turn .bubble--bot'); body.scrollTop += lead.getBoundingClientRect().top - body.getBoundingClientRect().top - 8 })
+    if (!(await tidyScroll(page, { scroller: 'dialog[open] .sheet-body', keys: ['.bot-turn .bubble-lead', CITED], range: 400 }))) {
+      await tidyScroll(page, { scroller: 'dialog[open] .sheet-body', keys: [CITED], range: 600 })
+    }
+    await page.waitForTimeout(300)
+    await page.screenshot({ path: path.join(OUT, 'app-loop-sources-zh.png') })
+    saveMark('app-loop-sources-zh.png', await boxOf(page, CITED))
     await page.context().close()
     await context.close()
   } finally {

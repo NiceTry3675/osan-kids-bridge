@@ -1,5 +1,6 @@
 import type {
-  ApplicationMethod, DisplayLanguage, GuardianSummary, InquiryMethod, ProgramRecord, ProgramSession, SummariesByLanguage, UncertainItem, UncertainTopic,
+  Addendum, AddendumCover, ApplicationMethod, DisplayLanguage, GuardianSummary, InquiryMethod, ProgramRecord, ProgramSession, SummariesByLanguage,
+  UncertainItem, UncertainTopic,
 } from '../types'
 import { methodPurpose } from '../summarize/facts'
 import { isValidDate } from './dates'
@@ -84,6 +85,32 @@ export function guardianUncertainItems(record: ProgramRecord, items: string[]): 
     else byTopic.set(topic, { topic, note_ko: sourceNote(record, topic, item) })
   }
   return [...byTopic.values()]
+}
+
+/**
+ * 참가비를 말하는 안내 ('참가비: 무료', '수강료는 5,000원', '1만 원', '무료로 참여해요').
+ * 그냥 '무료'·'비용'은 주차·간식·셔틀이나 형제 동반 추가 비용일 수 있어 보지 않고,
+ * 금액은 숫자 바로 뒤의 '원'만 본다 ('1:1 원어민', '031-372-1234 원장'은 아니다)
+ */
+const FEE_TEXT = /참가비|참여비|참가료|수강료|교육비|재료비|회비|(?:참가|참여|수강|교육|프로그램)\s*비용|(?<![\d-])\d[\d,]*(?:\s*[만천]\s*)?원|무료\s*(?:로\s*)?(?:참여|참가|수강|운영|진행)|(?:참여|참가|수강)(?:은|는|가|이)?\s*무료/
+/** 참가비를 묻던 '기관에 확인할 점' (normalize.ts가 비용이 없을 때 넣는 '참가비') */
+const FEE_ITEM = /^(?:참가비|참여비|수강료|재료비|회비)/
+
+/**
+ * 기관 추가 안내가 답한 주제. 안내의 주제와 푼 '기관에 확인할 점'의 주제(guardianUncertainItems와 같은 분류, 기타 제외)를 모으고,
+ * 안내가 참가비를 말하거나 참가비 항목을 풀었으면 'cost'를 붙인다 (보호자 웹이 비용 행의 '확인 필요'를 이 안내로 바꿔 보여 준다).
+ * openTopics를 주면 아직 남은 확인할 점의 주제는 빼서, 같은 주제의 다른 질문이 숨지 않게 한다
+ */
+export function addendumCovers(addendum: Pick<Addendum, 'topic' | 'text' | 'resolves_items'>, openTopics: ReadonlySet<UncertainTopic> = new Set()): AddendumCover[] {
+  const covers = new Set<AddendumCover>()
+  if (addendum.topic !== 'other') covers.add(addendum.topic)
+  for (const item of addendum.resolves_items) {
+    const topic = uncertainTopic(item)
+    if (topic && topic !== 'other') covers.add(topic)
+  }
+  for (const topic of openTopics) covers.delete(topic)
+  if (FEE_TEXT.test(addendum.text) || addendum.resolves_items.some((item) => FEE_ITEM.test(item.trim()))) covers.add('cost')
+  return [...covers]
 }
 
 export const isSafeUrl = (value: string | null | undefined): value is string => {

@@ -1,12 +1,12 @@
-import { useId, useState } from 'react'
+import { useId } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
 import { useI18n } from '../i18n'
-import { posterUrl } from '../data/agent'
 import type { PosterLanguage } from '../data/agent'
 import type { Locale, Program } from '../data/types'
-import { INTEREST_VISUAL, itemsToCheck, programText } from '../lib/content'
+import { addendumText, costAddendum, INTEREST_VISUAL, itemsToCheck, programText } from '../lib/content'
 import { InterestIcon } from '../screens/intro/art'
-import { formatCost, formatSessionPlace, formatSessionWhen, formatStatus, topicLabel } from '../lib/format'
+import { formatCost, formatSessionPlace, formatSessionWhen, formatStatus, placeLang, topicLabel } from '../lib/format'
+import { usePosterImage } from '../lib/poster'
 import { hrefFor, navigate, programPath } from '../lib/router'
 import { Marked, StatusTag } from './feedback'
 import { Icon } from './Icon'
@@ -62,8 +62,8 @@ export function ProgramItem({ program }: { program: Program }) {
             <Fact label={timeMatched ? t('matchedShort') : t('schedule')}>
               {session?.date ? formatSessionWhen(session, locale) : <Marked>{t('scheduleUnknown')}</Marked>}
             </Fact>
-            <Fact label={t('place')}><span lang="ko">{formatSessionPlace(session, locale)}</span></Fact>
-            <Fact label={t('cost')}>{program.cost_krw === null ? <Marked>{formatCost(program, locale)}</Marked> : formatCost(program, locale)}</Fact>
+            <Fact label={t('place')}><span lang={placeLang(session)}>{formatSessionPlace(session, locale)}</span></Fact>
+            <Fact label={t('cost')} clamp><Cost program={program} locale={locale} /></Fact>
           </span>
           {checks.length > 0 && (
             <span className="item-checks">
@@ -77,21 +77,37 @@ export function ProgramItem({ program }: { program: Program }) {
   )
 }
 
-/** 그림 칸: 포스터가 있으면 64×88 썸네일(번역본에는 ‘AI 번역’ 표시), 없거나 못 불러오면 분야 그림. 제목이 이미 공고를 말하므로 읽기 프로그램에는 숨깁니다. */
+/**
+ * 비용 칸. 공고에 비용이 없어도 기관이 덧붙인 안내가 비용에 답했으면 그 문장(화면 언어로 옮긴 것이 있으면 그것)을 보여 주고,
+ * 둘 다 없을 때만 ‘비용 확인 필요’ 형광펜을 칠합니다. 한국어 원문은 상세의 비용 칸과 안내 카드에 있습니다.
+ */
+function Cost({ program, locale }: { program: Program; locale: Locale }) {
+  if (program.cost_krw !== null) return <>{formatCost(program, locale)}</>
+  const addendum = costAddendum(program)
+  if (!addendum) return <Marked>{formatCost(program, locale)}</Marked>
+  const shown = addendumText(addendum, locale)
+  return <span lang={shown.lang}>{shown.text}</span>
+}
+
+/** 목록 썸네일의 화면 폭(CSS px). 포스터가 정사각형이라 정사각형으로 그립니다(styles/home.css .item-poster). */
+const ITEM_POSTER_SIZE = 64
+
+/**
+ * 그림 칸: 포스터가 있으면 정사각형 썸네일(번역본에는 ‘AI 번역’ 표시), 번역본을 못 불러오면 한국어 원본, 그것도 안 되면 분야 그림.
+ * 제목이 이미 공고를 말하므로 읽기 프로그램에는 숨깁니다.
+ */
 function ItemArt({ program, locale }: { program: Program; locale: Locale }) {
   const { t } = useI18n()
-  const variant = listPoster(program, locale)
-  const src = variant ? posterUrl(program.program_id, variant) : null
-  const [failed, setFailed] = useState<string | null>(null)
-  if (!src || failed === src) {
+  const { shown, onError } = usePosterImage(program.program_id, listPoster(program, locale), !!program.posters?.original, ITEM_POSTER_SIZE)
+  if (!shown) {
     const visual = INTEREST_VISUAL[program.category]
     // 홈 분야 타일과 같은 선 아이콘
     return <span className={`item-art tone-${visual.tone}`} aria-hidden="true"><InterestIcon interest={program.category} /></span>
   }
   return (
     <span className="item-poster" aria-hidden="true">
-      <img src={src} alt="" width={64} height={88} loading="lazy" decoding="async" onError={() => setFailed(src)} />
-      {variant !== 'original' && <span className="item-poster-ai">{t('itemPosterAi')}</span>}
+      <img src={shown.src} alt="" width={ITEM_POSTER_SIZE} height={ITEM_POSTER_SIZE} loading="lazy" decoding="async" onError={onError} />
+      {shown.variant !== 'original' && <span className="item-poster-ai">{t('itemPosterAi')}</span>}
     </span>
   )
 }

@@ -3,17 +3,21 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { Program as GuardianProgram, SearchResponse as GuardianSearchResponse } from '../../guardian-web/src/data/types'
 import { DEMO_NOW } from '../src/config'
-import { guardianMethods, guardianSummaries, guardianUncertainItems, uncertainTopic } from '../src/match/contract'
+import { addendumCovers, guardianMethods, guardianSummaries, guardianUncertainItems, uncertainTopic } from '../src/match/contract'
 import { evaluateProgram } from '../src/match/evaluate'
 import { searchPrograms } from '../src/match/search'
 import { factsHash, isPublished, publicSummaries } from '../src/review/hash'
 import { loadRecords } from '../src/store'
-import type { LanguageSummary, ProgramRecord, ProgramResponse, SearchResponse } from '../src/types'
+import type { Addendum, LanguageSummary, ProgramListing, ProgramPosters, ProgramRecord, ProgramResponse, SearchResponse } from '../src/types'
 
 // API 응답이 보호자 웹(apps/guardian-web/src/data/types.ts)의 계약을 그대로 만족하는지.
-// 아래 두 함수는 타입 검사(npm run typecheck)에서 계약이 어긋나면 실패한다.
+// 아래 함수들은 타입 검사(npm run typecheck)에서 계약이 어긋나면 실패한다.
+// 서버가 내보내는 공고(ProgramListing: 판정 결과 + 포스터 정보)와 검색 응답, 포스터·추가 안내 모양을 따로 확인한다.
 export const asGuardianProgram = (program: ProgramResponse): GuardianProgram => program
+export const asGuardianListing = (program: ProgramListing): GuardianProgram & { posters: NonNullable<GuardianProgram['posters']> } => program
 export const asGuardianSearch = (response: SearchResponse): GuardianSearchResponse => response
+export const asGuardianPosters = (posters: ProgramPosters): NonNullable<GuardianProgram['posters']> => posters
+export const asGuardianAddenda = (addenda: ProgramResponse['addenda']): NonNullable<GuardianProgram['addenda']> => addenda
 
 const NOW = new Date('2026-10-15T03:00:00Z')
 
@@ -191,9 +195,62 @@ describe('기관에 확인할 점 (보호자 웹 UncertainItem)', () => {
       resolves_items: ['형제자매 동반 가능 여부'], author: '김담당', added_at: '2026-10-15T16:30:00.000Z', drafted_by_ai: true,
     }
     const program = evaluateProgram(record({ uncertain_items: ['형제자매 동반 가능 여부'], addenda: [addendum] }), null, NOW)
-    expect(program.addenda).toEqual([{ topic: 'companion', text: '형제자매도 함께 올 수 있습니다.', added_at: '2026-10-16' }])
+    expect(program.addenda).toEqual([{ topic: 'companion', text: '형제자매도 함께 올 수 있습니다.', added_at: '2026-10-16', covers: ['companion'] }])
     expect(program.uncertain_items.map((item) => item.topic)).not.toContain('companion')
     expect(evaluateProgram(record(), null, NOW).addenda).toEqual([])
+  })
+
+  it('추가 안내마다 답한 주제(covers)를 붙인다: 푼 확인 항목의 주제와, 비용을 다루면 cost', () => {
+    const addendum = (overrides: Partial<Addendum>): Addendum => ({
+      id: 'add-1', topic: 'other', text: '', resolves_questions: [], resolves_items: [], author: '김담당', added_at: '2026-10-15T03:00:00.000Z', drafted_by_ai: true, ...overrides,
+    })
+    // 참가비 항목은 보호자 웹이 비용 행에 보여 주므로 주제는 없고 cost만
+    expect(addendumCovers(addendum({ text: '참가비: 무료', resolves_items: ['참가비'] }))).toEqual(['cost'])
+    expect(addendumCovers(addendum({ text: '재료비 1인 5,000원은 현장에서 받습니다.' }))).toEqual(['cost'])
+    expect(addendumCovers(addendum({ text: '참가비는 1만 원입니다.' }))).toEqual(['cost'])
+    expect(addendumCovers(addendum({ topic: 'materials', text: '준비물: 운동하기 편한 옷과 운동화', resolves_items: ['준비물'] }))).toEqual(['materials'])
+    // 기타로 묶이는 항목은 주제로 넣지 않는다 (같은 기타의 다른 질문이 숨는다)
+    expect(addendumCovers(addendum({ text: '형제자매도 함께 올 수 있습니다.', resolves_items: ['보호자·형제자매 동반 가능 여부', '주차 가능 여부'] }))).toEqual(['companion'])
+    expect(addendumCovers(addendum({ text: '무료로 참여할 수 있어요.' }))).toEqual(['cost'])
+    // '지원', '정원'의 '원'은 비용이 아니다
+    expect(addendumCovers(addendum({ text: '베트남어 통역을 지원하고 정원은 그대로입니다.' }))).toEqual([])
+  })
+
+  it('참가비가 아닌 무료·비용·원은 cost로 보지 않는다', () => {
+    const addendum = (overrides: Partial<Addendum>): Addendum => ({
+      id: 'add-1', topic: 'other', text: '', resolves_questions: [], resolves_items: [], author: '김담당', added_at: '2026-10-15T03:00:00.000Z', drafted_by_ai: true, ...overrides,
+    })
+    expect(addendumCovers(addendum({ text: '주차는 무료예요.' }))).toEqual([])
+    expect(addendumCovers(addendum({ text: '오산역에서 무료 셔틀버스가 다녀요.' }))).toEqual([])
+    expect(addendumCovers(addendum({ topic: 'materials', text: '간식은 센터에서 무료로 드려요.' }))).toEqual(['materials'])
+    expect(addendumCovers(addendum({ text: '1:1 원어민 선생님과 함께해요.' }))).toEqual([])
+    expect(addendumCovers(addendum({ text: '문의는 031-372-1234 원장에게 해 주세요.' }))).toEqual([])
+    expect(addendumCovers(addendum({ topic: 'companion', text: '형제자매도 올 수 있어요.', resolves_items: ['형제자매 동반 시 추가 비용'] }))).toEqual(['companion'])
+  })
+
+  it('한 항목만 푼 안내는 같은 주제의 남은 확인할 점을 숨기지 않는다', () => {
+    const base = { id: 'add-1', resolves_questions: [], author: '김담당', added_at: '2026-10-15T03:00:00.000Z', drafted_by_ai: true }
+    const partial = evaluateProgram(record({
+      uncertain_items: ['준비물 확인 필요', '간식 제공 여부', '주차 가능 여부', '통역 지원 여부'],
+      addenda: [
+        { ...base, topic: 'materials', text: '준비물: 운동화', resolves_items: ['준비물 확인 필요'] },
+        { ...base, id: 'add-2', topic: 'other', text: '주차할 수 있어요.', resolves_items: ['주차 가능 여부'] },
+      ],
+    }), null, NOW)
+    expect(partial.uncertain_items_ko).toEqual(expect.arrayContaining(['간식 제공 여부', '통역 지원 여부']))
+    expect(partial.uncertain_items_ko).not.toEqual(expect.arrayContaining(['준비물 확인 필요']))
+    expect(partial.uncertain_items.map((item) => item.topic)).toEqual(expect.arrayContaining(['materials', 'other']))
+    expect(partial.addenda?.map((addendum) => addendum.covers)).toEqual([[], []])
+  })
+
+  it('저장해 둔 번역은 있는 언어만 보호자 응답에 담는다', () => {
+    const base = { id: 'add-1', topic: 'other' as const, text: '참가비: 무료', resolves_questions: [], resolves_items: ['참가비'], author: '김담당', added_at: '2026-10-15T03:00:00.000Z', drafted_by_ai: true }
+    const both = evaluateProgram(record({ uncertain_items: ['참가비'], addenda: [{ ...base, translations: { vi: 'Phí tham gia: Miễn phí', zh: '参加费：免费' } }] }), null, NOW)
+    expect(both.addenda).toEqual([{ topic: 'other', text: '참가비: 무료', added_at: '2026-10-15', covers: ['cost'], translations: { vi: 'Phí tham gia: Miễn phí', zh: '参加费：免费' } }])
+    const viOnly = evaluateProgram(record({ addenda: [{ ...base, translations: { vi: 'Phí tham gia: Miễn phí', zh: ' ' } }] }), null, NOW)
+    expect(viOnly.addenda[0].translations).toEqual({ vi: 'Phí tham gia: Miễn phí' })
+    const none = evaluateProgram(record({ addenda: [{ ...base, translations: {} }] }), null, NOW)
+    expect(none.addenda[0]).not.toHaveProperty('translations')
   })
 })
 

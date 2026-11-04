@@ -15,6 +15,8 @@ const QA = process.env.DECK_QA === '1'
 const OUT = QA ? path.resolve(__dirname, 'render/deck-qa.pptx') : path.resolve(__dirname, '../osan-kids-bridge-deck.pptx')
 const img = (name) => path.join(ASSETS, name)
 /** PNG의 세로/가로 비율 (IHDR의 폭·높이). 캡처를 다시 찍어 크기가 바뀌어도 그림이 늘어나지 않게 */
+/** capture.js가 남긴 캡처 속 요소의 자리(비율). 없으면 각 슬라이드의 기본값을 쓴다 */
+const MARKS = (() => { try { return JSON.parse(fs.readFileSync(img('marks.json'), 'utf8')) } catch { return {} } })()
 const ratioOf = (name) => { const head = fs.readFileSync(img(name)).subarray(16, 24); return head.readUInt32BE(4) / head.readUInt32BE(0) }
 /** 편성 도우미의 실제 결과(capture.js plan이 받아 둔 것). 13번(편성)의 숫자를 캡처와 같은 결과에서 읽는다 */
 const PLAN_RESULT = (() => {
@@ -464,7 +466,8 @@ pres.addSection({ title: '해결' })
   steps.forEach(([file, language, title, note], index) => {
     const x = left + index * (w + gap)
     phone(slide, img(file), { x, y, h })
-    badge(slide, String(index + 1), { x: x - 0.24, y: y - 0.3, size: 0.44, fontSize: 14, fill: C.accent6 })
+    // 휴대폰 화면 왼쪽 위(뒤로·정보 아이콘)를 가리지 않게 모서리 바깥쪽으로
+    badge(slide, String(index + 1), { x: x - 0.28, y: y - 0.34, size: 0.44, fontSize: 14, fill: C.accent6 })
     // 화면 언어 표시: 휴대폰 위쪽 가운데의 작은 꼬리표
     card(slide, { x: x + w / 2 - 0.62, y: y - 0.36, w: 1.24, h: 0.28, fill: language === '쉬운 한국어' ? SAND : C.accent5, shadow: false })
     text(slide, language, { x: x + w / 2 - 0.62, y: y - 0.36, w: 1.24, h: 0.28, fontSize: 11, bold: true, color: language === '쉬운 한국어' ? C.text1 : C.accent1, align: 'center', valign: 'middle' })
@@ -649,9 +652,15 @@ pres.addSection({ title: '해결' })
   // ③ 다음 보호자(중국어): 덧붙인 안내 카드, 그 안내를 근거로 단 답
   const three = [8.4 + 0.12, 8.4 + 0.12 + pw + 0.3].map((x) => ({ x, y: top, w: pw, h }))
   phone(slide, img('app-loop-addenda-zh.png'), three[0])
-  mark(three[0], 0.035, 0.268, 0.93, 0.255, C.accent1)
+  // 덧붙인 안내 카드 자리는 capture.js가 찍을 때 잰 것(marks.json), 테두리는 카드보다 조금 크게
+  const card = MARKS['app-loop-addenda-zh.png']
+  if (card) mark(three[0], card.x - 0.013, card.y - 0.005, card.w + 0.026, card.h + 0.01, C.accent1)
+  else mark(three[0], 0.035, 0.236, 0.93, 0.327, C.accent1)
   phone(slide, img('app-loop-sources-zh.png'), three[1])
-  mark(three[1], 0.075, 0.6, 0.85, 0.165, C.accent1)
+  // 기관 안내를 인용한 근거 자리도 capture.js가 잰 것 (없으면 예전 캡처의 자리)
+  const cited = MARKS['app-loop-sources-zh.png']
+  if (cited) mark(three[1], cited.x - 0.013, cited.y - 0.005, cited.w + 0.026, cited.h + 0.01, C.accent1)
+  else mark(three[1], 0.075, 0.6, 0.85, 0.165, C.accent1)
   // 칸 사이 화살표
   const midY = top + h / 2
   arrow(slide, { x: one.x + pw + 0.14, y: midY, w: 3.85 - 0.1 - (one.x + pw + 0.14), color: C.accent6, width: 2.5 })
@@ -716,7 +725,8 @@ pres.addSection({ title: '해결' })
   // 사이드바·제목을 뺀 세 칸만 잘라 크게(prepare-assets.js의 dash-review-crop.png, 2253×1397)
   const shot = { x: 0.75, y: 1.75, w: 7.7, h: 7.7 * (1397 / 2253) }
   picture(slide, img('dash-review-crop.png'), shot)
-  ;[0.0, 0.33, 0.695].forEach((fx, index) => badge(slide, String(index + 1), { x: shot.x + shot.w * fx - 0.12, y: shot.y - 0.2, size: 0.42, fontSize: 14, fill: C.accent6 }))
+  // 칸 머리의 아이콘을 가리지 않게 그림 위쪽 끝에 걸쳐 둔다
+  ;[0.0, 0.33, 0.695].forEach((fx, index) => badge(slide, String(index + 1), { x: shot.x + shot.w * fx - 0.12, y: shot.y - 0.33, size: 0.42, fontSize: 14, fill: C.accent6 }))
   const blocks = [
     ['원본 그대로', '기관 공고의 포스터와 원문 글'],
     ['AI가 읽은 사실 + 근거', '원문 인용으로 확인되지 않은 사실은 노랗게\n직접 대조 표시가 있어야 승인'],

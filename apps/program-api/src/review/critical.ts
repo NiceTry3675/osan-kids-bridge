@@ -42,7 +42,7 @@ export function factChecks(record: ProgramRecord): FactCheck[] {
     },
     { label: '대상 원문 표현', present: record.target_raw.trim() !== '', fields: ['target_raw'], supports: contains(record.target_raw) },
     // 참여하는 사람은 audience 근거로만 확인한다 (대상 문구가 있다고 자녀 대상이 되지 않는다)
-    { label: '참여하는 사람(audience)', present: audience !== 'unknown', fields: ['audience'], supports: (text) => supportsAudience(audience, text) },
+    { label: '참여하는 사람', present: audience !== 'unknown', fields: ['audience'], supports: (text) => supportsAudience(audience, text) },
     { label: '학년 범위', present: grade !== null, fields: ['grade_range'], supports: (text) => grade !== null && supportsGradeRange(grade, text) },
     { label: '나이 범위', present: age !== null, fields: ['age_range'], supports: (text) => age !== null && supportsAgeRange(age, text) },
     {

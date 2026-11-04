@@ -38,7 +38,8 @@ export default function App() {
 
   return (
     <div className={showIntro ? 'shell shell--intro' : 'shell'}>
-      <a className="skip" href="#main">{t('browseTitle')}</a>
+      {/* 주소에 #main을 붙이지 않고 본문으로 초점만 옮깁니다 (라우터가 해시를 다른 화면으로 읽지 않게) */}
+      <a className="skip" href="#main" onClick={(event) => { event.preventDefault(); document.getElementById('main')?.focus() }}>{t('skip')}</a>
       <LanguagePicker
         ref={picker}
         value={locale}
@@ -54,7 +55,7 @@ export default function App() {
 
       {showIntro ? <IntroScreen onStart={finishIntro} onMoreLanguages={() => picker.current?.openSearch()} />
         : route.name === 'browse' ? <HomeScreen filters={filters} onFiltersChange={setFilters} restoreScrollY={history.scrollY} />
-          : <DetailScreen key={route.id} id={route.id} filters={history.fromList ? filters : null} />}
+          : <DetailScreen key={route.id} id={route.id} filters={history.fromList || history.fromChat ? filters : null} />}
     </div>
   )
 }

@@ -258,7 +258,7 @@ const STAGE = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><style
   #ripple { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: rgba(224,122,95,.5); z-index: 19; opacity: 0; pointer-events: none; }
   #ripple.go { animation: rip .55s ease-out; }
   @keyframes rip { 0% { opacity: .9; transform: scale(.3); } 100% { opacity: 0; transform: scale(1.4); } }
-  #prompter { display: none; position: absolute; left: 0; right: 0; bottom: 0; height: 120px; padding: 14px 40px; background: rgba(28,22,19,.88); color: #fff; font-size: 23px; line-height: 1.45; z-index: 30; }
+  #prompter { display: none; position: absolute; left: 0; right: 0; bottom: 0; height: 120px; padding: 14px 40px; background: rgba(28,22,19,.88); color: #fff; font-size: 23px; line-height: 1.45; z-index: 30; word-break: keep-all; overflow-wrap: anywhere; }
   body.prompter #prompter { display: block; }
 </style></head><body>
   <div id="world">
@@ -329,6 +329,12 @@ const STAGE = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><style
     r.classList.remove('go'); void r.offsetWidth; r.classList.add('go')
   }
   window.hideCursor = () => $('cursor').classList.remove('on')
+  /** 커서와 누름 표시를 서서히가 아니라 바로 없앤다 (카메라가 옮겨 갈 때 그 자리에 흐린 커서가 남지 않게) */
+  window.dropCursor = () => {
+    const c = $('cursor'), r = $('ripple')
+    c.style.transition = 'none'; c.classList.remove('on'); r.classList.remove('go')
+    void c.offsetWidth; c.style.transition = ''
+  }
   /** 휴대폰 테두리(베젤 포함) 왼쪽 끝의 화면 x (카메라가 가는 곳 기준). 휴대폰을 확대한 샷에서 왼쪽 위 표시가 베젤에 얹히지 않게 이보다 왼쪽에 둔다 */
   window.phoneLeft = () => ${PHONE.x - 9} * window.cam.s + window.cam.tx
   /** 말풍선(왼쪽 28px)의 너비를 휴대폰 왼쪽 빈 곳에 맞춘다 (넓으면 250px까지) */
@@ -510,6 +516,25 @@ async function resetState() {
 
 const fillBlanks = (draft, value) => draft.replace(/\{\{\s*([^{}]*?)\s*\}\}/g, () => value)
 
+/** 담당자가 영상에서 채워 덧붙일 안내 (고른 초안의 빈칸을 FILL 값으로) */
+const filledItems = (improve, chosen) => chosen.map(({ index }) => {
+  const item = improve.items[index]
+  return { topic: item.topic, text: fillBlanks(item.draft, FILL[item.topic]).trim(), resolves_questions: item.questions, resolves_items: item.resolves_items, drafted_by_ai: true }
+})
+
+/**
+ * 영상에서 덧붙일 안내를 미리 한 번 저장했다 지운다. 저장할 때 서버가 번역을 기억해 두므로(translate-addenda.ts),
+ * 녹화 중의 '덧붙이기'가 번역을 기다리지 않고 바로 끝나 내레이션과 맞는다
+ */
+async function warmTranslations(items) {
+  console.log('덧붙일 안내의 번역을 미리 받아 두는 중…')
+  try {
+    await api('POST', `/admin/programs/${PROGRAM}/addenda`, { author: REVIEWER, items })
+  } finally {
+    await resetState()
+  }
+}
+
 /** 녹화 전에 받은 실제 결과를 저장해 두는 파일. 제출용과 녹음용 영상이 같은 답을 쓰고, 모델 호출 한도에 걸려도 다시 녹화할 수 있다 (FRESH=1이면 새로 받음) */
 const PREFETCH_CACHE = path.resolve(__dirname, 'render/prefetch.json')
 
@@ -518,14 +543,23 @@ async function prefetch() {
   // render/는 gitignore라 새로 받은 저장소에는 없다. 실제 API를 부르기 전에 만들어 둬야 받은 답을 버리지 않는다
   fs.mkdirSync(path.dirname(PREFETCH_CACHE), { recursive: true })
   await resetState()
-  if (process.env.FRESH !== '1' && fs.existsSync(PREFETCH_CACHE) && fs.existsSync(PLAN_FIXTURE)) {
+  // FRESH=improve: 첫 상담 답(베트남어)은 저장해 둔 것을 쓰고, 공고 보완 초안과 두 번째 답(중국어)만 새로 받는다
+  const freshImprove = process.env.FRESH === 'improve' && fs.existsSync(PREFETCH_CACHE)
+  if (process.env.FRESH !== '1' && !freshImprove && fs.existsSync(PREFETCH_CACHE) && fs.existsSync(PLAN_FIXTURE)) {
     const cached = JSON.parse(fs.readFileSync(PREFETCH_CACHE, 'utf8'))
     if (cached.againLocale !== 'zh') throw new Error('render/prefetch.json의 두 번째 상담 답이 중국어가 아닙니다(지난 판). FRESH=1 node record-demo.js로 새로 받으세요.')
     console.log('저장해 둔 실제 결과(render/prefetch.json, render/plan-result.json)를 씁니다.')
+    await warmTranslations(filledItems(JSON.parse(cached.improve), cached.chosen))
     return { ...cached, plan: fs.readFileSync(PLAN_FIXTURE, 'utf8') }
   }
-  console.log('상담 API에서 실제 답을 받는 중…')
-  const reply = await chat(QUESTION, 'vi')
+  let reply
+  if (freshImprove) {
+    console.log('첫 상담 답은 저장해 둔 것(render/prefetch.json)을 쓰고, 보완 초안과 두 번째 답만 새로 받습니다.')
+    reply = JSON.parse(fs.readFileSync(PREFETCH_CACHE, 'utf8')).reply
+  } else {
+    console.log('상담 API에서 실제 답을 받는 중…')
+    reply = await chat(QUESTION, 'vi')
+  }
   const parsed = JSON.parse(reply)
   if (!parsed.inquiry || !parsed.unanswered?.length || !parsed.steps?.length) throw new Error('첫 상담 답에 문의문·못 찾은 질문·단계가 모두 있어야 합니다. 다시 실행하세요.')
   // 대시보드가 보낼 질문 목록과 같게: 시연용 예시 + 영상에서 보호자가 알릴 질문 (같은 문장은 하나로)
@@ -542,7 +576,7 @@ async function prefetch() {
     .filter(({ item }) => item.kind === 'add_notice' && FILL[item.topic] && item.blanks.length === 1)
     .filter(({ item }, at, list) => list.findIndex((entry) => entry.item.topic === item.topic) === at)
   if (chosen.length !== 2) throw new Error(`채울 항목을 찾지 못했습니다: ${result.items.map((item) => `${item.topic}/${item.kind}/${item.blanks.length}`).join(', ')}`)
-  const items = chosen.map(({ item }) => ({ topic: item.topic, text: fillBlanks(item.draft, FILL[item.topic]), resolves_questions: item.questions, resolves_items: item.resolves_items, drafted_by_ai: true }))
+  const items = filledItems(result, chosen)
   let replyAgain
   try {
     await api('POST', `/admin/programs/${PROGRAM}/addenda`, { author: REVIEWER, items })
@@ -705,8 +739,10 @@ async function record() {
     let desk = await frameOf(DASHBOARD, 'questions')
     await phone.waitForSelector('.intro-start', { timeout: 20_000 })
     await phone.addStyleTag({ content: PHONE_CSS })
-    // 보호자 화면에 나올 번역 포스터(베트남어·중국어)를 미리 받아 둔다 (홈 띠·목록 썸네일·상세 포스터가 비지 않게)
-    const posterUrls = fs.readdirSync(TRANSLATED).map((name) => name.match(/^([a-z0-9-]+)\.(vi|zh)\.json$/)).filter(Boolean).map(([, id, language]) => `${API}/posters/${id}/${language}`)
+    // 보호자 화면에 나올 번역 포스터(베트남어·중국어)를 미리 받아 둔다 (홈 띠·목록 썸네일·상세 포스터가 비지 않게).
+    // 띠·썸네일은 폭을 줄인 webp(?w=128~512), 상세 포스터 구역은 원래 크기를 쓴다
+    const posterUrls = fs.readdirSync(TRANSLATED).map((name) => name.match(/^([a-z0-9-]+)\.(vi|zh)\.json$/)).filter(Boolean)
+      .flatMap(([, id, language]) => [`${API}/posters/${id}/${language}`, ...[128, 256, 384, 512].map((width) => `${API}/posters/${id}/${language}?w=${width}`)])
     await phone.evaluate((urls) => Promise.all(urls.map((url) => { const image = new Image(); image.src = url; return image.decode().catch(() => {}) })), posterUrls)
     await desk.waitForSelector('.question-list', { timeout: 20_000 })
     /**
@@ -994,14 +1030,14 @@ async function record() {
       // '베트남어로 해 볼게요': 커서를 옮기고, 누르기 바로 전에 테두리를 내린다 (누르면 첫 화면이 베트남어로 바뀌며 줄 위치가 달라져 테두리가 엉뚱한 줄을 감싸게 된다)
       await atSay('베트남어로', 0)
       await settled(phone)
-      const vi = await rectIn(phone, '.intro-lang[lang="vi"]')
+      const vi = await rectIn(phone, '.intro-lang:has(> span[lang="vi"])')
       const viAt = toWorld(PHONE, { x: vi.x + Math.min(vi.w / 2, 60), y: vi.y + vi.h / 2, w: 0, h: 0 })
       await stage(([x, y]) => window.pointTo(x, y), [viAt.x, viAt.y])
       await wait(400)
       await unringAll()
       await stage(() => window.ripple())
       await wait(160)
-      await phone.evaluate(() => document.querySelector('.intro-lang[lang="vi"]')?.click())
+      await phone.evaluate(() => document.querySelector('.intro-lang:has(> span[lang="vi"])')?.click())
       mark('베트남어 고름')
       await wait(350)
       await tap(phone, PHONE, '.intro-start', { settle: 300 })
@@ -1010,11 +1046,27 @@ async function record() {
       await focusPhone(88, 450, 700)
       await wait(150)
       await atSay('여덟', -0.9)
-      await tap(phone, PHONE, '.fit-card', { settle: 300 })
+      // 누름 표시까지 보인 뒤 화면을 덮어 두고 누른다: 시트가 반투명하게 열리는 중간(화면 기록이 가끔 멈추면 홈과 시트가 겹쳐 남는다)은 찍지 않고,
+      // 다 열린 시트로 겹쳐 바꾼다. 커서·누름 표시는 덮인 동안 없앤다 (그 자리에 남으면 요일 칩(화)을 누르는 것처럼 보인다)
+      await settled(phone)
+      const fit = await rectIn(phone, '.fit-card')
+      const fitAt = toWorld(PHONE, { x: fit.x + Math.min(fit.w / 2, 60), y: fit.y + fit.h / 2, w: 0, h: 0 })
+      await stage(([x, y]) => window.pointTo(x, y), [fitAt.x, fitAt.y])
+      await wait(300)
+      await freeze()
+      // 누름 표시는 덮은 그림 위에서 끝까지 그린다 (덮은 그림 속에 반쯤 그려진 채 멈춰 보이지 않게)
+      await stage(() => { document.getElementById('ripple').style.zIndex = '41'; window.ripple() })
+      await wait(160)
+      await phone.evaluate(() => document.querySelector('.fit-card')?.click())
       await phone.waitForSelector('dialog[open] .legend-link')
-      // 시트가 열리기 시작한 뒤에 카메라를 옮긴다 (반투명한 시트가 찍히지 않게)
-      await wait(150)
-      await focusPhone(150, 662, 600)
+      await phone.evaluate(() => Promise.all(document.querySelector('dialog[open]').getAnimations({ subtree: true }).map((animation) => animation.finished.catch(() => {}))))
+      await wait(120)
+      await stage(() => { window.dropCursor(); document.getElementById('ripple').style.zIndex = '' })
+      await focusPhone(150, 662, 0)
+      await wait(80)
+      await unfreeze(300)
+      // 겹쳐 바꾸기가 끝나고 화면 기록이 따라잡을 틈을 둔 뒤 커서를 움직인다 (곧바로 움직이면 기록이 잠깐 멈춰 커서가 요일 칩 위에 선 채 찍힌다)
+      await wait(250)
       mark('조건 시트')
       await tap(phone, PHONE, 'dialog[open] .legend-link', { settle: 400 })
       await phone.locator('dialog[open] .input--short').pressSequentially('8', { delay: 50 })
@@ -1050,8 +1102,10 @@ async function record() {
       await ringApp('compare', PHONE, await rectIn(phone, '.compare-pills') ?? compare, 'ok', '', { pad: 4 })
       mark('상세 첫 화면')
       await wait(450)
-      await phone.waitForSelector('#poster img', { timeout: 10_000 })
+      // 상세 포스터는 loading="lazy"라 화면 아래에 있으면 받지 않는다. 썸네일을 누르기 전에 받아 그려 둔다
+      await phone.waitForSelector('#poster img', { state: 'attached', timeout: 10_000 })
       await imagesReady(phone, '#poster img')
+      await phone.waitForSelector('#poster img', { timeout: 10_000 })
       await atSay('포스터도', -0.6)
       await tap(phone, PHONE, '.poster-thumb', { settle: 400 })
       mark('썸네일 누름')
@@ -1312,7 +1366,8 @@ async function record() {
       await wait(160)
       await desk.evaluate((sel) => document.querySelector(sel)?.click(), confirm)
       mark('덧붙이기 누름')
-      await desk.waitForSelector('.improve .notice--ok', { timeout: 10_000 })
+      // 번역은 미리 받아 두지만(warmTranslations), 서버를 새로 띄웠으면 번역 시간 제한(20초)까지 걸릴 수 있다
+      await desk.waitForSelector('.improve .notice--ok', { timeout: 25_000 })
       await hideCursor()
       // 확정하면 질문 목록에 '답함' 표시가 붙고, 패널 위에 덧붙였다는 알림이 뜬다
       await wait(150)
@@ -1335,8 +1390,7 @@ async function record() {
     // 7. 다시 묻기: 기관 → 휴대폰으로 안내가 돌아간다. 이번에는 중국어가 편한 다른 가정 (중국어 화면, 중국어 질문, 중국어 답)
     // 내레이션: '중국어가 편한 다른 가정이에요'(0~2.9초)에 넓게 보기 → 중국어 화면, '아까 그 안내가 보여요'(약 3.1~4.9초)에 초록 추가 안내 카드,
     // '참가비랑 준비물을 물으면'(약 5.4~7.7초)에 질문, '이번엔 그 안내를 보고 답해요'(약 8.1초~)에 중국어 답 문장 → 근거
-    // 추가 안내 카드부터 찍는다: 그 위 공고 요약의 '참가비: 기관에 확인' 줄은 그대로라 함께 보이면 서로 어긋나 보인다
-    // (앱은 추가 안내가 어느 항목의 답인지 모른다: 알려진 한계)
+    // 추가 안내 카드부터 찍는다 (비용 줄도 이 안내를 보여 준다)
     await scene('again', async () => {
       await stage(() => window.link(2))
       await camera(OVERVIEW, 1150, undefined, undefined, undefined, false, SOFT)
@@ -1360,8 +1414,8 @@ async function record() {
       await stage(() => window.link(0))
       // 이름표는 휴대폰 왼쪽 빈 캔버스에 (아래 '기관에 확인할 점' 제목을 덮지 않게)
       await ringApp('addenda', PHONE, await rectIn(phone, '.addenda'), 'ok', '기관이 덧붙인 안내', { pad: 4, at: 'left', edge: PHONE_EDGE })
-      // 카드 제목·설명은 중국어지만 안내 문장은 기관이 쓴 한국어다 (자동 번역하지 않는다)
-      await badges(['추가 안내 문장은 기관이 쓴 한국어 그대로'])
+      // 안내 문장은 저장할 때 AI가 옮긴 중국어이고, 기관이 쓴 한국어 원문이 함께 보인다
+      await badges(['AI 번역 · 기관이 쓴 한국어 원문 함께'])
       mark('추가 안내 카드')
       await atSay('참가비랑', -0.8)
       await tap(phone, PHONE, '.ai-entry', { settle: 300 })
@@ -1397,7 +1451,8 @@ async function record() {
       if (oneShot) await focusPhone(answer.y - 18, sources.y + sources.h + 10 - (answer.y - 18), 600)
       else await focusPhone(answer.y - 18, Math.min(lead.y + lead.h + 60 - answer.y, 360), 600)
       mark(`답 도착 (${oneShot ? '한 화면' : '두 화면'})`)
-      await wait(400)
+      // 두 화면이면 근거로 옮기는 데 시간이 더 들어, 답 이름표를 조금 일찍 띄워 충분히 보이게 한다
+      await wait(oneShot ? 400 : 200)
       // 두 번째 답은 녹화 전에 같은 추가 안내(FILL)를 저장해 받은 실제 중국어 답이고, 첫 문장이 그 두 값을 말한다(prefetch가 확인)
       // 이름표는 그 문장의 한국어 뜻. 휴대폰 왼쪽 빈 캔버스에 두 줄로 (답 위는 화면 끝이라 잘리고, 아래는 다음 항목 글자).
       // 테두리는 위·옆은 넉넉히, 아래는 다음 줄(첫 항목) 위에서 멈춘다 (문장과 첫 항목 사이는 8px뿐)
@@ -1409,12 +1464,13 @@ async function record() {
       const padBottom = gap == null ? 2 : Math.round(Math.max(1, Math.min(8, gap - 5)))
       await ringApp('answer', PHONE, lead, 'ok', `중국어 답: 참가비 ${FILL.other}\n${FILL.materials}`, { pad: 8, padBottom, at: 'left', edge: PHONE_EDGE })
       mark(`답 문장 테두리 (아래 ${padBottom}px)`)
-      await wait(1600)
+      // 두 화면이면 근거로 옮기는 데 약 0.55초가 더 든다. 근거 테두리가 '그 안내를 보고'에 오게 그만큼 일찍 옮긴다 (답 이름표는 약 1.3초)
+      await wait(oneShot ? 1600 : 1300)
       if (!oneShot) {
         const moved = await scrollTo(phone, '.chat-sources', 40, SHEET)
         await unringAll()
-        await focusPhone(moved.y - 36, Math.min(moved.h + 64, 450), 550)
-        await wait(350)
+        await focusPhone(moved.y - 36, Math.min(moved.h + 64, 450), 400)
+        await wait(50)
         await settled(phone)
       }
       const cited = await rectsIn(phone, '.chat-sources blockquote:has(.chat-source-note)')

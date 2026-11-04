@@ -25,9 +25,11 @@ export const TOKEN_LABELS: Record<TokenKind, string> = {
 const pad = (value: string | number) => String(value).padStart(2, '0')
 const unique = (values: string[]) => [...new Set(values)].sort()
 const integer = (value: string) => String(Number(value))
+/** 달·날이 범위를 벗어난 날짜 값의 머리 (뒤에 원문 표기) */
+const INVALID = 'invalid:'
 
 function monthDay(month: number, day: number, raw: string): string {
-  return month >= 1 && month <= 12 && day >= 1 && day <= 31 ? `${month}-${day}` : `invalid:${raw.trim()}`
+  return month >= 1 && month <= 12 && day >= 1 && day <= 31 ? `${month}-${day}` : `${INVALID}${raw.trim()}`
 }
 
 /** 정규식에 걸린 부분을 지우면서 값을 모은다. 지운 자리는 공백으로 둬 앞뒤 숫자가 붙지 않게 한다 */
@@ -118,12 +120,44 @@ export function mergeTokens(list: LockedTokens[]): LockedTokens {
   return merged
 }
 
-export function describeDiff(diff: TokenDiff): string {
-  const label = TOKEN_LABELS[diff.kind]
+/** 담당자가 읽을 날짜: 'M-D'는 'M월 D일'로 */
+const dateLabel = (value: string) => value.replace(/^(\d{1,2})-(\d{1,2})$/, '$1월 $2일')
+
+/**
+ * 빠진 값·없던 값을 한 줄로 적는다. 담당자 화면과 모델에 그대로 가므로 날짜는 'M월 D일'로 쓰고,
+ * 읽을 수 없는 날짜(invalid:원문)는 따로 '날짜를 읽지 못함 (원문)'으로 적는다
+ */
+function describeValues(kind: TokenKind, missing: string[], extra: string[]): string {
+  const label = TOKEN_LABELS[kind]
+  const readable = (values: string[]) => values.filter((value) => !value.startsWith(INVALID)).map((value) => (kind === 'dates' ? dateLabel(value) : value))
+  const unreadable = [...missing, ...extra].filter((value) => value.startsWith(INVALID)).map((value) => value.slice(INVALID.length))
   const parts: string[] = []
-  if (diff.missing.length) parts.push(`빠진 ${label} ${diff.missing.join(', ')}`)
-  if (diff.extra.length) parts.push(`원래 없던 ${label} ${diff.extra.join(', ')}`)
+  if (readable(missing).length) parts.push(`빠진 ${label} ${readable(missing).join(', ')}`)
+  if (readable(extra).length) parts.push(`원래 없던 ${label} ${readable(extra).join(', ')}`)
+  if (unreadable.length) parts.push(`날짜를 읽지 못함 (${unreadable.join(', ')})`)
   return parts.join(' · ')
+}
+
+export function describeDiff(diff: TokenDiff): string {
+  return describeValues(diff.kind, diff.missing, diff.extra)
+}
+
+/**
+ * 예전 검증 기록에 저장된 값 대조 문구('빠진 날짜 10-31 · 원래 없던 날짜 invalid:10/31/2026')를
+ * 지금 describeDiff와 같은 말('빠진 날짜 10월 31일 · 날짜를 읽지 못함 (10/31/2026)')로 바꾼다. 날짜가 아닌 부분은 그대로 둔다
+ */
+export function readableTokenMessage(message: string): string {
+  const parts = message.split(' · ')
+  const dates = { missing: [] as string[], extra: [] as string[] }
+  const others = parts.filter((part) => {
+    const match = part.match(/^(빠진|원래 없던) 날짜 (.+)$/)
+    if (!match) return true
+    dates[match[1] === '빠진' ? 'missing' : 'extra'].push(...match[2].split(', '))
+    return false
+  })
+  // 이미 사람이 읽는 말이면 그대로 둔다
+  if (![...dates.missing, ...dates.extra].some((value) => value.startsWith(INVALID) || /^\d{1,2}-\d{1,2}$/.test(value))) return message
+  return [...others, describeValues('dates', dates.missing, dates.extra)].filter(Boolean).join(' · ')
 }
 
 /** 한글 낱말(음절 2자 이상 또는 1자)을 모두 뽑는다 */

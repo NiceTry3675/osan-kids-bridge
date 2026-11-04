@@ -4,7 +4,7 @@ import { useI18n } from '../../i18n'
 import type { AvailableWindow, Interest, SearchFilters, Weekday } from '../../data/types'
 import { emptyFilters } from '../../data/types'
 import { InterestIcon } from '../intro/art'
-import { DONGS, formatWindow, GRADES, INTERESTS, validateWindow, WEEKDAYS } from '../../lib/filters'
+import { DONGS, dongOption, formatWindow, GRADES, INTERESTS, validateWindow, WEEKDAYS } from '../../lib/filters'
 import { interestLabel, weekdayLabel } from '../../lib/format'
 import { Icon } from '../../components/Icon'
 import { Sheet } from '../../components/Sheet'
@@ -208,7 +208,7 @@ function PreferField({ draft, setDraft }: Draft) {
       </div>
       <select className="input select-dong" aria-label={t('dongTitle')} value={draft.dong ?? ''} onChange={(event) => setDraft({ ...draft, dong: event.target.value || undefined })}>
         <option value="">{t('dongTitle')} · {t('notSet')}</option>
-        {DONGS.map((dong) => <option key={dong} value={dong}>{dong}</option>)}
+        {DONGS.map((dong) => <option key={dong} value={dong}>{dongOption(dong, locale)}</option>)}
       </select>
     </fieldset>
   )

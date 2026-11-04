@@ -114,7 +114,8 @@ export function recordProblems(value: unknown, expectedId?: string): string[] {
   // 기관 추가 안내는 나중에 생긴 필드라 없어도 된다
   if (value.addenda !== undefined && !(Array.isArray(value.addenda) && value.addenda.every((entry) => isObject(entry)
     && isString(entry.id) && isString(entry.topic) && isString(entry.text) && isStringList(entry.resolves_questions)
-    && isStringList(entry.resolves_items) && isString(entry.author) && isString(entry.added_at) && typeof entry.drafted_by_ai === 'boolean'))) {
+    && isStringList(entry.resolves_items) && isString(entry.author) && isString(entry.added_at) && typeof entry.drafted_by_ai === 'boolean'
+    && (entry.translations === undefined || (isObject(entry.translations) && Object.values(entry.translations).every(isString)))))) {
     problems.push('addenda 형식이 올바르지 않습니다')
   }
   return problems

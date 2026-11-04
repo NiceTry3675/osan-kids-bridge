@@ -65,13 +65,42 @@ export function placesDiffer(program: Program): boolean {
   return new Set(program.sessions.map((item) => (item.online ? 'online' : item.place_name ?? '?'))).size > 1
 }
 
-/** 기관에 확인할 항목: 공고의 미확인 항목 + 판정이 unknown인 나이·학년·시간 */
+/**
+ * 기관에 확인할 항목: 공고의 미확인 항목 + 판정이 unknown인 나이·학년·시간.
+ * 기관이 덧붙인 안내가 이미 답한 주제(covers)는 빼서, 같은 화면의 초록 안내 카드와 어긋나지 않게 합니다.
+ */
 export function itemsToCheck(program: Program): UncertainItem[] {
+  const covered = coveredTopics(program)
   const items = [...program.uncertain_items]
   const has = (topic: UncertainItem['topic']) => items.some((item) => item.topic === topic)
   if (program.time_match_status === 'unknown' && !has('schedule')) items.unshift({ topic: 'schedule', note_ko: null })
   if (program.age_grade_match_status === 'unknown' && !has('age_grade')) items.unshift({ topic: 'age_grade', note_ko: null })
-  return items
+  return items.filter((item) => !covered.has(item.topic))
+}
+
+export type Addendum = NonNullable<Program['addenda']>[number]
+
+/** 기관이 덧붙인 안내가 답한 주제들: 확인할 점의 주제와 비용('cost') */
+export const coveredTopics = (program: Program): Set<string> =>
+  new Set((program.addenda ?? []).flatMap((addendum) => addendum.covers ?? []))
+
+/** 비용에 답한 기관 추가 안내. 여러 개면 가장 나중에 덧붙인 것 */
+export const costAddendum = (program: Program): Addendum | null =>
+  (program.addenda ?? []).filter((addendum) => addendum.covers?.includes('cost')).at(-1) ?? null
+
+export interface AddendumText {
+  /** 보여 줄 문장: 화면 언어로 옮긴 것이 있으면 그것, 없으면 기관이 쓴 한국어 문장 */
+  text: string
+  /** 한국어 문장을 보여 줄 때 붙일 lang 속성 */
+  lang: 'ko' | undefined
+  /** AI가 옮긴 문장을 보여 줄 때 함께 둘 한국어 원문. 원문을 그대로 보여 주면 null */
+  original: string | null
+}
+
+/** 기관 추가 안내 문장을 화면 언어로: 베트남어·중국어 번역이 있으면 그것과 한국어 원문을, 없으면 한국어 문장을 */
+export function addendumText(addendum: Addendum, locale: Locale): AddendumText {
+  const translated = locale === 'vi' || locale === 'zh' ? addendum.translations?.[locale]?.trim() : undefined
+  return translated ? { text: translated, lang: undefined, original: addendum.text } : { text: addendum.text, lang: 'ko', original: null }
 }
 
 /** 화면 언어로 상담이 된다고 기관 자료에서 확인됐는지 */

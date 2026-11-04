@@ -1,10 +1,14 @@
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, utimesSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import sharp from 'sharp'
 import { locateQrBlob } from '../src/poster/qr'
 import { checkTable } from '../src/poster/table'
 import type { TableSegment } from '../src/poster/table'
-import { diffTokens, extractTokens } from '../src/poster/tokens'
-import { editPrompt, fixPrompt, outputSize } from '../src/poster/translate'
+import { describeDiff, diffTokens, extractTokens, readableTokenMessage } from '../src/poster/tokens'
+import { editPrompt, fileSha256, findSourcePoster, fixPrompt, outputSize, posterSummary } from '../src/poster/translate'
+import { snapWidth } from '../src/poster/thumbnail'
 import { checkHangul, checkTokens } from '../src/poster/verify'
 
 // 모델 호출은 쓰지 않는다. 결정적 검사만 네트워크 없이 확인한다.
@@ -51,6 +55,20 @@ describe('바뀌면 안 되는 값 뽑기', () => {
   it('베트남어 천 단위 점은 날짜로 읽지 않는다', () => {
     expect(extractTokens('10.000 đồng', 'vi')).toMatchObject({ dates: [], numbers: ['0', '10'] })
   })
+
+  it('담당자에게 보이는 문구는 내부 날짜 표기 대신 읽는 말로 쓴다', () => {
+    expect(describeDiff({ kind: 'dates', missing: ['10-31'], extra: ['invalid:10/31/2026'] })).toBe('빠진 날짜 10월 31일 · 날짜를 읽지 못함 (10/31/2026)')
+    expect(describeDiff({ kind: 'dates', missing: [], extra: ['2-11'] })).toBe('원래 없던 날짜 2월 11일')
+    expect(describeDiff({ kind: 'numbers', missing: ['10'], extra: [] })).toBe('빠진 숫자 10')
+  })
+
+  it('예전 검증 기록의 날짜 표기도 같은 말로 바꾸고, 다른 문구는 그대로 둔다', () => {
+    expect(readableTokenMessage('빠진 날짜 10-31 · 원래 없던 날짜 invalid:10/31/2026')).toBe('빠진 날짜 10월 31일 · 날짜를 읽지 못함 (10/31/2026)')
+    expect(readableTokenMessage('원래 없던 날짜 invalid:19 tháng 13, 2-11')).toBe('원래 없던 날짜 2월 11일 · 날짜를 읽지 못함 (19 tháng 13)')
+    for (const message of ['빠진 전화번호 031-376-3428 · 원래 없던 전화번호 031-376-3482', '빠진 날짜 10월 31일 · 날짜를 읽지 못함 (10/31/2026)']) {
+      expect(readableTokenMessage(message)).toBe(message)
+    }
+  })
 })
 
 describe('번역표 코드 검사', () => {
@@ -64,7 +82,7 @@ describe('번역표 코드 검사', () => {
     const issues = checkTable([ok, { ko: '각 반 6명', action: 'translate', target: 'mỗi lớp 6 명' }, { ko: '10/19', action: 'translate', target: '10/19' }], 'vi')
     expect(issues.map((issue) => [issue.segment, issue.message])).toEqual([
       [1, '번역에 한국어가 남아 있음'],
-      [2, '빠진 날짜 10-19 · 원래 없던 날짜 invalid:10/19'],
+      [2, '빠진 날짜 10월 19일 · 날짜를 읽지 못함 (10/19)'],
     ])
   })
 })
@@ -86,7 +104,7 @@ describe('결과 포스터 검증 (판독문 대조)', () => {
     const readback = 'Liên hệ 031-376-3482\n19/10\n신청 기간\n오산시 가족센터'
     expect(checkTokens(table, readback, 'vi').map((issue) => issue.message)).toEqual([
       '빠진 전화번호 031-376-3428 · 원래 없던 전화번호 031-376-3482',
-      '빠진 날짜 10-26',
+      '빠진 날짜 10월 26일',
     ])
     expect(checkHangul(table, readback)).toEqual([{ kind: 'hangul', message: '한국어가 남아 있음: 신청, 기간' }])
   })
@@ -124,6 +142,46 @@ describe('이미지 편집 지시', () => {
     expect(await outputSize(await make(891, 1260))).toBe('1024x1536')
     expect(await outputSize(await make(1080, 1080))).toBe('1024x1024')
     expect(await outputSize(await make(1600, 900))).toBe('1536x1024')
+  })
+})
+
+describe('원본 포스터 찾기', () => {
+  it('파일(경로·크기·수정 시각)이 그대로면 다시 읽거나 해시하지 않고, 바뀌면 다시 계산한다', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'poster-sha-'))
+    try {
+      const file = join(dir, 'poster.png')
+      const fixed = new Date('2026-10-01T00:00:00Z')
+      writeFileSync(file, 'aaaa')
+      utimesSync(file, fixed, fixed)
+      const first = fileSha256(file)
+      // 크기·수정 시각이 같으면 내용을 다시 읽지 않는다 (요청마다 해시하지 않음)
+      writeFileSync(file, 'bbbb')
+      utimesSync(file, fixed, fixed)
+      expect(fileSha256(file)).toBe(first)
+      utimesSync(file, fixed, new Date('2026-10-02T00:00:00Z'))
+      expect(fileSha256(file)).not.toBe(first)
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('끊긴 링크·폴더 자리의 파일·없는 폴더는 포스터가 없는 것으로 본다 (예외를 내지 않는다)', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'poster-find-'))
+    try {
+      mkdirSync(join(dir, 'inbox', 'broken-link'), { recursive: true })
+      symlinkSync(join(dir, 'missing.png'), join(dir, 'inbox', 'broken-link', 'poster.png'))
+      writeFileSync(join(dir, 'inbox', 'not-a-folder'), 'file')
+      for (const id of ['broken-link', 'not-a-folder', 'no-folder']) {
+        expect([id, findSourcePoster(id, dir)]).toEqual([id, null])
+        expect([id, posterSummary(id, true, dir)]).toEqual([id, { original: false, languages: [] }])
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('썸네일 너비는 128·256·384·512 중 같거나 큰 값으로 맞춘다', () => {
+    expect([1, 128, 129, 256, 300, 512, 4000].map(snapWidth)).toEqual([128, 128, 256, 256, 384, 512, 512])
   })
 })
 
