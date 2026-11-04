@@ -1,10 +1,11 @@
 /** 상세 페이지를 위에서 아래로 이루는 부분들. 순서는 DetailScreen이 정합니다. */
+import { useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { translate, useI18n } from '../../i18n'
 import type { CompanionRule, Locale, MatchStatus, Program, UncertainItem } from '../../data/types'
-import { addendumText, classNames, costAddendum, groupSessions, itemsToCheck, placesDiffer, splitSessions } from '../../lib/content'
+import { addendumText, classNames, costAddendum, groupSessions, itemsToCheck, nextByClass, placesDiffer, splitSessions } from '../../lib/content'
 import type { Addendum, ProgramText } from '../../lib/content'
-import { formatCost, formatDate, formatSessionPlace, formatSessionWhen, formatStatus, languageName, mapUrl, placeLang, screenLanguageName, topicLabel, weekdayLabel } from '../../lib/format'
+import { isSafeUrl, formatCost, formatDate, formatSessionPlace, formatSessionWhen, formatStatus, languageName, mapUrl, periodText, placeLang, topicLabel, weekdayLabel } from '../../lib/format'
 import { Icon } from '../../components/Icon'
 import { Marked, Notice, StatusTag } from '../../components/feedback'
 import { ExternalLink } from '../../components/links'
@@ -16,16 +17,15 @@ type Props = { program: Program }
 export function FactSheet({ program, text }: Props & { text: ProgramText }) {
   const { locale, t } = useI18n()
   const session = program.next_session
-  const targetType = { multicultural_family: t('targetMulticultural'), all: t('targetAll'), parent_only: t('targetParent'), unknown: t('targetUnknown') }[program.target_type]
+  // 대상 글에 이미 있으면 다시 적지 않습니다. 다문화가족 대상인 것만 글에 없을 때 알립니다.
+  const showMulticultural = program.target_type === 'multicultural_family' && !/다문화|đa văn hóa|多文化|多元文化/i.test(text.target)
   return (
     <dl className="facts">
       <FactRow label={t('target')}>
         <span lang={text.lang}>{text.target}</span>
-        <span className="fact-sub">{program.target_type === 'unknown' ? <Marked>{targetType}</Marked> : targetType}</span>
+        {showMulticultural && <span className="fact-sub">{t('targetMulticultural')}</span>}
       </FactRow>
-      <FactRow label={program.time_match_status === 'matched' ? t('matchedSession') : t('representative')}>
-        {session?.date ? formatSessionWhen(session, locale) : <Marked>{t('scheduleUnknown')}</Marked>}
-      </FactRow>
+      <ScheduleRow program={program} />
       <FactRow label={t('place')}>
         <span lang={placeLang(session)}>{formatSessionPlace(session, locale)}</span>
         {program.outside_osan && <span className="tag-original tag-outside">{t('outsideOsan', { city: program.outside_osan })}</span>}
@@ -38,8 +38,43 @@ export function FactSheet({ program, text }: Props & { text: ProgramText }) {
         <StatusTag status={program.application_status}>{formatStatus(program, locale)}</StatusTag>
         {program.application_status === 'open' && program.application_end && <span className="fact-sub">{t('applyUntil', { date: formatDate(program.application_end, locale) })}</span>}
       </FactRow>
+      <FactRow label={t('institutionRow')}>
+        <span lang={text.lang}>{text.institution}</span>
+        {isSafeUrl(program.source_url) && <span className="fact-link"><ExternalLink href={program.source_url} demo={program.is_demo}>{t('sourceLink')}</ExternalLink></span>}
+      </FactRow>
+      {program.verified_at && <FactRow label={t('verifiedRow')}>{formatDate(program.verified_at, locale)}</FactRow>}
     </dl>
   )
+}
+
+/**
+ * 일정 줄. 시간이 맞으면 그 회차, 맞을 수 있으면 그 회차, 반이 나뉘었으면 반마다, 지났으면 ‘지난 일정’.
+ * 회차 날짜가 없으면 공고가 밝힌 일정 안내나 운영 기간을 보여 주고, 아무것도 없을 때만 ‘일정 확인 필요’라고 합니다.
+ */
+function ScheduleRow({ program }: Props) {
+  const { locale, t } = useI18n()
+  const session = program.next_session
+  const possible = program.sessions.find((item) => item.id === program.possible_sessions?.[0])
+  const classes = program.time_match_status === 'matched' || possible ? null : nextByClass(program)
+  const period = periodText(program, locale)
+  const today = program.as_of
+  const label = program.time_match_status === 'matched' ? t('matchedSession')
+    : possible ? t('possibleShort')
+      : session?.date && today && session.date < today ? t('pastSchedule') : t('schedule')
+  if (classes) {
+    return (
+      <FactRow label={label}>
+        {classes.map((item) => <span key={item.name} className="fact-line"><span lang="ko">{item.name}</span> {formatSessionWhen(item.session, locale)}</span>)}
+      </FactRow>
+    )
+  }
+  const shown = possible ?? session
+  if (shown?.date) return <FactRow label={label}>{formatSessionWhen(shown, locale)}</FactRow>
+  // 날짜가 없으면 ‘다음’이라고 할 수 없습니다.
+  const general = t('scheduleGeneral')
+  if (program.schedule_note) return <FactRow label={general}><span lang="ko">{program.schedule_note}</span></FactRow>
+  if (period) return <FactRow label={general}>{period}<span className="fact-sub">{t('periodDatesUnknown')}</span></FactRow>
+  return <FactRow label={general}><Marked>{t('scheduleUnknown')}</Marked></FactRow>
 }
 
 const FactRow = ({ label, children }: { label: string; children: ReactNode }) => (
@@ -74,11 +109,10 @@ export function StatusNote({ program }: Props) {
   const { locale, t } = useI18n()
   const { application_status: status, application_start: start } = program
   if (status === 'closed') return <Notice title={t('closedAction')} />
-  const next = status === 'open' ? null
-    : status === 'upcoming' && start ? <Notice title={t('upcomingAction', { date: formatDate(start, locale) })} />
-      // 기간 미상, 또는 시작일을 모르는 신청 예정
-      : <Notice tone="mark" title={t('unknownAction')} />
-  return <>{next}<ApplicationIssueNotice program={program} /></>
+  if (status === 'open') return null
+  if (status === 'upcoming' && start) return <Notice title={t('upcomingAction', { date: formatDate(start, locale) })} />
+  // 기간 미상, 또는 시작일을 모르는 신청 예정
+  return <Notice tone="mark" title={`${t('unknownAction')} ${t(isSafeUrl(program.source_url) ? 'checkSourceOrAsk' : 'askInstitution')}`} />
 }
 
 /** 신청 기간을 그대로 믿기 어려울 때: 상태 글자만 보고 믿지 않도록 이유와 할 일을 함께 알립니다. */
@@ -155,7 +189,7 @@ export function AddendaSection({ program }: Props) {
  * 기관에 확인할 점: 미확인 항목과 원문에 적힌 관련 표현.
  * 노란 카드 하나가 ‘아직 확인되지 않음’ 신호라서 항목마다 형광펜을 다시 칠하지 않고, 원문 표현을 그대로 둡니다.
  */
-export function ToCheck({ program }: Props) {
+export function ToCheck({ program, onAsk }: Props & { onAsk: () => void }) {
   const { locale, t } = useI18n()
   const items = itemsToCheck(program)
   if (!items.length) return null
@@ -173,6 +207,7 @@ export function ToCheck({ program }: Props) {
           </li>
         ))}
       </ul>
+      <button type="button" className="btn btn--secondary to-check-ask" onClick={onAsk}>{t('askAgency')}</button>
     </section>
   )
 }
@@ -180,13 +215,9 @@ export function ToCheck({ program }: Props) {
 type Comparison = { key: 'age' | 'time' | 'eligibility'; label: string; status: MatchStatus }
 
 /**
- * 우리 아이 조건과 비교. 맞는 것은 초록 알약으로, 공고만으로 모르는 것은 형광펜으로 보이고 넣지 않은 조건은 감춥니다.
- * 조건을 넣고 들어오면 DetailScreen이 머리글 바로 아래에 둡니다. 공유 링크로 바로 열면 비교하지 않았다고 알립니다.
+ * 우리 아이 조건과 비교. 조건을 넣고 왔을 때만 보입니다. 맞는 것은 초록 표시로, 공고만으로 모르는 것은 형광펜으로 보이고 넣지 않은 조건은 감춥니다.
  */
-/** compared: 조건을 넣고 왔음(머리글 아래 요약) / noConditions: 목록에서 조건 없이 왔음 / direct: 공유 링크로 바로 열었음 */
-export type CompareMode = 'compared' | 'noConditions' | 'direct'
-
-export function CompareSection({ program, mode }: Props & { mode: CompareMode }) {
+export function CompareSection({ program }: Props) {
   const { t } = useI18n()
   const rows: Comparison[] = [
     { key: 'age', label: t('rowAgeGrade'), status: program.age_grade_match_status },
@@ -196,54 +227,34 @@ export function CompareSection({ program, mode }: Props & { mode: CompareMode })
   const shown = rows.filter((row) => row.status !== 'not_applied')
   const matched = shown.filter((row) => row.status === 'matched')
   const rest = shown.filter((row) => row.status !== 'matched')
-  if (mode === 'noConditions') {
-    // 조건을 넣지 않았으면 학년·시간은 '조건을 넣지 않았어요'로 그대로 보이고, 자격만 공고 기준으로 말한다
-    return (
-      <Block title={t('compareTitle')} className="compare">
-        <ul className="compare-rest">
-          {rows.map((row) => (
-            <li key={row.key} className={`compare-line compare-line--${row.status}`}>
-              {row.status === 'matched' ? <Icon name="check" /> : row.status === 'not_matched' ? <Icon name="x" /> : row.status === 'unknown' ? <QuestionMark /> : <span className="compare-none" aria-hidden="true" />}
-              <span><span className="compare-label">{row.label}</span> {row.key === 'eligibility' && row.status === 'matched' ? <span className="judge judge--matched">{t('eligibilityConfirmed')}</span> : <Judge status={row.status} />}</span>
+  return (
+    <Block title={t('compareTitle')} className="compare">
+      {matched.length > 0 && (
+        <ul className="compare-pills">
+          {matched.map((row) => (
+            <li key={row.key} className="compare-pill">
+              <Icon name="check" />
+              {row.key === 'eligibility'
+                ? <span>{t('eligibilityConfirmed')}</span>
+                : <><span className="compare-label">{row.label}</span><span className="judge judge--matched">{t('judgeMatched')}</span></>}
             </li>
           ))}
         </ul>
-        <p className="muted">{t('noConditionsNote')}</p>
-      </Block>
-    )
-  }
-  return (
-    <Block title={t('compareTitle')} className="compare">
-      {mode === 'compared' ? (
-        <>
-          {matched.length > 0 && (
-            <ul className="compare-pills">
-              {matched.map((row) => (
-                <li key={row.key} className="compare-pill">
-                  <Icon name="check" />
-                  {row.key === 'eligibility'
-                    ? <span>{t('eligibilityConfirmed')}</span>
-                    : <><span className="compare-label">{row.label}</span><span className="judge judge--matched">{t('judgeMatched')}</span></>}
-                </li>
-              ))}
-            </ul>
-          )}
-          {rest.length > 0 && (
-            <ul className="compare-rest">
-              {rest.map((row) => (
-                <li key={row.key} className={`compare-line compare-line--${row.status}`}>
-                  {row.status === 'unknown' ? <QuestionMark /> : <Icon name="x" />}
-                  <span>
-                    <span className="compare-label">{row.label}</span> <Judge status={row.status} />
-                    {row.key === 'age' && row.status === 'unknown' && program.age_range && !program.grade_range && <span className="fact-sub">{t('ageBasisNote')}</span>}
-                    {row.key === 'age' && row.status === 'unknown' && program.grade_range && !program.age_range && <span className="fact-sub">{t('gradeBasisNote')}</span>}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      ) : <p className="muted">{t('directLinkNote')}</p>}
+      )}
+      {rest.length > 0 && (
+        <ul className="compare-rest">
+          {rest.map((row) => (
+            <li key={row.key} className={`compare-line compare-line--${row.status}`}>
+              {row.status === 'unknown' ? <QuestionMark /> : <Icon name="x" />}
+              <span>
+                <span className="compare-label">{row.label}</span> {row.key === 'eligibility' && row.status === 'unknown' ? <Marked>{t('judgeFamily')}</Marked> : <Judge status={row.status} />}
+                {row.key === 'age' && row.status === 'unknown' && program.age_range && !program.grade_range && <span className="fact-sub">{t('ageBasisNote')}</span>}
+                {row.key === 'age' && row.status === 'unknown' && program.grade_range && !program.age_range && <span className="fact-sub">{t('gradeBasisNote')}</span>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </Block>
   )
 }
@@ -251,6 +262,14 @@ export function CompareSection({ program, mode }: Props & { mode: CompareMode })
 /** 소개. 내 언어 검수본이 없으면 한국어 원문을 접어 둡니다(명세 5.4). */
 export function DescriptionSection({ program, text }: Props & { text: ProgramText }) {
   const { t } = useI18n()
+  const [expanded, setExpanded] = useState(false)
+  const [clipped, setClipped] = useState(false)
+  const ref = useRef<HTMLParagraphElement>(null)
+  // 3줄을 넘을 때만 ‘더 보기’를 둡니다.
+  useLayoutEffect(() => {
+    const element = ref.current
+    if (element && !expanded) setClipped(element.scrollHeight > element.clientHeight + 1)
+  }, [expanded, text.description])
   return (
     <Block title={t('description')}>
       {text.missingTranslation ? (
@@ -258,33 +277,41 @@ export function DescriptionSection({ program, text }: Props & { text: ProgramTex
           <summary>{t('showOriginal')}</summary>
           <p lang="ko">{program.description}</p>
         </details>
-      ) : <p className="prose" lang={text.lang}>{text.description}</p>}
+      ) : (
+        <>
+          <p ref={ref} className={expanded ? 'prose' : 'prose prose--clamp'} lang={text.lang}>{text.description}</p>
+          {(clipped || expanded) && <button type="button" className="link-btn" onClick={() => setExpanded(!expanded)}>{expanded ? t('showLess') : t('showMore')}</button>}
+        </>
+      )}
     </Block>
   )
 }
 
 /**
  * 전체 회차: 앞으로의 회차를 먼저, 지난 회차는 접어 둡니다.
- * 같은 요일·시간에 되풀이되면 ‘반마다 언제’로 묶어, 월·금 두 반이 섞여 보이지 않게 합니다.
+ * 회차가 하나뿐이면 위 일정 줄이 전부 말하므로 이 구역을 두지 않습니다. 장소가 모두 같으면 회차마다 되풀이하지 않습니다.
  */
 export function SessionsSection({ program }: Props) {
   const { t } = useI18n()
   const { past, upcoming } = splitSessions(program)
+  const total = program.session_count ?? program.sessions.length
+  if (!program.sessions.length || (program.sessions.length === 1 && total <= 1)) return null
   // 운영이 끝난 공고는 지난 회차뿐이니 그대로 보여 줍니다.
   const main = upcoming.length ? upcoming : past
   const folded = upcoming.length ? past : []
   const groups = groupSessions(program, main)
+  const showPlace = placesDiffer(program)
   return (
     <Block title={t('sessionsTitle')}>
-      <AttendanceRule program={program} started={past.length > 0 && upcoming.length > 0} />
-      {folded.length > 0 && <p className="muted">{t('sessionsRemaining', { remaining: upcoming.length, total: program.sessions.length })}</p>}
+      {upcoming.length > 0 && <AttendanceRule program={program} started={past.length > 0} />}
+      {folded.length > 0 && <p>{t('sessionsRemaining', { remaining: upcoming.length, total: program.sessions.length })}</p>}
       {groups
-        ? <ul className="sessions">{groups.map((group) => <SessionGroupRow key={group.key} program={program} group={group} />)}</ul>
-        : <ol className="sessions">{main.map((session) => <SessionRow key={session.id} program={program} session={session} />)}</ol>}
+        ? <ul className="sessions">{groups.map((group) => <SessionGroupRow key={group.key} program={program} group={group} showPlace={showPlace} />)}</ul>
+        : <ol className="sessions">{main.map((session) => <SessionRow key={session.id} program={program} session={session} showPlace={showPlace} />)}</ol>}
       {folded.length > 0 && (
         <details className="sessions-past">
           <summary>{t('pastSessions', { count: folded.length })}</summary>
-          <ol className="sessions">{folded.map((session) => <SessionRow key={session.id} program={program} session={session} />)}</ol>
+          <ol className="sessions">{folded.map((session) => <SessionRow key={session.id} program={program} session={session} showPlace={showPlace} />)}</ol>
         </details>
       )}
     </Block>
@@ -295,7 +322,7 @@ export function SessionsSection({ program }: Props) {
 function AttendanceRule({ program, started }: Props & { started: boolean }) {
   const { t } = useI18n()
   const classes = classNames(program)
-  if (program.attendance_rule === 'all_sessions' && started) {
+  if (program.attendance_rule !== 'choose_one' && started) {
     return <p>{program.mid_join_allowed ? t('attendRemaining') : <Unknown>{t('attendStarted')}</Unknown>}</p>
   }
   if (program.attendance_rule === 'unknown' && classes.length > 1) {
@@ -305,32 +332,42 @@ function AttendanceRule({ program, started }: Props & { started: boolean }) {
   return <p>{program.attendance_rule === 'all_sessions' ? t('attendAll') : t('chooseOne')}</p>
 }
 
-function SessionRow({ program, session }: Props & { session: Program['sessions'][number] }) {
-  const { locale, t } = useI18n()
+/** 넣은 시간과 맞는지 표시. 시간 판정이 미상이면 ‘맞음’이라 하지 않고 시간 안에 든다고만 합니다. */
+function SessionFlag({ matched, possible }: { matched: boolean; possible: boolean }) {
+  const { t } = useI18n()
+  if (matched) return <span className="session-flag"><Icon name="check" />{t('sessionMatched')}</span>
+  return possible ? <span className="session-flag"><Icon name="check" />{t('sessionPossible')}</span> : null
+}
+
+function SessionRow({ program, session, showPlace }: Props & { session: Program['sessions'][number]; showPlace: boolean }) {
+  const { locale } = useI18n()
   const matched = program.matched_sessions.includes(session.id)
+  const possible = !!program.possible_sessions?.includes(session.id)
   return (
-    <li className={matched ? 'session is-matched' : 'session'}>
+    <li className={matched || possible ? 'session is-matched' : 'session'}>
       <span className="session-when">{formatSessionWhen(session, locale)}</span>
-      <span className="session-where" lang={placeLang(session)}>{formatSessionPlace(session, locale)}</span>
-      {matched && <span className="session-flag"><Icon name="check" />{t('sessionMatched')}</span>}
+      {showPlace && <span className="session-where" lang={placeLang(session)}>{formatSessionPlace(session, locale)}</span>}
+      <SessionFlag matched={matched} possible={possible} />
     </li>
   )
 }
 
-function SessionGroupRow({ program, group }: Props & { group: NonNullable<ReturnType<typeof groupSessions>>[number] }) {
+function SessionGroupRow({ program, group, showPlace }: Props & { group: NonNullable<ReturnType<typeof groupSessions>>[number]; showPlace: boolean }) {
   const { locale, t } = useI18n()
   const first = group.sessions[0]
   const last = group.sessions[group.sessions.length - 1]
   const matched = group.sessions.some((session) => program.matched_sessions.includes(session.id))
+  const possible = group.sessions.some((session) => program.possible_sessions?.includes(session.id))
+  const day = weekdayLabel(locale, group.day)
   return (
-    <li className={matched ? 'session is-matched' : 'session'}>
+    <li className={matched || possible ? 'session is-matched' : 'session'}>
       <span className="session-when">
         {group.className && <span lang="ko">{group.className} · </span>}
-        {t('sessionWeekly', { day: weekdayLabel(locale, group.day), time: group.time })}
+        {group.weekly ? t('sessionWeekly', { day, time: group.time }) : t('sessionDayTime', { day, time: group.time })}
       </span>
       <span className="session-where">{t('sessionRange', { from: formatDate(first.date!, locale), to: formatDate(last.date!, locale), count: group.sessions.length })}</span>
-      <span className="session-where" lang={placeLang(first)}>{formatSessionPlace(first, locale)}</span>
-      {matched && <span className="session-flag"><Icon name="check" />{t('sessionMatched')}</span>}
+      {showPlace && <span className="session-where" lang={placeLang(first)}>{formatSessionPlace(first, locale)}</span>}
+      <SessionFlag matched={matched} possible={possible} />
       <details className="session-dates">
         <summary>{t('sessionDates')}</summary>
         <ul>{group.sessions.map((session) => <li key={session.id}>{formatSessionWhen(session, locale)}</li>)}</ul>
@@ -339,31 +376,26 @@ function SessionGroupRow({ program, group }: Props & { group: NonNullable<Return
   )
 }
 
-/** 동반 규칙과 필요한 한국어 수준. 공고에 없으면 추정하지 않습니다(명세 3장). */
+/**
+ * 참여 정보: 공고로 확인된 동반 규칙·한국어 수준·기관과 신청 페이지의 언어(명세 3·5.2장).
+ * 모르는 항목은 추정하지 않고 한 줄로 모아 적습니다. 하나씩 ‘공고에 없어요’를 되풀이하면 확인된 내용이 묻힙니다.
+ */
 export function ParticipationSection({ program }: Props) {
-  const { t } = useI18n()
+  const { locale, t } = useI18n()
+  const languages = (codes: string[]) => (codes.length ? codes.map((code) => languageName(locale, code)).join(', ') : t('languageNone'))
+  const rows: { label: string; value: ReactNode | null }[] = [
+    { label: t('rowGuardian'), value: program.guardian_companion == null ? null : <Companion rule={program.guardian_companion} /> },
+    { label: t('rowSibling'), value: program.sibling_companion == null ? null : <Companion rule={program.sibling_companion} /> },
+    { label: t('rowKoreanLevel'), value: program.korean_level_required ? <span lang="ko">{program.korean_level_required}</span> : null },
+    { label: t('rowSupportLanguage'), value: program.support_languages ? languages(program.support_languages) : null },
+    { label: t('rowApplicationLanguage'), value: program.application_languages ? languages(program.application_languages) : null },
+  ]
+  const known = rows.filter((row) => row.value !== null)
+  const unknown = rows.filter((row) => row.value === null)
   return (
     <Block title={t('participationTitle')}>
-      <dl className="rows">
-        <Row label={t('rowGuardian')}><Companion rule={program.guardian_companion} /></Row>
-        <Row label={t('rowSibling')}><Companion rule={program.sibling_companion} /></Row>
-        <Row label={t('rowKoreanLevel')}>{program.korean_level_required ? <span lang="ko">{program.korean_level_required}</span> : <Unknown>{t('notInNotice')}</Unknown>}</Row>
-      </dl>
-    </Block>
-  )
-}
-
-/** 화면 언어 · 기관 상담 언어 · 신청 페이지 언어를 따로 보여 줍니다(명세 5.4). */
-export function LanguageSection({ program }: Props) {
-  const { locale, t } = useI18n()
-  return (
-    <Block title={t('languageTitle')}>
-      <dl className="rows">
-        <Row label={t('rowScreenLanguage')}>{t('screenLanguageValue', { language: screenLanguageName(locale) })}</Row>
-        <Row label={t('rowSupportLanguage')}><LanguageList codes={program.support_languages} /></Row>
-        <Row label={t('rowApplicationLanguage')}><LanguageList codes={program.application_languages} /></Row>
-      </dl>
-      <p className="muted">{t('languageSeparateNote')}</p>
+      {known.length > 0 && <dl className="rows">{known.map((row) => <Row key={row.label} label={row.label}>{row.value}</Row>)}</dl>}
+      {unknown.length > 0 && <p className="participation-unknown"><Unknown>{t('notInNoticeList', { items: unknown.map((row) => row.label).join(', ') })}</Unknown></p>}
     </Block>
   )
 }
@@ -378,22 +410,13 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 function Judge({ status }: { status: MatchStatus }) {
   const { t } = useI18n()
-  const label = { matched: t('judgeMatched'), not_matched: t('judgeNotMatched'), unknown: t('judgeUnknown'), not_applied: t('judgeNotApplied') }[status]
+  const label = { matched: t('judgeMatched'), not_matched: t('judgeNotMatched'), unknown: t('judgeUnknown'), not_applied: '' }[status]
   return status === 'unknown' ? <Marked>{label}</Marked> : <span className={`judge judge--${status}`}>{label}</span>
 }
 
-function Companion({ rule }: { rule: CompanionRule }) {
+function Companion({ rule }: { rule: NonNullable<CompanionRule> }) {
   const { t } = useI18n()
-  if (rule === null) return <Unknown>{t('notInNotice')}</Unknown>
   return <>{{ required: t('companionRequired'), allowed: t('companionAllowed'), not_allowed: t('companionNotAllowed') }[rule]}</>
-}
-
-/** null = 확인되지 않음, 빈 배열 = 확인 결과 지원 언어 없음(명세 6장) */
-function LanguageList({ codes }: { codes: string[] | null }) {
-  const { locale, t } = useI18n()
-  if (codes === null) return <Unknown>{t('languageUnknown')}</Unknown>
-  if (!codes.length) return <>{t('languageNone')}</>
-  return <>{codes.map((code) => languageName(locale, code)).join(', ')}</>
 }
 
 /** ? 글머리. 뜻은 늘 옆 글자가 전하므로 읽기 프로그램에는 숨깁니다. */
@@ -401,7 +424,7 @@ const QuestionMark = () => <span className="q-mark" aria-hidden="true">?</span>
 
 /**
  * 아래쪽 구역에서 다시 나오는 미확인 값(동반·한국어 수준·언어·참석 방식).
- * ‘기관에 확인할 점’ 카드가 이미 노란색으로 알리므로 형광펜을 또 칠하지 않고 ? 표시와 흐린 글자로 둡니다.
+ * ‘기관에 확인할 점’ 칸이 이미 노란색으로 알리므로 형광펜을 또 칠하지 않고 ? 표시만 둡니다.
  */
 function Unknown({ children }: { children: ReactNode }) {
   return <span className="unknown"><QuestionMark />{children}</span>

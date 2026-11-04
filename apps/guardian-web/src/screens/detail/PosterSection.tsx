@@ -47,7 +47,7 @@ export function PosterSection({ programId, posters }: { programId: string; poste
           {translated.approved ? <p>{t('posterApproved', { language })}</p> : <p><Marked>{t('posterMachine')}</Marked></p>}
         </div>
       )}
-      {shown === 'original' && locale !== 'ko-easy' && <p className="muted">{t('posterOriginalOnly', { language })}</p>}
+      {shown === 'original' && locale !== 'ko-easy' && <p>{t('posterOriginalOnly', { language })}</p>}
       <a className="poster-frame" href={src} target="_blank" rel="noopener noreferrer" aria-label={t('posterEnlarge')}>
         <img src={src} alt={t('posterTitle')} loading="lazy" onError={() => setFailed((list) => [...list, src])} />
       </a>

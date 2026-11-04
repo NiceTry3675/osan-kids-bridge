@@ -3,29 +3,30 @@ import { useI18n } from '../../i18n'
 import type { Program, SearchFilters } from '../../data/types'
 import { hasMatchConditions } from '../../data/api'
 import { canApply, consultsIn, programText } from '../../lib/content'
-import { formatDate, interestLabel, isSafeUrl, screenLanguageName } from '../../lib/format'
-import { backToList, navigate } from '../../lib/router'
+import { isSafeUrl, screenLanguageName } from '../../lib/format'
+import { backToList, navigate, programPath } from '../../lib/router'
 import { Icon } from '../../components/Icon'
 import { Notice, StatePanel } from '../../components/feedback'
-import { ExternalLink } from '../../components/links'
 import { ActionSheet } from './ActionSheet'
 import type { ActionTab } from './ActionSheet'
-import { AddendaSection, CompareSection, DescriptionSection, FactSheet, LanguageSection, ParticipationSection, SessionsSection, StatusNote, ToCheck } from './sections'
-import type { CompareMode } from './sections'
+import { AddendaSection, ApplicationIssueNotice, CompareSection, DescriptionSection, FactSheet, ParticipationSection, SessionsSection, StatusNote, ToCheck } from './sections'
 import { PosterSection, PosterThumb } from './PosterSection'
 import { usePosterInfo } from './usePosterInfo'
 import { useProgram } from './useProgram'
 import { ChatSheet } from '../chat/ChatSheet'
-import { AiEntry } from '../chat/AiEntry'
+import { ConditionSheet } from '../home/ConditionSheet'
 
 interface Props {
   id: string
   /** 목록이나 AI 상담에서 들어왔을 때만 조건을 넘깁니다. 공유 링크로 바로 열면 null. */
   filters: SearchFilters | null
+  /** 지금 넣어 둔 아이 조건. 상세에서 조건을 넣어 바로 비교할 때 씁니다. */
+  conditions?: SearchFilters
+  onConditionsChange?: (filters: SearchFilters) => void
 }
 
 /** 05 상세 페이지(/programs/{id}). 07 ‘내 언어 안내가 없을 때’도 이 페이지의 상태입니다. */
-export function DetailScreen({ id, filters }: Props) {
+export function DetailScreen({ id, filters, conditions, onConditionsChange }: Props) {
   const { locale, t } = useI18n()
   const [state, retry] = useProgram(id, filters, locale)
 
@@ -42,19 +43,29 @@ export function DetailScreen({ id, filters }: Props) {
       {state.status === 'missing' && (
         <StatePanel title={t('missingTitle')} hint={t('missingHint')} action={<button type="button" className="btn btn--primary" onClick={() => navigate('/')}>{t('browseOthers')}</button>} />
       )}
-      {state.status === 'ready' && <ProgramDetail program={state.program} comparison={filters === null ? 'direct' : hasMatchConditions(filters) ? 'compared' : 'noConditions'} />}
+      {state.status === 'ready' && <ProgramDetail id={id} program={state.program} compared={filters !== null && hasMatchConditions(filters)} conditions={conditions} onConditionsChange={onConditionsChange} />}
     </main>
   )
 }
 
+interface DetailProps {
+  id: string
+  program: Program
+  compared: boolean
+  conditions?: SearchFilters
+  onConditionsChange?: (filters: SearchFilters) => void
+}
+
 /**
- * 첫 화면 순서: 머리글(제목 옆 내 언어 포스터) → 조건을 넣고 왔으면 ‘맞아요’ 요약 → 핵심 사실 → 기관이 덧붙인 안내 → 기관에 확인할 점 → AI.
- * 조건 없이 목록에서 왔거나 공유 링크로 바로 열면 비교하지 않았다는 안내를 아래쪽에 둡니다(비교한 것처럼 보이지 않게).
+ * 순서: 머리글 → 신청 기간 경고 → 조건을 넣고 왔으면 ‘맞아요’ 요약 → 핵심 사실 → 기관이 덧붙인 안내 → 기관에 확인할 점 →
+ * 포스터 → 전체 회차 → 소개 → 확인된 참여 정보. 신청 전에 알아야 할 경고는 버튼에 가려지지 않게 맨 위에 둡니다.
+ * 비교하지 않았으면 비교 구역을 두지 않고, 여기서 바로 조건을 넣어 비교할 수 있게 합니다.
  */
-function ProgramDetail({ program, comparison }: { program: Program; comparison: CompareMode }) {
+function ProgramDetail({ id, program, compared, conditions, onConditionsChange }: DetailProps) {
   const { locale, t } = useI18n()
   const [sheet, setSheet] = useState<ActionTab | null>(null)
   const [chatOpen, setChatOpen] = useState(false)
+  const [conditionsOpen, setConditionsOpen] = useState(false)
   const posters = usePosterInfo(program)
   const text = programText(program, locale)
   const language = screenLanguageName(locale)
@@ -72,35 +83,30 @@ function ProgramDetail({ program, comparison }: { program: Program; comparison: 
       <header className="detail-head">
         <div className="detail-head-top">
           <div className="detail-head-text">
-            <p className="detail-category">{interestLabel(locale, program.category)}</p>
             <h1 className="detail-title">
               <span lang={text.lang}>{text.title}</span>
               {text.missingTranslation && <span className="tag-original">{t('originalTag')}</span>}
               {program.is_demo && <span className="tag-original tag-demo">{t('demoTag')}</span>}
             </h1>
-            <p className="detail-org" lang={text.lang}>{text.institution}</p>
           </div>
           <PosterThumb programId={program.program_id} posters={posters} />
         </div>
-        <p className="detail-meta">
-          {program.verified_at && <span>{t('verifiedAt', { date: formatDate(program.verified_at, locale) })}</span>}
-          {isSafeUrl(program.source_url) && <ExternalLink href={program.source_url} demo={program.is_demo}>{t('sourceLink')}</ExternalLink>}
-        </p>
         {text.reviewed && locale !== 'ko-easy' && <p className="reviewed-line"><Icon name="check" />{t('reviewedSummary', { language })}</p>}
       </header>
 
-      {comparison === 'compared' && <CompareSection program={program} mode="compared" />}
+      <ApplicationIssueNotice program={program} />
+      {compared && <CompareSection program={program} />}
       <FactSheet program={program} text={text} />
       <StatusNote program={program} />
+      {!compared && conditions && onConditionsChange && (
+        <button type="button" className="link-btn detail-compare-link" onClick={() => setConditionsOpen(true)}>{t('compareLink')}</button>
+      )}
       <AddendaSection program={program} />
-      <ToCheck program={program} />
-      <AiEntry title={t('chatOpen')} body={t('chatOpenProgramBody')} onOpen={() => setChatOpen(true)} />
-      {comparison !== 'compared' && <CompareSection program={program} mode={comparison} />}
+      <ToCheck program={program} onAsk={() => setSheet('ask')} />
       <PosterSection programId={program.program_id} posters={posters} />
-      <DescriptionSection program={program} text={text} />
       <SessionsSection program={program} />
+      <DescriptionSection program={program} text={text} />
       <ParticipationSection program={program} />
-      <LanguageSection program={program} />
 
       <div className="action-bar">
         <button type="button" className="btn btn--outline btn--lg" onClick={() => setSheet('ask')}>{t('askButton')}</button>
@@ -108,6 +114,22 @@ function ProgramDetail({ program, comparison }: { program: Program; comparison: 
       </div>
       <ActionSheet program={program} tab={sheet} onTab={setSheet} onClose={() => setSheet(null)} onOpenChat={() => { setSheet(null); setChatOpen(true) }} />
       <ChatSheet open={chatOpen} onClose={() => setChatOpen(false)} program={program} suggestions={['chatSuggestFit', 'chatSuggestMaterials', 'chatSuggestHowApply']} />
+      {conditions && onConditionsChange && (
+        <ConditionSheet
+          open={conditionsOpen}
+          filters={conditions}
+          submitLabel={t('compareApply')}
+          onClose={() => setConditionsOpen(false)}
+          onApply={(next) => {
+            onConditionsChange(next)
+            setConditionsOpen(false)
+            // 시트의 기록이 빠진 뒤 이 공고의 기록에 표시해, 이 공고에 머물며 비교합니다. 뒤로 가기는 한 번에 앞 화면으로 갑니다.
+            window.addEventListener('popstate', () => {
+              navigate(programPath(id), { ...(window.history.state as object | null), compare: true }, { replace: true })
+            }, { once: true })
+          }}
+        />
+      )}
     </article>
   )
 }
@@ -116,7 +138,7 @@ function ProgramDetail({ program, comparison }: { program: Program; comparison: 
 function PrimaryAction({ program, onOpen }: { program: Program; onOpen: () => void }) {
   const { t } = useI18n()
   if (program.application_status === 'closed') return <button type="button" className="btn btn--primary btn--lg" onClick={() => navigate('/')}>{t('browseOthers')}</button>
-  return <button type="button" className="btn btn--primary btn--lg" onClick={onOpen}>{canApply(program) ? t('applyButton') : t('seeOriginalHowTo')}</button>
+  return <button type="button" className="btn btn--primary btn--lg" onClick={onOpen}>{canApply(program) ? t('applyButton') : !program.application_methods.length && isSafeUrl(program.source_url) ? t('seeOriginalHowTo') : t('howToApply')}</button>
 }
 
 function CopyLink() {

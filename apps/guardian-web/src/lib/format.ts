@@ -45,6 +45,19 @@ export function formatSessionPlace(session: ProgramSession | null, locale: Local
   return session.place_name ? placeName(session.place_name) : translate(locale, 'placeUnknown')
 }
 
+/**
+ * 회차별 날짜가 없을 때 공고가 밝힌 일정: 운영 기간과 총 횟수, 없으면 null.
+ * 공고에 적힌 것을 ‘일정 확인 필요’로만 뭉개지 않으려는 것입니다.
+ */
+export function periodText(program: Pick<Program, 'period_start' | 'period_end' | 'session_count'>, locale: Locale): string | null {
+  const { period_start: start, period_end: end, session_count: count } = program
+  const range = start && end
+    ? start === end ? formatDate(start, locale) : `${formatDate(start, locale)} ~ ${formatDate(end, locale)}`
+    : start ? formatDate(start, locale) : end ? formatDate(end, locale) : null
+  if (!range) return null
+  return count ? `${range} · ${translate(locale, 'sessionTotal', { count })}` : range
+}
+
 /** 공고가 ‘2층 가족센터’처럼 층을 앞에 적어도 ‘가족센터 2층’으로 읽히게 합니다. 여러 곳을 함께 적은 이름은 그대로 둡니다. */
 export function placeName(name: string): string {
   const match = name.trim().replace(/\s+내$/, '').match(/^(\d+층)\s+(.+)$/)
@@ -80,6 +93,17 @@ export function formatStatus(program: Pick<Program, 'application_status' | 'appl
     case 'closed': return translate(locale, 'statusClosed')
     case 'unknown': return translate(locale, 'statusUnknown')
   }
+}
+
+/**
+ * 목록의 신청 표시: 신청 중이면 언제까지인지가 가장 궁금하므로 마감일을 적습니다.
+ * 신청 기간을 믿기 어려운 공고는 날짜를 단정하지 않습니다.
+ */
+export function formatListStatus(program: Pick<Program, 'application_status' | 'application_start' | 'application_end' | 'application_issue' | 'as_of'>, locale: Locale): string {
+  if (program.application_status !== 'open' || !program.application_end || program.application_issue) return formatStatus(program, locale)
+  return program.application_end === program.as_of
+    ? translate(locale, 'statusToday')
+    : translate(locale, 'statusUntil', { date: formatDate(program.application_end, locale) })
 }
 
 export function isSafeUrl(value: string | null | undefined): value is string {

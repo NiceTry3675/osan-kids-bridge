@@ -1,15 +1,12 @@
 .actions { display: grid; gap: 8px; }
-.action-visit { display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 12px; background: var(--sunken); font-size: var(--text-sm); }
+.action-visit { display: flex; gap: 10px; align-items: flex-start; font-size: var(--text-sm); }
 .action-visit .icon { margin-top: 2px; color: var(--action); flex: none; }
 .action-visit strong { display: block; }
-.step-card { display: grid; gap: 6px; padding: 14px; border-radius: 16px; background: var(--sunken); }
-.step-title { display: flex; align-items: center; gap: 8px; font-weight: 800; }
-.step-no { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: var(--paper); font-size: 12px; flex: none; }
 .contacts { display: grid; gap: 12px; }
 .contact { display: grid; gap: 6px; }
-.contact-meta { display: grid; gap: 1px; font-size: var(--text-xs); color: var(--ink-2); }
+.contact-meta { display: grid; gap: 1px; font-size: var(--text-sm); }
 .empty-contact { display: grid; gap: 4px; }
-.empty-contact-title { font-weight: 750; }
+.empty-contact-title { font-weight: 600; }
 
 /* 03 조건 시트 안 */
 .grades { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
@@ -32,10 +29,24 @@
 
 /* 학교급 고르기와 시간대 빠른 선택 */
 .school-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
-.time-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 /* 신청 전 안내와 기관에 물을 문장 */
-.apply-guide { display: grid; gap: 6px; padding: 12px 14px; border-radius: 14px; background: var(--status-open-soft); font-size: var(--text-sm); }
-.apply-guide ul { display: grid; gap: 2px; font-weight: 700; }
+.apply-guide { display: grid; gap: 6px; padding: 12px 14px; border-radius: 8px; background: var(--status-open-soft); font-size: var(--text-sm); }
+.apply-guide ul { display: grid; gap: 2px; font-weight: 600; }
 .inquiry-box { display: grid; gap: 6px; margin-bottom: 10px; }
-.inquiry-box-title { font-weight: 750; }
-.inquiry-box-text { padding: 12px 14px; border-radius: 12px; background: var(--paper); white-space: pre-line; line-height: 1.55; }
+.inquiry-box-title { font-weight: 700; }
+.inquiry-box-text { padding: 12px 14px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--paper); white-space: pre-line; line-height: 1.55; }
+
+/* 요일·시간대 고르기와 직접 넣기 */
+.time-parts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+.time-custom { margin-top: 10px; }
+.time-custom > summary { min-height: 40px; color: var(--action); font-size: var(--text-sm); font-weight: 600; cursor: pointer; }
+.time-custom .legend-link { margin: 2px 0 6px; }
+
+/* 신청 방법과 목록에서 공고 찾기 */
+.apply-online { display: grid; gap: 8px; }
+.apply-method { font-weight: 600; }
+.find-on-list { display: grid; gap: 6px; }
+.find-on-list-title { font-weight: 600; }
+/* 물어보기: 문장 → 문의처 → 원문 → AI */
+.inquiry-meaning { font-size: var(--text-sm); line-height: 1.5; }
+.ask-source { display: grid; gap: 2px; justify-items: start; }

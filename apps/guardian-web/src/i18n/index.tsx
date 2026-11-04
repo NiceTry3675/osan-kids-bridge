@@ -20,6 +20,29 @@ export function readStoredLocale(raw: string | null, allowDraft?: boolean): Loca
   return raw && (LOCALES as readonly string[]).includes(raw) && isSelectable(raw as Locale, allowDraft) ? (raw as Locale) : 'ko-easy'
 }
 
+const DEVICE_LOCALE: Record<string, Locale> = { vi: 'vi', zh: 'zh', ko: 'ko-easy' }
+
+/**
+ * 처음 온 사람의 화면 언어: 기기 언어 중 제공하는 첫 언어. 없으면 쉬운 한국어.
+ * 한국어를 읽기 전에 내 언어로 시작하게 하려는 것이고, 고른 언어가 있으면 그것을 씁니다.
+ */
+export function detectLocale(languages: readonly string[], allowDraft?: boolean): Locale {
+  for (const language of languages) {
+    const locale = DEVICE_LOCALE[language.toLowerCase().split('-')[0]]
+    if (locale && isSelectable(locale, allowDraft)) return locale
+  }
+  return 'ko-easy'
+}
+
+function initialLocale(): Locale {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? readStoredLocale(stored) : detectLocale(navigator.languages ?? [navigator.language])
+  } catch {
+    return 'ko-easy'
+  }
+}
+
 interface I18n {
   locale: Locale
   setLocale: (locale: Locale) => void
@@ -30,8 +53,7 @@ const I18nContext = createContext<I18n | null>(null)
 
 export function I18nProvider({ children, initial }: { children: ReactNode; initial?: Locale }) {
   const [locale, setLocaleState] = useState<Locale>(() => {
-    if (initial) return initial
-    try { return readStoredLocale(localStorage.getItem(STORAGE_KEY)) } catch { return 'ko-easy' }
+    return initial ?? initialLocale()
   })
   const setLocale = useCallback((next: Locale) => {
     if (!isSelectable(next)) return

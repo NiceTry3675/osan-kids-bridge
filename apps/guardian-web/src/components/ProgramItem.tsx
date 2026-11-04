@@ -3,9 +3,8 @@ import type { MouseEvent, ReactNode } from 'react'
 import { useI18n } from '../i18n'
 import type { PosterLanguage } from '../data/agent'
 import type { Locale, Program } from '../data/types'
-import { addendumText, costAddendum, INTEREST_VISUAL, itemsToCheck, programText, timeUnknownReason } from '../lib/content'
-import { InterestIcon } from '../screens/intro/art'
-import { formatCost, formatSessionPlace, formatSessionWhen, formatStatus, placeLang, topicLabel } from '../lib/format'
+import { addendumText, costAddendum, itemsToCheck, programText, timeUnknownReason } from '../lib/content'
+import { formatCost, formatListStatus, formatSessionPlace, formatSessionWhen, periodText, placeLang, topicLabel } from '../lib/format'
 import { usePosterImage } from '../lib/poster'
 import { hrefFor, navigate, programPath } from '../lib/router'
 import { Marked, StatusTag } from './feedback'
@@ -21,7 +20,7 @@ export function listPoster(program: Program, locale: Locale): PosterLanguage | '
 
 /**
  * 목록 한 줄. 목록·상세에서 대상 → 일정 → 장소 → 비용 → 신청을 같은 이름으로 씁니다(명세 5.1).
- * 맞는 이유는 위쪽 초록 알약, 기관에 확인할 점은 개수 칩 하나로 줄이고 전체 항목은 읽기 프로그램과 상세에 남깁니다.
+ * 맞는 이유는 위쪽 초록 표시, 기관에 확인할 점은 상태 줄 오른쪽에 개수만 적고 전체 항목은 읽기 프로그램과 상세에 남깁니다.
  */
 export function ProgramItem({ program }: { program: Program }) {
   const { locale, t } = useI18n()
@@ -55,17 +54,27 @@ export function ProgramItem({ program }: { program: Program }) {
               {timeMatched && <span><Icon name="check" />{t('timeMatched')}</span>}
             </span>
           )}
-          <StatusTag status={program.application_status}>{formatStatus(program, locale)}</StatusTag>
-          <span className="item-title" lang={text.lang}>{text.title}</span>
-          <span className="item-org">
-            <span lang={text.lang}>{text.institution}</span>
-            {text.missingTranslation && <span className="tag-original">{t('originalTag')}</span>}
-            {program.is_demo && <span className="tag-original tag-demo">{t('demoTag')}</span>}
+          <span className="item-top">
+            <StatusTag status={program.application_status}>{formatListStatus(program, locale)}</StatusTag>
+            {checks.length > 0 && (
+              <span className="item-checks">
+                <span aria-hidden="true">{t('checksCount', { count: checks.length })}</span>
+                <span className="visually-hidden">{t('toCheck')}: {checks.join(', ')}</span>
+              </span>
+            )}
           </span>
+          <span className="item-title" lang={text.lang}>{text.title}</span>
+          {(text.missingTranslation || program.is_demo) && (
+            <span className="item-tags">
+              {text.missingTranslation && <span className="tag-original">{t('originalTag')}</span>}
+              {program.is_demo && <span className="tag-original tag-demo">{t('demoTag')}</span>}
+            </span>
+          )}
           <span className="item-facts">
+            <Fact label={t('institutionRow')}><span lang={text.lang}>{text.institution}</span></Fact>
             <Fact label={t('target')} clamp><span lang={text.lang}>{text.target}</span></Fact>
-            <Fact label={timeMatched ? t('matchedShort') : possible ? t('possibleShort') : t('schedule')}>
-              {shownSession?.date ? formatSessionWhen(shownSession, locale) : <Marked>{t('scheduleUnknown')}</Marked>}
+            <Fact label={timeMatched ? t('matchedShort') : possible ? t('possibleShort') : shownSession?.date ? t('schedule') : t('scheduleGeneral')}>
+              <ScheduleText program={program} session={shownSession} locale={locale} />
             </Fact>
             <Fact label={t('place')}>
               <span lang={placeLang(shownSession)}>{formatSessionPlace(shownSession, locale)}</span>
@@ -79,16 +88,18 @@ export function ProgramItem({ program }: { program: Program }) {
               {issue && <span className="item-why">{t('issueShort')}</span>}
             </span>
           )}
-          {checks.length > 0 && (
-            <span className="item-checks">
-              <span className="item-check-chip" aria-hidden="true">{t('toCheck')}<span className="item-check-count">{checks.length}</span></span>
-              <span className="visually-hidden">{t('toCheck')}: {checks.join(', ')}</span>
-            </span>
-          )}
         </span>
       </a>
     </li>
   )
+}
+
+/** 일정 칸: 회차 날짜, 없으면 공고의 일정 안내나 운영 기간, 그것도 없을 때만 ‘일정 확인 필요’ */
+function ScheduleText({ program, session, locale }: { program: Program; session: Program['next_session']; locale: Locale }) {
+  const { t } = useI18n()
+  if (session?.date) return <>{formatSessionWhen(session, locale)}</>
+  if (program.schedule_note) return <span lang="ko">{program.schedule_note}</span>
+  return <>{periodText(program, locale) ?? <Marked>{t('scheduleUnknown')}</Marked>}</>
 }
 
 /**
@@ -107,17 +118,13 @@ function Cost({ program, locale }: { program: Program; locale: Locale }) {
 const ITEM_POSTER_SIZE = 64
 
 /**
- * 그림 칸: 포스터가 있으면 정사각형 썸네일(번역본에는 ‘AI 번역’ 표시), 번역본을 못 불러오면 한국어 원본, 그것도 안 되면 분야 그림.
- * 제목이 이미 공고를 말하므로 읽기 프로그램에는 숨깁니다.
+ * 그림 칸: 포스터가 있으면 정사각형 썸네일(번역본에는 ‘AI 번역’ 표시), 번역본을 못 불러오면 한국어 원본.
+ * 포스터가 없으면 칸을 두지 않아 글을 넓게 씁니다. 제목이 이미 공고를 말하므로 읽기 프로그램에는 숨깁니다.
  */
 function ItemArt({ program, locale }: { program: Program; locale: Locale }) {
   const { t } = useI18n()
   const { shown, onError } = usePosterImage(program.program_id, listPoster(program, locale), !!program.posters?.original, ITEM_POSTER_SIZE)
-  if (!shown) {
-    const visual = INTEREST_VISUAL[program.category]
-    // 홈 분야 타일과 같은 선 아이콘
-    return <span className={`item-art tone-${visual.tone}`} aria-hidden="true"><InterestIcon interest={program.category} /></span>
-  }
+  if (!shown) return null
   return (
     <span className="item-poster" aria-hidden="true">
       <img src={shown.src} alt="" width={ITEM_POSTER_SIZE} height={ITEM_POSTER_SIZE} loading="lazy" decoding="async" onError={onError} />

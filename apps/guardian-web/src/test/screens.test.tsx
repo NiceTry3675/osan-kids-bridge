@@ -32,7 +32,7 @@ describe('상세 화면', () => {
     fireEvent.click(await screen.findByRole('button', { name: '신청하러 가기' }))
     expect(screen.getByText('방문해서 신청')).toBeTruthy()
     fireEvent.click(screen.getAllByRole('button', { name: /물어보기/ })[0])
-    expect(await screen.findByText('확인된 문의처가 없어요')).toBeTruthy()
+    expect(await screen.findByText('이 공고에는 연락처가 없어요')).toBeTruthy()
   })
 
   it('신청 기간을 모르면 신청 버튼 대신 원문 확인을 안내한다', async () => {
@@ -41,16 +41,17 @@ describe('상세 화면', () => {
     expect(screen.queryByRole('button', { name: '신청하러 가기' })).toBeNull()
   })
 
-  it('공유 링크로 열면 아이 조건과 비교하지 않았다고 알린다', async () => {
+  it('공유 링크로 열면 비교 구역을 두지 않는다', async () => {
     renderDetail('demo-craft', 'ko-easy')
-    expect(await screen.findByText(/공유 링크로 열어서/)).toBeTruthy()
+    await screen.findByRole('heading', { name: '기관에 확인할 점' })
+    expect(screen.queryByRole('heading', { name: '우리 아이 조건과 비교' })).toBeNull()
   })
 
   it('목록에서 조건을 가지고 들어오면 나이·학년 판정을 보여 준다', async () => {
     renderDetail('demo-korean', 'ko-easy', { ...emptyFilters(), child_grade: 2 })
     const compare = (await screen.findByRole('heading', { name: '우리 아이 조건과 비교' })).closest('section')!
     expect(within(compare).getByText('맞아요')).toBeTruthy()
-    expect(within(compare).getByText('공고만으로는 알 수 없어요')).toBeTruthy()
+    expect(within(compare).getByText('우리 가족이 해당하는지 기관에 확인해 주세요')).toBeTruthy()
   })
 
   it('원문이 바뀐 공고는 재검수 중임을 알린다', async () => {

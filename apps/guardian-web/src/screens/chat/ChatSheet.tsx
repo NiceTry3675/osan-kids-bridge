@@ -114,11 +114,11 @@ export function ChatSheet({ open, onClose, program, suggestions }: Props) {
       <div className="chat">
         {/* 대화가 시작되면 안내는 한 줄로 접어 질문·단계·답이 한 화면에 들어오게 합니다. */}
         {turns.length > 0 ? (
-          <p className="chat-intro chat-intro--short"><span className="chat-badge" aria-hidden="true">AI</span>{t('chatIntroShort')}</p>
+          <p className="chat-intro chat-intro--short">{t('chatIntroShort')}</p>
         ) : (
           <div className="chat-intro">
-            <p className="chat-intro-lead"><span className="chat-badge" aria-hidden="true">AI</span>{t('chatIntro')}</p>
-            <p className="muted">{t('chatPrivacy')}</p>
+            <p>{t('chatIntro')}</p>
+            <p>{t('chatPrivacy')}</p>
             {viewing && <p className="chat-viewing">{withTitle(t, 'chatViewing', viewing)}</p>}
           </div>
         )}
@@ -292,12 +292,11 @@ function InquiryCard({ inquiry }: { inquiry: NonNullable<AgentReply['inquiry']> 
   return (
     <div className="chat-card chat-inquiry">
       <p className="chat-card-title">{t('inquiryTitle')}</p>
-      <p className="muted">{t('inquiryNote')}</p>
       <pre className="inquiry-text" lang="ko">{inquiry.message_ko}</pre>
       <button type="button" className="btn btn--secondary" onClick={copy}><Icon name={copied ? 'check' : 'link'} />{copied ? t('inquiryCopied') : t('inquiryCopy')}</button>
       {contacts.length
         ? contacts.map((contact, index) => <InquiryContact key={index} contact={contact} demo={inquiry.is_demo} />)
-        : <p className="muted">{t('inquiryNoContact')}</p>}
+        : <p>{t('inquiryNoContact')}</p>}
     </div>
   )
 }
@@ -342,11 +341,11 @@ function UnansweredCard({ items }: { items: AgentReply['unanswered'] }) {
       <ul className="unanswered-list">
         {items.map((item) => <li key={item.question_ko}><span className="unanswered-topic">{t(TOPIC_KEYS[item.topic])}</span><span lang="ko">{item.question_ko}</span></li>)}
       </ul>
-      <p className="muted">{t('unansweredBody')}</p>
+      <p>{t('unansweredBody')}</p>
       {state === 'sent'
         ? <p className="unanswered-sent" role="status"><Icon name="check" />{t('unansweredSent')}</p>
         : <button type="button" className="btn btn--outline" onClick={send} disabled={state === 'sending'}>{t('unansweredSend')}</button>}
-      {state === 'failed' && <p className="muted" role="status">{t('chatError')}</p>}
+      {state === 'failed' && <p role="status">{t('chatError')}</p>}
     </div>
   )
 }

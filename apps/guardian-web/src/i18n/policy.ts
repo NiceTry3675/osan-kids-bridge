@@ -5,6 +5,7 @@
  */
 import type { LanguageOption, LanguageState } from '@osan-kids-bridge/ui'
 import type { Locale } from '../data/types'
+import { messages } from './messages'
 
 export const LOCALES: readonly Locale[] = ['ko-easy', 'vi', 'zh']
 
@@ -30,5 +31,6 @@ export function localeState(locale: Locale, allowDraft = draftLocalesAllowed()):
 export const isSelectable = (locale: Locale, allowDraft = draftLocalesAllowed()) => localeState(locale, allowDraft) !== 'in_review'
 
 export function languageOptions(allowDraft = draftLocalesAllowed()): LanguageOption<Locale>[] {
-  return LOCALES.map((code) => ({ code, ...NATIVE[code], state: localeState(code, allowDraft) }))
+  // ‘번역 초안’ 표시는 그 언어로 적습니다. 아직 그 언어로 바꾸기 전에도 읽을 수 있어야 하니까요.
+  return LOCALES.map((code) => ({ code, ...NATIVE[code], state: localeState(code, allowDraft), note: messages[code].pickerDraft }))
 }

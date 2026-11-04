@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { searchLanguages } from '@osan-kids-bridge/ui'
-import { readStoredLocale, translate } from '../i18n'
+import { readStoredLocale, translate, detectLocale } from '../i18n'
 import { messages } from '../i18n/messages'
 import { languageOptions, localeState, UI_REVIEW } from '../i18n/policy'
 import type { Locale } from '../data/types'
@@ -48,5 +48,33 @@ describe('화면 언어 공개 정책(명세 9장 6항)', () => {
     expect(searchLanguages(options, 'TIENG VIET').offered.map((option) => option.code)).toEqual(['vi'])
     expect(searchLanguages(options, '中文').offered.map((option) => option.code)).toEqual(['zh'])
     expect(searchLanguages(options, 'english')).toEqual({ offered: [], notOffered: ['English'] })
+  })
+
+  it('준비 중인 언어는 요청할 때만 검색 없이 목록으로 내보낸다', () => {
+    const options = languageOptions(true)
+    expect(searchLanguages(options, '').notOffered).toEqual([])
+    expect(searchLanguages(options, '', true).notOffered).toContain('Русский')
+    expect(searchLanguages(options, '러시아', true).notOffered).toEqual(['Русский'])
+  })
+
+  it('초안 표시는 그 언어로 적는다', () => {
+    const options = languageOptions(true)
+    expect(options.find((option) => option.code === 'vi')?.note).toBe('Bản dịch nháp')
+    expect(options.find((option) => option.code === 'zh')?.note).not.toBe('번역 초안')
+  })
+})
+
+describe('처음 온 사람의 화면 언어', () => {
+  it('기기 언어 중 제공하는 첫 언어로 시작한다', () => {
+    expect(detectLocale(['vi-VN', 'en'], true)).toBe('vi')
+    expect(detectLocale(['zh-Hans-CN'], true)).toBe('zh')
+    expect(detectLocale(['en-US', 'vi'], true)).toBe('vi')
+    expect(detectLocale(['ko-KR', 'vi'], true)).toBe('ko-easy')
+  })
+
+  it('제공하지 않거나 공개되지 않은 언어면 쉬운 한국어로 시작한다', () => {
+    expect(detectLocale(['ru-RU', 'en'], true)).toBe('ko-easy')
+    expect(detectLocale(['vi-VN'], false)).toBe('ko-easy')
+    expect(detectLocale([], true)).toBe('ko-easy')
   })
 })

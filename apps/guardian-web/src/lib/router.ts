@@ -14,6 +14,8 @@ export interface HistoryState {
   fromList?: boolean
   /** AI 상담이 권한 공고를 눌러 들어온 상세인지. 공유 링크가 아니므로 지금 넣은 조건으로 판정합니다(‘목록’은 홈으로) */
   fromChat?: boolean
+  /** 상세에서 아이 조건을 넣어 비교를 요청했는지 */
+  compare?: boolean
   /** 이 항목을 떠날 때의 스크롤 위치 */
   scrollY?: number
 }
@@ -40,8 +42,17 @@ function currentState(): HistoryState {
   return (window.history.state as HistoryState | null) ?? {}
 }
 
+/** 화면 내용이 스크롤되는 상자. 틀은 고정되고 이 안의 내용만 움직입니다(App). */
+export const SCROLL_ROOT_ID = 'scroll-root'
+const scrollRoot = () => document.getElementById(SCROLL_ROOT_ID)
+const scrollPosition = () => scrollRoot()?.scrollTop ?? 0
+const setScrollPosition = (top: number) => { const root = scrollRoot(); if (root) root.scrollTop = top }
+
+/** 조건을 바꿨을 때처럼 같은 화면에서 맨 위로 돌아갑니다. */
+export const scrollToTop = () => setScrollPosition(0)
+
 function rememberScroll() {
-  window.history.replaceState({ ...currentState(), scrollY: window.scrollY }, '')
+  window.history.replaceState({ ...currentState(), scrollY: scrollPosition() }, '')
 }
 
 export function navigate(path: string, state: HistoryState = {}, options: { replace?: boolean } = {}) {
@@ -49,7 +60,7 @@ export function navigate(path: string, state: HistoryState = {}, options: { repl
   if (options.replace) window.history.replaceState(state, '', hrefFor(path))
   else window.history.pushState(state, '', hrefFor(path))
   notify()
-  window.scrollTo(0, 0)
+  setScrollPosition(0)
 }
 
 /** 목록으로 돌아가기: 목록에서 들어왔다면 뒤로 가기로 원래 위치를 살립니다. */
@@ -75,7 +86,7 @@ export function useRoute(): [Route, HistoryState] {
 export function useRestoreScroll(ready: boolean, scrollY: number | undefined) {
   useEffect(() => {
     if (!ready || scrollY === undefined) return
-    const frame = requestAnimationFrame(() => window.scrollTo(0, scrollY))
+    const frame = requestAnimationFrame(() => setScrollPosition(scrollY))
     return () => cancelAnimationFrame(frame)
   }, [ready, scrollY])
 }

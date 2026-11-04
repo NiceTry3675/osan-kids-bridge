@@ -48,29 +48,30 @@ describe('상세 첫 화면', () => {
     expect(compare.previousElementSibling?.tagName).toBe('HEADER')
     expect(compare.nextElementSibling?.classList.contains('facts')).toBe(true)
     expect(within(compare).getByText('맞아요').closest('.compare-pill')?.textContent).toBe('나이·학년맞아요')
-    expect(within(compare).getByText('공고만으로는 알 수 없어요').tagName).toBe('MARK')
+    expect(within(compare).getByText('우리 가족이 해당하는지 기관에 확인해 주세요').tagName).toBe('MARK')
     expect(within(compare).queryByText('시간')).toBeNull()
   })
 
-  it('조건 없이 목록에서 들어오면 비교한 것처럼 보이지 않게 아래쪽에 두고, 넣지 않은 조건을 그대로 밝힌다', async () => {
+  it('조건을 넣지 않고 들어오면 비교 구역을 두지 않는다(비교한 것처럼 보이지 않게)', async () => {
     serve()
     renderDetail('ko-easy', emptyFilters())
-    const compare = (await screen.findByRole('heading', { name: '우리 아이 조건과 비교' })).closest('section')!
-    expect(compare.previousElementSibling?.tagName).not.toBe('HEADER')
-    const toCheck = screen.getByRole('heading', { name: '기관에 확인할 점' }).closest('section')!
-    expect(toCheck.compareDocumentPosition(compare) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(within(compare).getAllByText('조건을 넣지 않았어요')).toHaveLength(2)
-    expect(within(compare).getByText(/아이 학년·시간을 넣지 않아/)).toBeTruthy()
-    expect(within(compare).queryByText(/공유 링크로 열어서/)).toBeNull()
-    expect(compare.querySelector('.compare-pill')).toBeNull()
+    await screen.findByRole('heading', { name: '기관에 확인할 점' })
+    expect(screen.queryByRole('heading', { name: '우리 아이 조건과 비교' })).toBeNull()
   })
 
-  it('공유 링크로 열면 비교하지 않았다는 안내를 확인할 점 아래에 둔다', async () => {
+  it('공유 링크로 열어도 비교 구역을 두지 않는다', async () => {
     serve()
     renderDetail('ko-easy')
-    const note = await screen.findByText(/공유 링크로 열어서/)
-    const toCheck = screen.getByRole('heading', { name: '기관에 확인할 점' }).closest('section')!
-    expect(toCheck.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    await screen.findByRole('heading', { name: '기관에 확인할 점' })
+    expect(screen.queryByRole('heading', { name: '우리 아이 조건과 비교' })).toBeNull()
+  })
+
+  it('신청 기간 경고는 핵심 정보보다 위에 둔다', async () => {
+    serve({ application_issue: { kind: 'conflict', note_ko: '신청 기간: 10. 14.까지', event_date: null } })
+    renderDetail('ko-easy')
+    const warning = (await screen.findAllByText('공고 안에 신청 기간이 다르게 적혀 있어요'))[0]
+    const facts = document.querySelector('.facts')!
+    expect(warning.compareDocumentPosition(facts) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('확인할 점은 카드 하나로, 항목에 형광펜을 다시 칠하지 않고 원문 표현은 lang="ko"로 둔다', async () => {
@@ -82,13 +83,15 @@ describe('상세 첫 화면', () => {
     expect(within(toCheck).getByText('다문화가족 자녀').parentElement!.textContent).toBe('Bản gốc ghi: “다문화가족 자녀”')
   })
 
-  it('아래쪽 구역의 같은 미확인 값은 형광펜 대신 ? 표시로 둔다', async () => {
-    serve()
+  it('공고에 없는 참여 정보는 하나씩 되풀이하지 않고 한 줄로 모으며 형광펜을 칠하지 않는다', async () => {
+    serve({ guardian_companion: 'allowed', sibling_companion: null, korean_level_required: null, support_languages: null, application_languages: null })
     renderDetail('ko-easy')
-    const companion = (await screen.findByRole('heading', { name: '함께 가기와 한국어' })).closest('section')!
-    const unknown = within(companion).getByText('공고에 없어요')
+    const section = (await screen.findByRole('heading', { name: '참여 정보' })).closest('section')!
+    expect(within(section).getByText('함께 올 수 있어요')).toBeTruthy()
+    const unknown = within(section).getByText(/공고에 없어요:/)
+    expect(unknown.textContent).toContain('형제자매 동반')
+    expect(unknown.textContent).not.toContain('보호자 동반')
     expect(unknown.closest('mark')).toBeNull()
-    expect(unknown.closest('.unknown')).toBeTruthy()
   })
 })
 
@@ -228,7 +231,7 @@ describe('기관이 확인해 덧붙인 안내', () => {
     renderDetail('ko-easy')
     const toCheck = (await screen.findByRole('heading', { name: '기관에 확인할 점' })).closest('section')!
     expect(within(toCheck).queryByText('보호자·형제자매가 함께 갈 수 있는지')).toBeNull()
-    expect(within(toCheck).getByText('가족 자격(다문화가족 여부 등)')).toBeTruthy()
+    expect(within(toCheck).getByText('우리 가족도 참여할 수 있는지')).toBeTruthy()
   })
 
   it('예전 서버처럼 안내가 없으면 카드를 그리지 않는다', async () => {
