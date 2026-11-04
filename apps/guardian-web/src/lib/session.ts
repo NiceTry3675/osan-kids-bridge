@@ -26,7 +26,7 @@ export function parseFilters(raw: string | null): SearchFilters {
   try {
     const data: unknown = JSON.parse(raw)
     if (!isRecord(data)) return filters
-    if (inRange(data.child_grade, 1, 6)) filters.child_grade = data.child_grade
+    if (inRange(data.child_grade, 1, 12)) filters.child_grade = data.child_grade
     else if (inRange(data.child_age, 1, 18)) filters.child_age = data.child_age
     if (Array.isArray(data.available_windows)) filters.available_windows = data.available_windows.filter(isWindow).slice(0, MAX_WINDOWS)
     if (Array.isArray(data.interests)) filters.interests = [...new Set(data.interests.filter((value): value is Interest => (INTERESTS as unknown[]).includes(value)))]

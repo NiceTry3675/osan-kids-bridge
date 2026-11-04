@@ -25,6 +25,12 @@ function nextWeekday(weekday: number, weeksLater = 0): string {
   return offsetDate(days)
 }
 
+/** 첫 회차 전날: 시연 공고의 신청 마감이 일정보다 늦어 보이지 않게 합니다 */
+function dayBefore(date: string): string {
+  const [year, month, day] = date.split('-').map(Number)
+  return isoDate(new Date(year, month - 1, day - 1, 12))
+}
+
 const SAT = 6
 const WED = 3
 
@@ -32,7 +38,7 @@ function session(id: string, date: string | null, start: string | null, end: str
   return { id, date, start_time: start, end_time: end, place_name: place, dong, online: false }
 }
 
-function base(): Pick<Program, 'age_grade_match_status' | 'time_match_status' | 'matched_reasons' | 'matched_sessions' | 'next_session' | 'source_url' | 'verified_at' | 'review_state' | 'is_demo' | 'summaries_by_language' | 'application_languages' | 'support_languages' | 'guardian_companion' | 'sibling_companion' | 'korean_level_required' | 'inquiry_methods'> {
+function base(): Pick<Program, 'as_of' | 'possible_sessions' | 'application_issue' | 'outside_osan' | 'age_grade_match_status' | 'time_match_status' | 'matched_reasons' | 'matched_sessions' | 'next_session' | 'source_url' | 'verified_at' | 'review_state' | 'is_demo' | 'summaries_by_language' | 'application_languages' | 'support_languages' | 'guardian_companion' | 'sibling_companion' | 'korean_level_required' | 'inquiry_methods'> {
   return {
     age_grade_match_status: 'not_applied',
     time_match_status: 'not_applied',
@@ -43,6 +49,10 @@ function base(): Pick<Program, 'age_grade_match_status' | 'time_match_status' | 
     verified_at: offsetDate(-1),
     review_state: 'current',
     is_demo: true,
+    as_of: offsetDate(0),
+    possible_sessions: [],
+    application_issue: null,
+    outside_osan: null,
     summaries_by_language: {},
     application_languages: null,
     support_languages: null,
@@ -65,14 +75,14 @@ function buildPrograms(): Program[] {
       target_type: 'multicultural_family',
       description: '놀이와 이야기로 한국어를 익히는 프로그램입니다. 회차 중 하나를 골라 참여합니다. 필기도구를 가져오세요.',
       grade_range: [1, 4], age_range: null, eligibility_status: 'unknown',
-      uncertain_items: [{ topic: 'family_eligibility', note_ko: '다문화가족 자녀' }, { topic: 'companion', note_ko: '형제자매 동반은 적혀 있지 않음' }],
+      uncertain_items: [{ topic: 'family_eligibility', note_ko: '다문화가족 자녀' }, { topic: 'companion', note_ko: null }],
       attendance_rule: 'choose_one',
       sessions: [
         session('korean-1', nextWeekday(SAT), '10:30', '12:00', '가상 가족센터 2층 교육실', '중앙동'),
         session('korean-2', nextWeekday(SAT, 1), '10:30', '12:00', '가상 가족센터 2층 교육실', '중앙동'),
       ],
       cost_krw: 0, cost_raw: '무료',
-      application_status: 'open', application_start: offsetDate(-3), application_end: offsetDate(6),
+      application_status: 'open', application_start: offsetDate(-3), application_end: dayBefore(nextWeekday(SAT)),
       application_methods: [{ type: 'online', url: 'https://example.com/apply' }],
       application_languages: ['ko'],
       inquiry_methods: [{ type: 'phone', phone: '031-000-0001', hours: '평일 10:00~17:00', languages: ['ko', 'vi'], verified_at: offsetDate(-1) }],
@@ -103,7 +113,7 @@ function buildPrograms(): Program[] {
         session('craft-2', nextWeekday(SAT, 1), '13:00', '15:00', '가상 대원동 센터', '대원동'),
       ],
       cost_krw: 0, cost_raw: '무료',
-      application_status: 'open', application_start: offsetDate(-2), application_end: offsetDate(5),
+      application_status: 'open', application_start: offsetDate(-2), application_end: dayBefore(nextWeekday(SAT)),
       application_methods: [{ type: 'online', url: 'https://example.com/apply' }, { type: 'phone', phone: '031-000-0000' }],
       inquiry_methods: [{ type: 'phone', phone: '031-000-0000', hours: '화~일 09:00~18:00', languages: null, verified_at: offsetDate(-1) }],
       summaries_by_language: {
@@ -148,7 +158,7 @@ function buildPrograms(): Program[] {
       attendance_rule: 'all_sessions',
       sessions: [0, 1, 2, 3].map((week) => session(`art-${week}`, nextWeekday(SAT, week), '10:00', '12:00', '가상 청소년문화의집', '신장동')),
       cost_krw: null, cost_raw: null,
-      application_status: 'open', application_start: offsetDate(-1), application_end: offsetDate(3),
+      application_status: 'open', application_start: offsetDate(-1), application_end: dayBefore(nextWeekday(SAT)),
       application_methods: [{ type: 'visit', address: '오산시 신장동 (시연용 주소)' }],
     },
     {
@@ -270,6 +280,9 @@ function evaluate(program: Program, filters: SearchFilters): Program {
     age_grade_match_status: ageGrade,
     time_match_status: time.status,
     matched_sessions: time.matched,
+    possible_sessions: time.status === 'unknown'
+      ? program.sessions.filter((item) => item.date && item.date >= now && filters.available_windows.some((window) => windowContains(window, item))).map((item) => item.id)
+      : [],
     matched_reasons: reasons,
     next_session: matchedSession ?? upcoming[0] ?? program.sessions[0] ?? null,
   }
@@ -279,11 +292,11 @@ const applicationOrder = { open: 0, upcoming: 1, unknown: 2, closed: 3 }
 const isUncertain = (program: Program) => program.age_grade_match_status === 'unknown' || program.eligibility_status === 'unknown'
 
 function compare(a: Program, b: Program, filters: SearchFilters): number {
-  return applicationOrder[a.application_status] - applicationOrder[b.application_status]
+  return Number(filters.interests.includes(b.category)) - Number(filters.interests.includes(a.category))
+    || Number(!!filters.dong && b.next_session?.dong === filters.dong) - Number(!!filters.dong && a.next_session?.dong === filters.dong)
+    || applicationOrder[a.application_status] - applicationOrder[b.application_status]
     || (a.next_session?.date ?? '9999-12-31').localeCompare(b.next_session?.date ?? '9999-12-31')
     || Number(isUncertain(a)) - Number(isUncertain(b))
-    || Number(filters.interests.includes(b.category)) - Number(filters.interests.includes(a.category))
-    || Number(!!filters.dong && b.next_session?.dong === filters.dong) - Number(!!filters.dong && a.next_session?.dong === filters.dong)
 }
 
 export function searchMockPrograms(filters: SearchFilters): SearchResponse {

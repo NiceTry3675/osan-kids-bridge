@@ -29,15 +29,15 @@ function inPreferredDong(record: ProgramRecord, program: ProgramResponse, dong: 
   return relevant.some((session) => session.dong?.trim() === wanted)
 }
 
-// 신청 상태 → 가장 빠른 관련 회차 날짜(미상은 뒤) → 대상·자격 확인 → 관심 분야 → 같은 동 → 시작 시각 → id
+// 고른 관심 분야 → 같은 동('먼저 보기'가 말 그대로 먼저 오게, 명세 3장) → 신청 상태 → 가장 빠른 관련 회차 날짜(미상은 뒤) → 대상·자격 확인 → 시작 시각 → id
 function sortKey(record: ProgramRecord, program: ProgramResponse, filters: SearchFilters, clock: Clock): SortKey {
   const uncertain = program.age_grade_match_status === 'unknown' || program.eligibility_status === 'unknown'
   return [
+    filters.interests.includes(program.category) ? 0 : 1,
+    inPreferredDong(record, program, filters.dong, clock) ? 0 : 1,
     APPLICATION_ORDER[program.application_status],
     program.next_session?.date ?? '9999-12-31',
     uncertain ? 1 : 0,
-    filters.interests.includes(program.category) ? 0 : 1,
-    inPreferredDong(record, program, filters.dong, clock) ? 0 : 1,
     program.next_session?.start_time ?? '99:99',
     program.program_id,
   ]

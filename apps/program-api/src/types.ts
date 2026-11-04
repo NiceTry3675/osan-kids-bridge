@@ -265,6 +265,14 @@ export interface GuardianSummary extends SummaryHeading {
 }
 
 /** 보호자 웹이 받는 프로그램 한 건 (guardian-web Program + 명세 v2.2 추가 필드) */
+/** conflict: 공고 안에 신청 기간이 다르게 적힘(note_ko는 원문 표현) / after_event: 신청 마감이 마지막 일정보다 늦음 */
+export interface ApplicationIssue {
+  kind: 'conflict' | 'after_event'
+  note_ko: string | null
+  /** after_event일 때 마지막 일정 날짜 */
+  event_date: string | null
+}
+
 export interface ProgramResponse {
   program_id: string
   title: string
@@ -293,6 +301,14 @@ export interface ProgramResponse {
    * 그런 회차가 없으면 끝난 공고는 마지막 회차, 날짜 미상이면 장소가 있는 회차나 원문의 공통 장소(날짜 null, id 'venue')
    */
   next_session: ProgramSession | null
+  /** 판정 기준일(YYYY-MM-DD, 서울). 보호자 웹이 지난 회차를 가를 때 쓴다 */
+  as_of: string
+  /** 시간 판정이 unknown일 때, 넣은 시간 안에 드는 앞으로의 회차 id. 일치했다는 뜻은 아니다 */
+  possible_sessions: string[]
+  /** 신청 기간을 그대로 믿기 어려운 사정. 신청 상태를 대신하지 않고 함께 보여 준다 */
+  application_issue: ApplicationIssue | null
+  /** 장소가 오산시 밖이면 그 시·군 이름 */
+  outside_osan: string | null
   cost_krw: number | null
   cost_raw: string | null
   application_status: ApplicationStatus

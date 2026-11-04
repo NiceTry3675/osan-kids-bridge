@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { useI18n } from '../../i18n'
 import type { InquiryMethod, Program } from '../../data/types'
-import { canApply } from '../../lib/content'
-import { formatDate, isSafeUrl, languageName } from '../../lib/format'
+import { canApply, classNames, inquiryMessage, splitSessions } from '../../lib/content'
+import { formatDate, formatSessionWhen, isSafeUrl, languageName, weekdayLabel } from '../../lib/format'
 import { Icon } from '../../components/Icon'
 import { Marked } from '../../components/feedback'
 import { SLOT, WithKorean } from '../../components/korean'
@@ -9,6 +10,7 @@ import { ExternalLink, PhoneLink } from '../../components/links'
 import { Sheet } from '../../components/Sheet'
 import { agentAvailable } from '../../data/agent'
 import { AiEntry } from '../chat/AiEntry'
+import { ApplicationIssueNotice } from './sections'
 
 export type ActionTab = 'apply' | 'ask'
 
@@ -44,6 +46,8 @@ function ApplyPanel({ program }: { program: Program }) {
   const hasSource = isSafeUrl(program.source_url)
   return (
     <div className="stack">
+      <ApplicationIssueNotice program={program} />
+      {canApply(program) && <ApplyGuide program={program} />}
       <p className="sheet-note">{t('applyResultNote')}</p>
       {canApply(program) ? (
         <div className="actions">
@@ -71,9 +75,56 @@ function ApplyPanel({ program }: { program: Program }) {
   )
 }
 
+/** 기관 페이지로 나가기 전에 알아 둘 것: 무엇을 골라야 하는지, 신청 페이지가 어떤 말로 되어 있는지 */
+function ApplyGuide({ program }: { program: Program }) {
+  const { locale, t } = useI18n()
+  const { upcoming } = splitSessions(program)
+  const classes = classNames(program)
+  const matched = upcoming.filter((session) => program.matched_sessions.includes(session.id))
+  const picks = (matched.length ? matched : upcoming).slice(0, 3)
+  const koreanOnly = locale !== 'ko-easy' && program.application_languages?.length === 1 && program.application_languages[0] === 'ko'
+  const pickClass = classes.length > 1
+  const pickSession = !pickClass && program.attendance_rule === 'choose_one' && upcoming.length > 1
+  if (!pickClass && !pickSession && !koreanOnly) return null
+  return (
+    <div className="apply-guide">
+      {pickClass && <p>{t('applyPickClass', { classes: classes.map((item) => `${item.name}(${weekdayLabel(locale, item.day)})`).join(', ') })}</p>}
+      {pickSession && (
+        <>
+          <p>{t('applyPickSession')}</p>
+          <ul>{picks.map((session) => <li key={session.id}>{formatSessionWhen(session, locale)}</li>)}</ul>
+        </>
+      )}
+      {koreanOnly && <p>{t('applyKoreanOnly')}</p>}
+    </div>
+  )
+}
+
+/** 공고에 답이 없는 내용을 기관에 그대로 보여 주거나 보낼 한국어 문장 */
+function InquiryText({ message }: { message: string }) {
+  const { t } = useI18n()
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(message)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2400)
+    } catch { /* 문장을 길게 눌러 복사할 수 있습니다. */ }
+  }
+  return (
+    <div className="inquiry-box">
+      <p className="inquiry-box-title">{t('inquiryTitle')}</p>
+      <p className="muted">{t('inquiryNote')}</p>
+      <p className="inquiry-box-text" lang="ko">{message}</p>
+      <button type="button" className="btn btn--secondary" onClick={copy} aria-live="polite"><Icon name={copied ? 'check' : 'link'} />{copied ? t('inquiryCopied') : t('inquiryCopy')}</button>
+    </div>
+  )
+}
+
 /** 물어보기: (AI 도우미) → ① 원문에서 먼저 → ② 확인된 문의처(없으면 없다고) */
 function AskPanel({ program, onOpenChat }: { program: Program; onOpenChat?: () => void }) {
   const { t } = useI18n()
+  const message = inquiryMessage(program)
   return (
     <div className="stack">
       {onOpenChat && agentAvailable && <AiEntry title={t('chatOpen')} body={t('chatOpenProgramBody')} onOpen={onOpenChat} />}
@@ -84,6 +135,7 @@ function AskPanel({ program, onOpenChat }: { program: Program; onOpenChat?: () =
       </div>
       <div className="step-card">
         <p className="step-title"><span className="step-no">2</span>{t('askStep2')}</p>
+        {message && <InquiryText message={message} />}
         {program.inquiry_methods.length ? (
           <ul className="contacts">{program.inquiry_methods.map((method, index) => <Contact key={index} method={method} demo={program.is_demo} />)}</ul>
         ) : (

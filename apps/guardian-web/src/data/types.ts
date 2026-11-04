@@ -33,6 +33,8 @@ export interface ProgramSession {
   place_name: string | null
   dong: string | null
   online: boolean
+  /** 원문에 적힌 주소. 확인되지 않으면 없음 */
+  address?: string | null
 }
 
 export interface ApplicationMethod {
@@ -68,7 +70,7 @@ export interface ReviewedSummary {
 
 /** 기관에 확인해야 할 항목. topic으로 화면 언어의 문구를 고르고, note_ko는 원문에 적힌 관련 표현입니다. */
 export interface UncertainItem {
-  topic: 'family_eligibility' | 'companion' | 'korean_level' | 'schedule' | 'age_grade' | 'materials' | 'other'
+  topic: 'family_eligibility' | 'companion' | 'guardian' | 'sibling' | 'korean_level' | 'schedule' | 'age_grade' | 'materials' | 'other'
   note_ko: string | null
 }
 
@@ -95,6 +97,14 @@ export interface Program {
   sessions: ProgramSession[]
   matched_sessions: string[]
   next_session: ProgramSession | null
+  /** 판정 기준일(YYYY-MM-DD). 지난 회차를 가를 때 씁니다 */
+  as_of?: string
+  /** 시간이 unknown일 때 넣은 시간 안에 드는 앞으로의 회차. 일치했다는 뜻은 아닙니다 */
+  possible_sessions?: string[]
+  /** 신청 기간을 그대로 믿기 어려운 사정: 공고 안에서 기간이 다름(conflict), 마감이 마지막 일정보다 늦음(after_event) */
+  application_issue?: { kind: 'conflict' | 'after_event'; note_ko: string | null; event_date: string | null } | null
+  /** 장소가 오산시 밖이면 그 시·군 이름 */
+  outside_osan?: string | null
   cost_krw: number | null
   cost_raw: string | null
   application_status: ApplicationStatus

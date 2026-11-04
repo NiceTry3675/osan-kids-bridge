@@ -1,9 +1,10 @@
-import type { CompanionRule, GuardianAddendum, GuardianCompanionRule, MatchStatus, ProgramRecord, ProgramResponse, SearchFilters, UncertainItem } from '../types'
+import { dongFromAddress } from '../geo/dong'
+import type { ApplicationIssue, CompanionRule, GuardianAddendum, GuardianCompanionRule, MatchStatus, ProgramRecord, ProgramResponse, SearchFilters, UncertainItem } from '../types'
 import { applicationStatus } from './application'
 import { addendumCovers, guardianMethods, guardianSummaries, guardianUncertainItems, representativeSession } from './contract'
 import { lastApplicationDay, seoulDateOf } from './dates'
 import { ageRangeLabel, gradeLabel, gradeRangeLabel, sessionLabel } from './labels'
-import { clockOf, hasOperationEnded, hasStarted, judgeTime, MID_JOIN_MENTION, needsMidJoinCheck } from './sessions'
+import { clockOf, hasOperationEnded, hasStarted, judgeTime, MID_JOIN_MENTION, needsMidJoinCheck, remainingSessions, windowContains } from './sessions'
 import type { Clock, TimeJudgement } from './sessions'
 
 export const MID_JOIN_ITEM = '중도 참여 확인 필요'
@@ -86,6 +87,32 @@ function uncertainItems(record: ProgramRecord, eligibility: MatchStatus, clock: 
   return items.filter((item) => !resolved.has(item))
 }
 
+/** 신청 기간이 공고 안에서 다르게 적혔다는 확인 항목 */
+const APPLICATION_CONFLICT = /(?:신청|접수|모집).*(?:불일치|다르)/
+/** 신청 마감이 일정보다 늦다는 확인 항목. 코드가 직접 계산해 보여 주므로 확인할 점에 다시 넣지 않는다 */
+const APPLICATION_AFTER_EVENT = /(?:신청|접수|모집).*늦은\s*점/
+const OUTSIDE_ITEM = /^오산시 밖 장소/
+
+/** 마지막 일정 날짜: 적힌 회차의 가장 늦은 날, 회차가 없으면 운영 종료일 */
+function lastEventDate(record: ProgramRecord): string | null {
+  const dates = record.sessions.map((session) => session.date).filter((date): date is string => !!date).sort()
+  return dates.at(-1) ?? record.period_end ?? null
+}
+
+function applicationIssue(record: ProgramRecord, items: string[]): ApplicationIssue | null {
+  const conflict = items.find((item) => APPLICATION_CONFLICT.test(item))
+  if (conflict) return { kind: 'conflict', note_ko: guardianUncertainItems(record, [conflict])[0]?.note_ko ?? null, event_date: null }
+  const end = lastApplicationDay(record.application_end)
+  const event = lastEventDate(record)
+  return end && event && end > event ? { kind: 'after_event', note_ko: null, event_date: event } : null
+}
+
+/** 공고 장소(대표 회차 또는 공통 장소)가 오산시 밖이면 그 시·군 이름 */
+function outsideOsan(record: ProgramRecord, session: ProgramResponse['next_session']): string | null {
+  const lookup = dongFromAddress(session?.address ?? record.venue?.address ?? null)
+  return lookup.outside_osan ? lookup.matched : null
+}
+
 /** 원문이 기관의 언어 지원을 '통역'이라고 밝힘 */
 export const supportInterpretation = (record: ProgramRecord) =>
   record.evidence.some((entry) => entry.verified && entry.field === 'support_languages' && /통역/.test(entry.quote))
@@ -125,7 +152,13 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
   const time = judgeTime(record, filters?.available_windows ?? [], clock)
   const reasons = [ageGrade.reason, timeReason(record, time, clock)].filter((reason): reason is string => reason !== null)
   const checkItems = uncertainItems(record, eligibility, clock)
-  const openItems = guardianUncertainItems(record, checkItems)
+  const issue = applicationIssue(record, checkItems)
+  const nextSession = representativeSession(record, time, clock)
+  const outside = outsideOsan(record, nextSession)
+  // 신청 기간 문제와 오산 밖 장소는 화면이 따로 알리므로 '기관에 확인할 점'에 겹치지 않게 뺀다
+  const openItems = guardianUncertainItems(record, checkItems.filter((item) => !APPLICATION_CONFLICT.test(item) && !APPLICATION_AFTER_EVENT.test(item) && !(outside && OUTSIDE_ITEM.test(item))))
+  const windows = filters?.available_windows ?? []
+  const possible = time.status === 'unknown' ? remainingSessions(record, clock).filter((session) => windows.some((window) => windowContains(window, session))) : []
   const verifiedAt = record.review.status === 'approved' ? seoulDateOf(record.review.reviewed_at) : null
   const methods = guardianMethods(record, verifiedAt ?? seoulDateOf(record.extracted_at) ?? record.extracted_at.slice(0, 10))
 
@@ -150,7 +183,11 @@ export function evaluateProgram(record: ProgramRecord, filters: SearchFilters | 
     venue: record.venue ?? null,
     schedule_note: record.schedule_note ?? null,
     matched_sessions: time.matched.map((session) => session.id),
-    next_session: representativeSession(record, time, clock),
+    next_session: nextSession,
+    as_of: clock.today,
+    possible_sessions: possible.map((session) => session.id),
+    application_issue: issue,
+    outside_osan: outside,
     cost_krw: record.cost_krw,
     cost_raw: record.cost_raw,
     application_status: hasOperationEnded(record, clock) ? 'closed' : applicationStatus(record, now),

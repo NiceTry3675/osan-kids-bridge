@@ -3,7 +3,7 @@ import type { MouseEvent, ReactNode } from 'react'
 import { useI18n } from '../i18n'
 import type { PosterLanguage } from '../data/agent'
 import type { Locale, Program } from '../data/types'
-import { addendumText, costAddendum, INTEREST_VISUAL, itemsToCheck, programText } from '../lib/content'
+import { addendumText, costAddendum, INTEREST_VISUAL, itemsToCheck, programText, timeUnknownReason } from '../lib/content'
 import { InterestIcon } from '../screens/intro/art'
 import { formatCost, formatSessionPlace, formatSessionWhen, formatStatus, placeLang, topicLabel } from '../lib/format'
 import { usePosterImage } from '../lib/poster'
@@ -31,6 +31,11 @@ export function ProgramItem({ program }: { program: Program }) {
   const session = program.next_session
   const ageMatched = program.age_grade_match_status === 'matched'
   const timeMatched = program.time_match_status === 'matched'
+  // 시간 판정이 미상이어도 넣은 시간 안에 드는 회차가 있으면 그 회차를 보여 줍니다(일치했다고 하지는 않습니다).
+  const possible = program.sessions.find((item) => item.id === program.possible_sessions?.[0])
+  const shownSession = possible ?? session
+  const why = timeUnknownReason(program)
+  const issue = program.application_issue && program.application_status !== 'closed'
   const bodyId = useId()
 
   const open = (event: MouseEvent<HTMLAnchorElement>) => {
@@ -59,12 +64,21 @@ export function ProgramItem({ program }: { program: Program }) {
           </span>
           <span className="item-facts">
             <Fact label={t('target')} clamp><span lang={text.lang}>{text.target}</span></Fact>
-            <Fact label={timeMatched ? t('matchedShort') : t('schedule')}>
-              {session?.date ? formatSessionWhen(session, locale) : <Marked>{t('scheduleUnknown')}</Marked>}
+            <Fact label={timeMatched ? t('matchedShort') : possible ? t('possibleShort') : t('schedule')}>
+              {shownSession?.date ? formatSessionWhen(shownSession, locale) : <Marked>{t('scheduleUnknown')}</Marked>}
             </Fact>
-            <Fact label={t('place')}><span lang={placeLang(session)}>{formatSessionPlace(session, locale)}</span></Fact>
+            <Fact label={t('place')}>
+              <span lang={placeLang(shownSession)}>{formatSessionPlace(shownSession, locale)}</span>
+              {program.outside_osan && <span className="tag-original tag-outside">{t('outsideOsan', { city: program.outside_osan })}</span>}
+            </Fact>
             <Fact label={t('cost')} clamp><Cost program={program} locale={locale} /></Fact>
           </span>
+          {(why || issue) && (
+            <span className="item-whys">
+              {why && <span className="item-why">{t(why)}</span>}
+              {issue && <span className="item-why">{t('issueShort')}</span>}
+            </span>
+          )}
           {checks.length > 0 && (
             <span className="item-checks">
               <span className="item-check-chip" aria-hidden="true">{t('toCheck')}<span className="item-check-count">{checks.length}</span></span>

@@ -1,11 +1,19 @@
 /** 검색 조건: 선택지, 입력 검사, 조건 칩 */
 import { translate } from '../i18n'
 import type { AvailableWindow, Interest, Locale, SearchFilters, Weekday } from '../data/types'
-import { formatDate, interestLabel, weekdayLabel } from './format'
+import { formatDate, gradeLabel, interestLabel, weekdayLabel } from './format'
 
 export const WEEKDAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 export const INTERESTS: Interest[] = ['experience_culture', 'korean_study', 'sports_arts', 'career']
 export const GRADES = [1, 2, 3, 4, 5, 6] as const
+/** 학교급과 그 학교급의 학년 숫자(서버 규칙: 초등 1~6, 중학교 7~9, 고등학교 10~12) */
+export type School = 'elementary' | 'middle' | 'high'
+export const SCHOOLS: { school: School; grades: number[]; offset: number }[] = [
+  { school: 'elementary', grades: [1, 2, 3, 4, 5, 6], offset: 0 },
+  { school: 'middle', grades: [7, 8, 9], offset: 6 },
+  { school: 'high', grades: [10, 11, 12], offset: 9 },
+]
+export const schoolOf = (grade: number | undefined): School => (grade !== undefined && grade > 9 ? 'high' : grade !== undefined && grade > 6 ? 'middle' : 'elementary')
 export const DONGS = ['중앙동', '대원동', '남촌동', '신장동', '세마동', '초평동'] as const
 
 /**
@@ -55,7 +63,7 @@ export interface Chip { key: string; label: string }
 /** 넣은 조건을 칩으로. 관심 분야·동은 ‘먼저 보기’로 표시합니다(명세 3장). */
 export function filterChips(filters: SearchFilters, locale: Locale): Chip[] {
   const chips: Chip[] = []
-  if (filters.child_grade) chips.push({ key: 'child', label: translate(locale, 'gradeChip', { grade: filters.child_grade }) })
+  if (filters.child_grade) chips.push({ key: 'child', label: gradeLabel(locale, filters.child_grade) })
   if (filters.child_age) chips.push({ key: 'child', label: translate(locale, 'ageChip', { age: filters.child_age }) })
   filters.available_windows.forEach((window, index) => chips.push({ key: `time-${index}`, label: formatWindow(window, locale) }))
   filters.interests.forEach((interest) => chips.push({ key: `interest-${interest}`, label: translate(locale, 'preferChip', { label: interestLabel(locale, interest) }) }))

@@ -2,11 +2,12 @@
 import type { ReactNode } from 'react'
 import { translate, useI18n } from '../../i18n'
 import type { CompanionRule, Locale, MatchStatus, Program, UncertainItem } from '../../data/types'
-import { addendumText, costAddendum, itemsToCheck, placesDiffer } from '../../lib/content'
+import { addendumText, classNames, costAddendum, groupSessions, itemsToCheck, placesDiffer, splitSessions } from '../../lib/content'
 import type { Addendum, ProgramText } from '../../lib/content'
-import { formatCost, formatDate, formatSessionPlace, formatSessionWhen, formatStatus, languageName, placeLang, screenLanguageName, topicLabel } from '../../lib/format'
+import { formatCost, formatDate, formatSessionPlace, formatSessionWhen, formatStatus, languageName, mapUrl, placeLang, screenLanguageName, topicLabel, weekdayLabel } from '../../lib/format'
 import { Icon } from '../../components/Icon'
 import { Marked, Notice, StatusTag } from '../../components/feedback'
+import { ExternalLink } from '../../components/links'
 import { SLOT, WithKorean } from '../../components/korean'
 
 type Props = { program: Program }
@@ -27,6 +28,9 @@ export function FactSheet({ program, text }: Props & { text: ProgramText }) {
       </FactRow>
       <FactRow label={t('place')}>
         <span lang={placeLang(session)}>{formatSessionPlace(session, locale)}</span>
+        {program.outside_osan && <span className="tag-original tag-outside">{t('outsideOsan', { city: program.outside_osan })}</span>}
+        {session?.address && <span className="fact-sub" lang="ko">{session.address}</span>}
+        {session?.address && <span className="fact-link"><ExternalLink href={mapUrl(session.address)} demo={program.is_demo}>{t('mapLink')}</ExternalLink></span>}
         {placesDiffer(program) && <span className="fact-sub">{t('placesDiffer')}</span>}
       </FactRow>
       <CostRow program={program} />
@@ -69,11 +73,33 @@ function CostRow({ program }: Props) {
 export function StatusNote({ program }: Props) {
   const { locale, t } = useI18n()
   const { application_status: status, application_start: start } = program
-  if (status === 'open') return null
   if (status === 'closed') return <Notice title={t('closedAction')} />
-  if (status === 'upcoming' && start) return <Notice title={t('upcomingAction', { date: formatDate(start, locale) })} />
-  // 기간 미상, 또는 시작일을 모르는 신청 예정
-  return <Notice tone="mark" title={t('unknownAction')} />
+  const next = status === 'open' ? null
+    : status === 'upcoming' && start ? <Notice title={t('upcomingAction', { date: formatDate(start, locale) })} />
+      // 기간 미상, 또는 시작일을 모르는 신청 예정
+      : <Notice tone="mark" title={t('unknownAction')} />
+  return <>{next}<ApplicationIssueNotice program={program} /></>
+}
+
+/** 신청 기간을 그대로 믿기 어려울 때: 상태 글자만 보고 믿지 않도록 이유와 할 일을 함께 알립니다. */
+export function ApplicationIssueNotice({ program }: Props) {
+  const { locale, t } = useI18n()
+  const issue = program.application_issue
+  if (!issue || program.application_status === 'closed') return null
+  if (issue.kind === 'conflict') {
+    return (
+      <Notice tone="warn" title={t('issueConflictTitle')}>
+        <p>{t('issueConflictBody')}</p>
+        {issue.note_ko && <p><WithKorean template={t('sourceSays', { text: SLOT })} text={issue.note_ko} /></p>}
+      </Notice>
+    )
+  }
+  if (!program.application_end || !issue.event_date) return null
+  return (
+    <Notice tone="warn" title={t('issueAfterEventTitle', { end: formatDate(program.application_end, locale), event: formatDate(issue.event_date, locale) })}>
+      <p>{t('issueAfterEventBody')}</p>
+    </Notice>
+  )
 }
 
 /** 화면 언어 문구가 있는 주제. 서버가 모르는 주제를 보내면 주제 줄을 감춥니다. */
@@ -207,7 +233,11 @@ export function CompareSection({ program, mode }: Props & { mode: CompareMode })
               {rest.map((row) => (
                 <li key={row.key} className={`compare-line compare-line--${row.status}`}>
                   {row.status === 'unknown' ? <QuestionMark /> : <Icon name="x" />}
-                  <span><span className="compare-label">{row.label}</span> <Judge status={row.status} /></span>
+                  <span>
+                    <span className="compare-label">{row.label}</span> <Judge status={row.status} />
+                    {row.key === 'age' && row.status === 'unknown' && program.age_range && !program.grade_range && <span className="fact-sub">{t('ageBasisNote')}</span>}
+                    {row.key === 'age' && row.status === 'unknown' && program.grade_range && !program.age_range && <span className="fact-sub">{t('gradeBasisNote')}</span>}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -233,25 +263,79 @@ export function DescriptionSection({ program, text }: Props & { text: ProgramTex
   )
 }
 
+/**
+ * 전체 회차: 앞으로의 회차를 먼저, 지난 회차는 접어 둡니다.
+ * 같은 요일·시간에 되풀이되면 ‘반마다 언제’로 묶어, 월·금 두 반이 섞여 보이지 않게 합니다.
+ */
 export function SessionsSection({ program }: Props) {
-  const { locale, t } = useI18n()
-  const rule = { all_sessions: t('attendAll'), choose_one: t('chooseOne'), unknown: t('attendanceUnknown') }[program.attendance_rule]
+  const { t } = useI18n()
+  const { past, upcoming } = splitSessions(program)
+  // 운영이 끝난 공고는 지난 회차뿐이니 그대로 보여 줍니다.
+  const main = upcoming.length ? upcoming : past
+  const folded = upcoming.length ? past : []
+  const groups = groupSessions(program, main)
   return (
     <Block title={t('sessionsTitle')}>
-      <p>{program.attendance_rule === 'unknown' ? <Unknown>{rule}</Unknown> : rule}</p>
-      <ol className="sessions">
-        {program.sessions.map((session) => {
-          const matched = program.matched_sessions.includes(session.id)
-          return (
-            <li key={session.id} className={matched ? 'session is-matched' : 'session'}>
-              <span className="session-when">{formatSessionWhen(session, locale)}</span>
-              <span className="session-where" lang={placeLang(session)}>{formatSessionPlace(session, locale)}</span>
-              {matched && <span className="session-flag"><Icon name="check" />{t('sessionMatched')}</span>}
-            </li>
-          )
-        })}
-      </ol>
+      <AttendanceRule program={program} started={past.length > 0 && upcoming.length > 0} />
+      {folded.length > 0 && <p className="muted">{t('sessionsRemaining', { remaining: upcoming.length, total: program.sessions.length })}</p>}
+      {groups
+        ? <ul className="sessions">{groups.map((group) => <SessionGroupRow key={group.key} program={program} group={group} />)}</ul>
+        : <ol className="sessions">{main.map((session) => <SessionRow key={session.id} program={program} session={session} />)}</ol>}
+      {folded.length > 0 && (
+        <details className="sessions-past">
+          <summary>{t('pastSessions', { count: folded.length })}</summary>
+          <ol className="sessions">{folded.map((session) => <SessionRow key={session.id} program={program} session={session} />)}</ol>
+        </details>
+      )}
     </Block>
+  )
+}
+
+/** 참석 방식. 이미 시작한 과정에 ‘모든 회차에 참여해야 해요’라고 하지 않습니다. */
+function AttendanceRule({ program, started }: Props & { started: boolean }) {
+  const { t } = useI18n()
+  const classes = classNames(program)
+  if (program.attendance_rule === 'all_sessions' && started) {
+    return <p>{program.mid_join_allowed ? t('attendRemaining') : <Unknown>{t('attendStarted')}</Unknown>}</p>
+  }
+  if (program.attendance_rule === 'unknown' && classes.length > 1) {
+    return <p><Unknown>{t('attendClasses', { classes: classes.map((item) => item.name).join('·') })}</Unknown></p>
+  }
+  if (program.attendance_rule === 'unknown') return <p><Unknown>{t('attendanceUnknown')}</Unknown></p>
+  return <p>{program.attendance_rule === 'all_sessions' ? t('attendAll') : t('chooseOne')}</p>
+}
+
+function SessionRow({ program, session }: Props & { session: Program['sessions'][number] }) {
+  const { locale, t } = useI18n()
+  const matched = program.matched_sessions.includes(session.id)
+  return (
+    <li className={matched ? 'session is-matched' : 'session'}>
+      <span className="session-when">{formatSessionWhen(session, locale)}</span>
+      <span className="session-where" lang={placeLang(session)}>{formatSessionPlace(session, locale)}</span>
+      {matched && <span className="session-flag"><Icon name="check" />{t('sessionMatched')}</span>}
+    </li>
+  )
+}
+
+function SessionGroupRow({ program, group }: Props & { group: NonNullable<ReturnType<typeof groupSessions>>[number] }) {
+  const { locale, t } = useI18n()
+  const first = group.sessions[0]
+  const last = group.sessions[group.sessions.length - 1]
+  const matched = group.sessions.some((session) => program.matched_sessions.includes(session.id))
+  return (
+    <li className={matched ? 'session is-matched' : 'session'}>
+      <span className="session-when">
+        {group.className && <span lang="ko">{group.className} · </span>}
+        {t('sessionWeekly', { day: weekdayLabel(locale, group.day), time: group.time })}
+      </span>
+      <span className="session-where">{t('sessionRange', { from: formatDate(first.date!, locale), to: formatDate(last.date!, locale), count: group.sessions.length })}</span>
+      <span className="session-where" lang={placeLang(first)}>{formatSessionPlace(first, locale)}</span>
+      {matched && <span className="session-flag"><Icon name="check" />{t('sessionMatched')}</span>}
+      <details className="session-dates">
+        <summary>{t('sessionDates')}</summary>
+        <ul>{group.sessions.map((session) => <li key={session.id}>{formatSessionWhen(session, locale)}</li>)}</ul>
+      </details>
+    </li>
   )
 }
 

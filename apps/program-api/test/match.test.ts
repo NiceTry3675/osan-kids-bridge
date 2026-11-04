@@ -740,7 +740,7 @@ describe('검색 결과 순서', () => {
     expect(evaluateProgram(record(), null, NOW).venue).toBeNull()
   })
 
-  it('같은 날짜에서는 대상·자격 확인 → 관심 분야 → 같은 동 순', () => {
+  it('고른 관심 분야 → 같은 동을 먼저, 그 안에서는 대상·자격 확인 순', () => {
     const date = '2026-10-17'
     const records = [
       at('unsure', date, { eligibility_requirements: null, category: 'korean_study' }),
@@ -749,7 +749,7 @@ describe('검색 결과 순서', () => {
       at('other-interest', date, { category: 'career', sessions: [session('i', date, '10:10', '12:00', '세마동')] }),
     ]
     expect(ids(searchPrograms(records, filters({ interests: ['korean_study'], dong: '세마동' }), NOW).results))
-      .toEqual(['same-dong', 'other-dong', 'other-interest', 'unsure'])
+      .toEqual(['same-dong', 'other-dong', 'unsure', 'other-interest'])
     expect(ids(searchPrograms(records, filters({ interests: ['career'] }), NOW).results)[0]).toBe('other-interest')
   })
 })
@@ -822,5 +822,63 @@ describe('검색 조건 검증', () => {
 
   it('오류 문구는 한국어다', () => {
     expect(errorsOf({ child_grade: 20 })[0]).toMatch(/학년/)
+  })
+})
+
+describe('보호자가 헷갈리지 않게 알리는 값', () => {
+  const SAT_AT = (start: string, end: string) => ({ day_of_week: 'sat' as const, start_time: start, end_time: end })
+
+  it('고른 관심 분야는 신청 상태·날짜보다 먼저 온다', () => {
+    const records = [
+      record({ program_id: 'soon-open', category: 'korean_study', sessions: [session('a', '2026-10-17', '10:00', '12:00')] }),
+      record({ program_id: 'late-unknown', category: 'career', application_start: null, application_end: null, sessions: [session('b', '2026-12-20', '10:00', '12:00')] }),
+    ]
+    const results = searchPrograms(records, filters({ interests: ['career'] }), NOW).results
+    expect(results.map((program) => program.program_id)).toEqual(['late-unknown', 'soon-open'])
+  })
+
+  it('참석 방식을 몰라도 넣은 시간 안에 드는 회차를 알려 주되 일치했다고 하지 않는다', () => {
+    const program = evaluateProgram(record({
+      attendance_rule: 'unknown',
+      sessions: [session('fits', '2026-10-17', '10:00', '12:00'), session('late', '2026-10-17', '14:00', '16:00')],
+    }), filters({ available_windows: [SAT_AT('09:00', '13:00')] }), NOW)
+    expect(program.time_match_status).toBe('unknown')
+    expect(program.matched_sessions).toEqual([])
+    expect(program.possible_sessions).toEqual(['fits'])
+  })
+
+  it('신청 마감이 마지막 일정보다 늦으면 알리고, 확인할 점에는 겹치지 않는다', () => {
+    const program = evaluateProgram(record({
+      attendance_rule: 'all_sessions',
+      application_end: '2026-10-22',
+      sessions: [session('only', '2026-10-19', '16:00', '17:30')],
+      uncertain_items: ['신청 마감(10월 22일)이 운영 종료일(10월 19일)보다 늦은 점'],
+    }), null, NOW)
+    expect(program.application_issue).toEqual({ kind: 'after_event', note_ko: null, event_date: '2026-10-19' })
+    expect(program.uncertain_items.filter((item) => item.topic === 'schedule')).toEqual([])
+  })
+
+  it('공고 안에 신청 기간이 다르게 적혔으면 원문 표현과 함께 알린다', () => {
+    const program = evaluateProgram(record({
+      uncertain_items: ['신청 기간 불일치(웹 본문과 상단 접수기간이 다름)'],
+      evidence: [{ field: 'application_period', quote: '신청 기간: 10. 14.까지', verified: true } as never],
+    }), null, NOW)
+    expect(program.application_issue).toEqual({ kind: 'conflict', note_ko: '신청 기간: 10. 14.까지', event_date: null })
+    expect(program.uncertain_items).toEqual([])
+  })
+
+  it('오산 밖 장소는 시·군 이름으로 알리고, 확인할 점에 주소를 다시 넣지 않는다', () => {
+    const address = '경기도 화성시 동탄구 동탄대로 446'
+    const program = evaluateProgram(record({
+      sessions: [{ ...session('far', '2026-10-17', '14:00', '16:00'), address }],
+      uncertain_items: [`오산시 밖 장소(${address})`],
+    }), null, NOW)
+    expect(program.outside_osan).toBe('화성시')
+    expect(program.uncertain_items).toEqual([])
+    expect(evaluateProgram(record(), null, NOW).outside_osan).toBeNull()
+  })
+
+  it('판정 기준일을 함께 보낸다', () => {
+    expect(evaluateProgram(record(), null, NOW).as_of).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 })
