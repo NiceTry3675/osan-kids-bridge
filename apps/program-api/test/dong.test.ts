@@ -13,6 +13,20 @@ describe('dongFromAddress', () => {
     expect(dongFromAddress('경기도 오산시 오산천로 271 (오산동)')).toEqual({ dong: '중앙동', outside_osan: false, matched: '오산천로 271' })
   })
 
+  it('행정복지센터 8곳의 주소를 해당 동으로 찾는다 (분동된 곳은 6개 동으로 묶음)', () => {
+    const centers: [string, string][] = [
+      ['경기도 오산시 경기대로 307', '중앙동'],
+      ['경기도 오산시 오산로132번길 28 (원동) 대원1동 행정복지센터', '대원동'],
+      ['경기도 오산시 동부대로 332-13', '대원동'],
+      ['경기도 오산시 청학로 80', '남촌동'],
+      ['경기도 오산시 문헌공로 45', '신장동'],
+      ['경기도 오산시 내삼미로79번길 48', '신장동'],
+      ['경기도 오산시 독산성로 419', '세마동'],
+      ['경기도 오산시 초평중앙로 77', '초평동'],
+    ]
+    for (const [address, dong] of centers) expect(dongFromAddress(address), address).toMatchObject({ dong, outside_osan: false })
+  })
+
   it('한 행정동에 속한 법정동은 법정동으로 판단한다', () => {
     expect(dongFromAddress('경기도 오산시 청학로 45 (청학동)')).toEqual({ dong: '남촌동', outside_osan: false, matched: '청학동' })
     expect(dongFromAddress('경기 오산시 서동로 74-33 (서동)')).toEqual({ dong: '초평동', outside_osan: false, matched: '서동' })
@@ -47,8 +61,8 @@ describe('dongFromAddress', () => {
     expect(dongFromAddress('대원1동 행정복지센터')).toMatchObject({ dong: '대원동', matched: '대원1동' })
     expect(dongFromAddress('오산시 신장2동')).toMatchObject({ dong: '신장동' })
     expect(dongFromAddress('가상 중앙동 도서관')).toMatchObject({ dong: '중앙동' })
-    // 걸친 법정동 + 행정동 이름
-    expect(dongFromAddress('중앙동 행정복지센터 (경기대로 307, 오산동)')).toMatchObject({ dong: '중앙동', matched: '중앙동' })
+    // 걸친 법정동 + 행정동 이름 (주소 표에 없는 건물번호)
+    expect(dongFromAddress('중앙동 행정복지센터 (경기대로 300, 오산동)')).toMatchObject({ dong: '중앙동', matched: '중앙동' })
   })
 
   it('주소 없이 시설 이름만 있을 때', () => {
