@@ -105,3 +105,11 @@
   .home-head { margin-inline: -14px; padding-inline: 14px; }
   .home-poster-list { margin-inline: -14px; padding-inline: 14px; scroll-padding: 0 14px; }
 }
+
+/* 왜 확인이 필요한지: 공고마다 한 줄씩 */
+.item-whys { display: grid; gap: 2px; margin-top: 6px; }
+.item-why { color: var(--ink-2); font-size: var(--text-xs); line-height: 1.45; }
+.tag-outside { justify-self: start; width: fit-content; margin-left: 6px; }
+.fact-row .tag-outside { display: block; margin: 4px 0 2px; font-weight: 650; }
+/* 조건을 지운 뒤 되돌리기 */
+.undo-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; padding: 6px 6px 6px 14px; border-radius: 12px; background: var(--status-open-soft); font-size: var(--text-sm); }

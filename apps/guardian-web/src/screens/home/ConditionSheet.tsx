@@ -4,8 +4,9 @@ import { useI18n } from '../../i18n'
 import type { AvailableWindow, Interest, SearchFilters, Weekday } from '../../data/types'
 import { emptyFilters } from '../../data/types'
 import { InterestIcon } from '../intro/art'
-import { DONGS, dongOption, formatWindow, GRADES, INTERESTS, validateWindow, WEEKDAYS } from '../../lib/filters'
-import { interestLabel, weekdayLabel } from '../../lib/format'
+import { DONGS, dongOption, formatWindow, INTERESTS, schoolOf, SCHOOLS, validateWindow, WEEKDAYS } from '../../lib/filters'
+import type { School } from '../../lib/filters'
+import { gradeLabel, interestLabel, weekdayLabel } from '../../lib/format'
 import { Icon } from '../../components/Icon'
 import { Sheet } from '../../components/Sheet'
 
@@ -97,8 +98,13 @@ interface ChildFieldProps extends Draft {
   onAge: (value: string) => void
 }
 
+const SCHOOL_KEY = { elementary: 'schoolElementary', middle: 'schoolMiddle', high: 'schoolHigh' } as const
+
 function ChildField({ draft, setDraft, byAge, ageText, ageInvalid, onToggleMode, onAge }: ChildFieldProps) {
-  const { t } = useI18n()
+  const { locale, t } = useI18n()
+  const [school, setSchool] = useState<School>(schoolOf(draft.child_grade))
+  useEffect(() => { if (draft.child_grade !== undefined) setSchool(schoolOf(draft.child_grade)) }, [draft.child_grade])
+  const current = SCHOOLS.find((item) => item.school === school) ?? SCHOOLS[0]
   return (
     <fieldset className="field">
       <legend>
@@ -112,15 +118,25 @@ function ChildField({ draft, setDraft, byAge, ageText, ageInvalid, onToggleMode,
             onChange={(event) => onAge(event.target.value.replace(/\D/g, '').slice(0, 2))} />
         </label>
       ) : (
-        <div className="grades" role="radiogroup" aria-label={t('gradeMode')}>
-          {GRADES.map((grade) => (
-            <button key={grade} type="button" role="radio" aria-checked={draft.child_grade === grade} className="pick pick--round"
-              aria-label={t('gradeOption', { grade })}
-              onClick={() => setDraft({ ...draft, child_grade: draft.child_grade === grade ? undefined : grade, child_age: undefined })}>
-              {grade}
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="school-row" role="radiogroup" aria-label={t('childTitle')}>
+            {SCHOOLS.map((item) => (
+              <button key={item.school} type="button" role="radio" aria-checked={school === item.school} className="pick pick--day"
+                onClick={() => { setSchool(item.school); if (school !== item.school) setDraft({ ...draft, child_grade: undefined, child_age: undefined }) }}>
+                {t(SCHOOL_KEY[item.school])}
+              </button>
+            ))}
+          </div>
+          <div className="grades" role="radiogroup" aria-label={t('gradeMode')}>
+            {current.grades.map((grade) => (
+              <button key={grade} type="button" role="radio" aria-checked={draft.child_grade === grade} className="pick pick--round"
+                aria-label={gradeLabel(locale, grade)}
+                onClick={() => setDraft({ ...draft, child_grade: draft.child_grade === grade ? undefined : grade, child_age: undefined })}>
+                {grade - current.offset}
+              </button>
+            ))}
+          </div>
+        </>
       )}
       {ageInvalid && <p className="field-error" role="alert">{t('ageError')}</p>}
     </fieldset>
@@ -140,6 +156,13 @@ function addWindow(base: SearchFilters, pending: PendingTime, setPending: (value
   setPending({ ...pending, start: '', end: '', error: '' })
   return { ...base, available_windows: [...base.available_windows, window] }
 }
+
+/** 시각을 몰라도 ‘토요일 오전’처럼 고를 수 있게 합니다. 고른 뒤 시각을 바꿀 수 있습니다. */
+const TIME_PRESETS = [
+  { key: 'timeMorning', start: '09:00', end: '12:00' },
+  { key: 'timeAfternoon', start: '13:00', end: '18:00' },
+  { key: 'timeEvening', start: '18:00', end: '21:00' },
+] as const
 
 interface TimeFieldProps extends Draft { pending: PendingTime; setPending: (value: PendingTime) => void }
 
@@ -163,6 +186,14 @@ function TimeField({ draft, setDraft, pending, setPending }: TimeFieldProps) {
           ))}
         </div>
       )}
+      <div className="time-presets">
+        {TIME_PRESETS.map((preset) => (
+          <button key={preset.key} type="button" className="chip chip--pick" aria-pressed={pending.start === preset.start && pending.end === preset.end}
+            onClick={() => set({ start: preset.start, end: preset.end, error: '' })}>
+            {t(preset.key)}
+          </button>
+        ))}
+      </div>
       <div className="time-row">
         <input type="time" step={60} className="input" aria-label={t('startField')} value={pending.start} onChange={(event) => set({ start: event.target.value })} onClick={openTimePicker} />
         <span aria-hidden="true">~</span>

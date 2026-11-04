@@ -36,7 +36,7 @@ describe('목록 카드', () => {
     expect(chip.textContent).toBe('기관에 확인할 점2')
     expect(container.querySelector('.item-checks .marked')).toBeNull()
     const full = container.querySelector('.item-checks .visually-hidden')!
-    expect(full.textContent).toBe('기관에 확인할 점: 가족 자격(다문화가족 여부 등), 보호자·형제자매가 함께 갈 수 있는지')
+    expect(full.textContent).toBe('기관에 확인할 점: 가족 자격(다문화가족 여부 등), 형제자매도 함께 갈 수 있는지')
     // 링크 이름은 짧게 두고, 카드 내용(전체 항목 포함)은 설명으로 읽는다
     const link = screen.getByRole('link', { name: '주말 한국어 놀이교실 자세히 보기' })
     expect(document.getElementById(link.getAttribute('aria-describedby')!)!.contains(full)).toBe(true)

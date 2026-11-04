@@ -37,7 +37,7 @@ describe('첫 화면', () => {
   it('언어를 고르기 전에 이 서비스가 해 주는 세 가지를 글자로 보여 주고, 그림은 읽기 프로그램에 숨긴다', () => {
     const { container } = render(<I18nProvider initial="vi"><IntroScreen onStart={() => {}} onMoreLanguages={() => {}} /></I18nProvider>)
     const values = screen.getAllByRole('listitem').map((item) => item.textContent)
-    expect(values).toEqual(['Áp phích bằng ngôn ngữ của bạn', 'Có hợp với con bạn không', 'Câu tiếng Hàn để hỏi cơ quan'])
+    expect(values).toEqual(['Thông báo bằng ngôn ngữ của bạn', 'Có hợp với con bạn không', 'Câu tiếng Hàn để hỏi cơ quan'])
     expect(container.querySelector('.intro-art')!.getAttribute('aria-hidden')).toBe('true')
     expect(screen.getByRole('radiogroup')).toBeTruthy()
   })
@@ -97,7 +97,7 @@ describe('홈 포스터 띠', () => {
 
   it('포스터가 있는 공고가 없으면 띠를 그리지 않는다', async () => {
     renderHome('zh', searchMockPrograms(emptyFilters()).results)
-    expect(await screen.findByRole('heading', { level: 1, name: /孩子可以参加的活动 \d+个/ })).toBeTruthy()
+    expect(await screen.findByRole('heading', { level: 1, name: /目前有 \d+ 个活动/ })).toBeTruthy()
     expect(screen.queryByRole('heading', { name: '译成您语言的海报' })).toBeNull()
     expect(screen.queryByRole('heading', { name: '机构海报' })).toBeNull()
   })

@@ -7,7 +7,7 @@ const WEEKDAY_BY_INDEX: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', '
 const DAY_KEY: Record<Weekday, MessageKey> = { mon: 'dayMon', tue: 'dayTue', wed: 'dayWed', thu: 'dayThu', fri: 'dayFri', sat: 'daySat', sun: 'daySun' }
 const INTEREST_KEY: Record<Interest, MessageKey> = { experience_culture: 'interestExperience', korean_study: 'interestKorean', sports_arts: 'interestSports', career: 'interestCareer' }
 const TOPIC_KEY: Record<UncertainItem['topic'], MessageKey> = {
-  family_eligibility: 'topicFamily', companion: 'topicCompanion', korean_level: 'topicKoreanLevel', schedule: 'topicSchedule',
+  family_eligibility: 'topicFamily', companion: 'topicCompanion', guardian: 'topicGuardian', sibling: 'topicSibling', korean_level: 'topicKoreanLevel', schedule: 'topicSchedule',
   age_grade: 'topicAgeGrade', materials: 'topicMaterials', other: 'topicOther',
 }
 const LANGUAGE_KEY: Record<string, MessageKey> = { ko: 'lang_ko', vi: 'lang_vi', zh: 'lang_zh', en: 'lang_en' }
@@ -23,7 +23,7 @@ export const languageName = (locale: Locale, code: string) => (LANGUAGE_KEY[code
 /** 지금 화면 언어의 이름(예: ‘베트남어’) */
 export const screenLanguageName = (locale: Locale) => (locale === 'ko-easy' ? '쉬운 한국어' : languageName(locale, locale))
 
-function weekdayOfDate(date: string): Weekday {
+export function weekdayOfDate(date: string): Weekday {
   const [year, month, day] = date.split('-').map(Number)
   return WEEKDAY_BY_INDEX[(new Date(year, month - 1, day).getDay() + 6) % 7]
 }
@@ -42,7 +42,23 @@ export function formatSessionWhen(session: ProgramSession | null, locale: Locale
 export function formatSessionPlace(session: ProgramSession | null, locale: Locale): string {
   if (!session) return translate(locale, 'placeUnknown')
   if (session.online) return translate(locale, 'placeOnline')
-  return session.place_name ?? translate(locale, 'placeUnknown')
+  return session.place_name ? placeName(session.place_name) : translate(locale, 'placeUnknown')
+}
+
+/** 공고가 ‘2층 가족센터’처럼 층을 앞에 적어도 ‘가족센터 2층’으로 읽히게 합니다. 여러 곳을 함께 적은 이름은 그대로 둡니다. */
+export function placeName(name: string): string {
+  const match = name.trim().replace(/\s+내$/, '').match(/^(\d+층)\s+(.+)$/)
+  return match && !/(?:및|외)/.test(match[2]) ? `${match[2]} ${match[1]}` : name
+}
+
+/** 주소로 지도를 여는 주소. 프로그램 장소만 보내고 보호자 정보는 보내지 않습니다. */
+export const mapUrl = (address: string) => `https://map.naver.com/p/search/${encodeURIComponent(address.replace(/\s*\([^)]*\)\s*$/, ''))}`
+
+/** 학년 숫자(초등 1~6, 중학교 7~9, 고등학교 10~12)를 화면 언어로 */
+export function gradeLabel(locale: Locale, grade: number): string {
+  if (grade <= 6) return translate(locale, 'gradeChip', { grade })
+  if (grade <= 9) return translate(locale, 'gradeChipMiddle', { grade: grade - 6 })
+  return translate(locale, 'gradeChipHigh', { grade: grade - 9 })
 }
 
 /** 장소 칸이 기관이 적은 한국어 장소 이름이면 'ko'. ‘온라인’·‘장소 확인 필요’는 화면 언어라 붙이지 않습니다. */
