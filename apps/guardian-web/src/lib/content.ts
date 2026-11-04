@@ -166,7 +166,8 @@ export interface SessionGroup {
 }
 
 /**
- * 같은 요일·시간에 되풀이되는 회차를 묶습니다. 되풀이되는 공고가 아니면 null을 돌려줘 회차를 그대로 보이게 합니다.
+ * 같은 요일·시간·장소에 되풀이되는 회차를 묶습니다. 되풀이되는 공고가 아니면 null을 돌려줘 회차를 그대로 보이게 합니다.
+ * 장소가 다른 회차를 한 묶음에 넣으면 다른 장소가 화면에서 사라지므로 따로 묶습니다.
  * 월·금 두 반이 번갈아 나와도 ‘반마다 언제’로 읽히게 하려는 것입니다.
  */
 export function groupSessions(program: Program, sessions: ProgramSession[]): SessionGroup[] | null {
@@ -176,7 +177,7 @@ export function groupSessions(program: Program, sessions: ProgramSession[]): Ses
   for (const session of sessions) {
     const day = weekdayOfDate(session.date!)
     const time = `${session.start_time}~${session.end_time}`
-    const key = `${day}-${time}`
+    const key = `${day}-${time}-${session.online ? 'online' : session.place_name ?? ''}`
     const group = groups.get(key) ?? { key, day, time, sessions: [], className: classes.find((item) => item.day === day)?.name ?? null }
     group.sessions.push(session)
     groups.set(key, group)
@@ -184,10 +185,19 @@ export function groupSessions(program: Program, sessions: ProgramSession[]): Ses
   return sessions.length / groups.size >= 2 ? [...groups.values()] : null
 }
 
-/** 고른 관심 분야나 동의 공고인지(‘먼저 볼 공고’로 묶을 때 씁니다) */
+/**
+ * 고른 관심 분야나 동의 공고인지(‘먼저 볼 공고’로 묶을 때 씁니다).
+ * 동은 서버 정렬(inPreferredDong)과 같은 회차만 봅니다: 시간이 맞으면 맞는 회차, 아니면 앞으로의 회차, 회차가 없으면 공통 장소.
+ * 지난 회차나 시간이 안 맞는 회차가 그 동에서 열렸다고 먼저 보여 주지 않습니다.
+ */
 export function isPreferred(program: Program, filters: SearchFilters): boolean {
   if (filters.interests.includes(program.category)) return true
-  return !!filters.dong && (program.next_session?.dong === filters.dong || program.sessions.some((session) => session.dong === filters.dong))
+  if (!filters.dong) return false
+  if (!program.sessions.length) return program.next_session?.dong === filters.dong
+  const relevant = program.time_match_status === 'matched'
+    ? program.sessions.filter((session) => program.matched_sessions.includes(session.id))
+    : splitSessions(program).upcoming
+  return relevant.some((session) => session.dong === filters.dong)
 }
 
 const INQUIRY_KO: Partial<Record<UncertainItem['topic'], string>> = {

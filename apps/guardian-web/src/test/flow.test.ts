@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { getMockProgram, searchMockPrograms } from '../data/mock'
 import { emptyFilters } from '../data/types'
 import type { Program } from '../data/types'
-import { classNames, groupSessions, inquiryMessage, itemsToCheck, splitSessions, timeUnknownReason } from '../lib/content'
+import { classNames, groupSessions, inquiryMessage, isPreferred, itemsToCheck, splitSessions, timeUnknownReason } from '../lib/content'
 import { filterChips } from '../lib/filters'
 import { placeName } from '../lib/format'
 import { parseFilters } from '../lib/session'
@@ -41,6 +41,25 @@ describe('회차', () => {
     const target = program(sessions, { description: 'A반(월요일)은 10월 19일부터, B반(금요일)은 10월 23일부터 해요.' })
     expect(classNames(target)).toEqual([{ name: 'A반', day: 'mon' }, { name: 'B반', day: 'fri' }])
     expect(groupSessions(target, sessions)?.map((group) => [group.className, group.sessions.map((item) => item.id)])).toEqual([['A반', ['m1', 'm2']], ['B반', ['f1', 'f2']]])
+  })
+
+  it('요일과 시간이 같아도 장소가 다르면 따로 묶어 장소를 잃지 않는다', () => {
+    const at = (id: string, date: string, place_name: string) => ({ ...session(id, date), place_name })
+    const sessions = [at('a1', '2026-10-19', '가 센터'), at('b1', '2026-10-26', '나 센터'), at('a2', '2026-11-02', '가 센터'), at('b2', '2026-11-09', '나 센터')]
+    const groups = groupSessions(program(sessions), sessions)!
+    expect(groups.map((group) => [group.sessions[0].place_name, group.sessions.length])).toEqual([['가 센터', 2], ['나 센터', 2]])
+  })
+
+  it('동 먼저 보기는 지난 회차나 시간이 안 맞는 회차로 판단하지 않는다', () => {
+    const at = (id: string, date: string, dong: string) => ({ ...session(id, date), dong })
+    const filters = { ...emptyFilters(), dong: '세마동', interests: [] }
+    const past = at('past', '2026-10-01', '세마동')
+    const later = at('later', '2026-10-20', '대원동')
+    expect(isPreferred(program([past, later], { category: 'korean_study' }), filters)).toBe(false)
+    expect(isPreferred(program([later, at('next', '2026-10-27', '세마동')], { category: 'korean_study' }), filters)).toBe(true)
+    // 시간을 넣었으면 맞는 회차의 동만 본다
+    const matched = { category: 'korean_study' as const, time_match_status: 'matched' as const, matched_sessions: ['later'] }
+    expect(isPreferred(program([later, at('next', '2026-10-27', '세마동')], matched), filters)).toBe(false)
   })
 
   it('되풀이되지 않는 회차는 묶지 않는다', () => {
