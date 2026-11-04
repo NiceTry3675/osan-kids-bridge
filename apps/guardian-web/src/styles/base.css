@@ -1,16 +1,17 @@
 /* 보호자 웹에만 있는 요소. 두 앱 공통 요소는 packages/ui/src/components.css */
 
 /*
-  보호자 웹의 따뜻한 색: 덱·시연 영상 무대(크림·코랄·초록)와 맞춥니다.
+  보호자 웹의 따뜻한 색과 크기: 덱·시연 영상 무대(크림·코랄·초록)와 맞춥니다.
   공통 토큰(packages/ui/src/tokens.css)은 기관 대시보드도 쓰므로 여기서만 덮어씁니다.
-  - 글자색 ink-3도 paper·canvas·sunken과 모든 *-soft 바탕 위에서 5:1 이상입니다.
-  - 코랄(--coral)은 그림·장식에만 씁니다(흰 글자 대비 2.95:1). 따뜻한 글자는 --warm(코랄 바탕 위 4.8:1, 흰 바탕 위 5.8:1).
+  - 글자는 한 가지 색입니다. 흐린 글자로 위계를 만들지 않고, 필요 없는 설명은 지웁니다.
+  - 가장 작은 글자도 14px입니다.
+  - 코랄(--coral)은 그림·장식에만 씁니다(흰 글자 대비 2.95:1). 따뜻한 글자는 --warm.
   - 입력 칸 테두리(--field-border)는 흰 바탕 위 3.78:1, sunken 위 3.39:1. --line-strong은 장식 선에만 씁니다.
 */
 :root {
   --ink: #2b2420;
-  --ink-2: #574b44;
-  --ink-3: #6a5d55;
+  --ink-2: var(--ink);
+  --ink-3: var(--ink);
   --canvas: #fbf6ee;
   --sunken: #f7f2ea;
   --line: #ece4d8;
@@ -19,19 +20,40 @@
   --coral: #e07a5f;
   --coral-soft: #fce6dc;
   --warm: #a9482a;
-  --shadow-sheet: 0 -8px 40px rgb(43 36 32 / 18%);
-  --shadow-card: 0 1px 2px rgb(43 36 32 / 6%), 0 4px 14px rgb(43 36 32 / 5%);
+  --text-xs: 0.875rem;
+  --radius-s: 4px;
+  --radius-m: 8px;
+  --radius-l: 8px;
+  --shadow-sheet: 0 -2px 16px rgb(43 36 32 / 16%);
+  --shadow-card: none;
+}
+
+/*
+  앱 틀: 휴대폰 화면은 움직이지 않고, 페이지가 바뀌어도 그대로입니다.
+  문서는 스크롤되지 않고, 언어 띠 아래 .shell-scroll 안의 내용만 움직입니다.
+  넓은 창에서도 같은 크기의 휴대폰 틀로 보입니다.
+*/
+html, html body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+html body { position: fixed; inset: 0; padding: 0; }
+#root { height: 100%; }
+html .shell { display: flex; flex-direction: column; height: 100svh; min-height: 0; overflow: clip; }
+.shell-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; container-type: size; }
+@media (min-width: 520px) {
+  :root { --frame-w: 390px; --frame-h: min(calc(100svh - 48px), 844px); }
+  html .shell { width: var(--frame-w); max-width: none; height: var(--frame-h); margin: calc((100svh - var(--frame-h)) / 2) auto 0; border-radius: 28px; box-shadow: 0 0 0 1px var(--line), var(--shadow-card); }
+  /* 시트도 틀 안에서 올라옵니다 */
+  html .sheet { width: var(--frame-w); max-width: var(--frame-w); margin: auto auto calc((100svh - var(--frame-h)) / 2); border-radius: 8px 24px 28px 28px; }
+  html .sheet--tall { height: calc(var(--frame-h) * 0.92); }
 }
 
 .page--detail { padding-bottom: 0; }
 /* 건너뛰기 링크로 초점만 받는 본문. 테두리는 그리지 않습니다 */
 main[tabindex="-1"]:focus { outline: none; }
 
-.tag-original { display: inline-block; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--line-strong); border-radius: 999px; color: var(--ink-3); font-size: 11px; font-weight: 600; vertical-align: 0.15em; white-space: nowrap; }
+.tag-original { display: inline-block; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--line-strong); border-radius: 4px; font-size: var(--text-xs); font-weight: 500; vertical-align: 0.15em; white-space: nowrap; }
 
 /* 언어 띠: 형광펜 노랑은 '확인되지 않은 것'에만 쓰므로 띠는 크림 바탕에 아래 선만 */
-.shell .lp--band { background: var(--canvas); border-bottom: 1px solid var(--line); }
-.shell .lp--band:has(+ .ribbon) { border-bottom-color: transparent; }
+.shell .lp--band { flex: none; background: var(--canvas); border-bottom: 1px solid var(--line); }
 
 /* 번역 초안·시연 안내: 노란 띠 대신 조용한 정보 한 줄 */
 .shell .ribbon { display: flex; align-items: flex-start; gap: 6px; padding: 2px 18px 8px; border-bottom: 1px solid var(--line); background: var(--canvas); color: var(--ink-2); font-size: var(--text-xs); line-height: 1.45; }
@@ -42,10 +64,34 @@ main[tabindex="-1"]:focus { outline: none; }
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5.5M12 7.6v.1'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 .shell .ribbon:has(+ .ribbon) { border-bottom-color: transparent; }
-.shell--intro .ribbon { padding-top: 8px; }
 
 /* 휴대폰에서 누르는 곳은 44px 이상(공통 칩·탭·작은 글자 단추는 대시보드에서 더 촘촘하게 쓰므로 여기서만 키웁니다) */
 .chip, .legend-link, .seg-btn { min-height: 44px; }
 
 /* 상단 줄 */
 .bar-top { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 6px; }
+
+/* 공통 요소를 보호자 웹에서만 평평하게: 알약과 그림자를 쓰지 않습니다 */
+.btn { font-weight: 700; }
+.btn--lg { border-radius: 8px; }
+.chip { border-width: 1px; border-radius: 8px; font-weight: 600; }
+.notice { border-radius: 8px; }
+.notice-title, .state-title, .sheet-head h2, .block-title, .field legend { font-weight: 700; }
+.notice-body { gap: 6px; }
+.notice--mark, .notice--warn { box-shadow: none; }
+.state-title { font-size: var(--text-md); }
+.sheet { border-radius: 12px 12px 0 0; }
+.seg { padding: 0; border-radius: 0; background: none; border-bottom: 1px solid var(--line); }
+.seg-btn { border-radius: 0; font-weight: 500; }
+.seg-btn[aria-selected='true'] { background: none; box-shadow: inset 0 -2px 0 var(--ink); font-weight: 700; }
+.pick, .pick--round { border-width: 1px; border-radius: 8px; font-weight: 600; }
+.input { border-width: 1px; border-radius: 8px; }
+.field-hint { margin: 0 0 10px; }
+.fact-row dd { font-weight: 600; }
+.fact-sub { font-size: inherit; font-weight: 400; }
+.row dd { font-weight: 600; }
+.status { font-weight: 700; }
+.lp-row:disabled, .lp-row--off, .lp-off-hint { opacity: 0.6; }
+.switch-row { padding: 0; border-radius: 0; background: none; }
+.switch-row strong { font-weight: 600; }
+.switch-row small { font-size: var(--text-sm); }

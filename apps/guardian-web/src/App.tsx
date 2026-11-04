@@ -7,7 +7,7 @@ import { usingDemoData } from './data/api'
 import type { SearchFilters } from './data/types'
 import { hasAnyCondition } from './lib/filters'
 import { readFilters, writeFilters } from './lib/session'
-import { useRoute } from './lib/router'
+import { SCROLL_ROOT_ID, useRoute } from './lib/router'
 import { DetailScreen } from './screens/detail/DetailScreen'
 import { HomeScreen } from './screens/home/HomeScreen'
 import { IntroScreen } from './screens/intro/IntroScreen'
@@ -47,15 +47,19 @@ export default function App() {
         onChange={setLocale}
         copy={{
           label: t('languageLabel'), more: t('pickerMore'), title: t('pickerTitle'), search: t('pickerSearch'), close: t('close'),
-          current: t('pickerCurrent'), draft: t('pickerDraft'), inReview: t('pickerInReview'), notOffered: t('pickerNotOffered'), noMatch: t('pickerNoMatch'),
+          current: t('pickerCurrent'), draft: t('pickerDraft'), inReview: t('pickerInReview'), notOffered: t('pickerNotOffered'), noMatch: t('pickerNoMatch'), notOfferedHint: t('pickerNotOfferedHint'),
         }}
       />
-      {localeState(locale) === 'draft' && <p className="ribbon ribbon--draft" role="note">{t('draftNotice')}</p>}
-      {usingDemoData && !showIntro && <p className="ribbon ribbon--demo" role="note">{t('demoNotice')}</p>}
+      {/* 틀(언어 띠)은 움직이지 않고, 화면 내용만 이 안에서 움직입니다. 앱처럼요. */}
+      <div className="shell-scroll" id={SCROLL_ROOT_ID}>
+        {/* 첫 화면은 언어 고르기 아래에 따로 적습니다. 위에 띠가 생기면 방금 누른 버튼이 밀려나니까요. */}
+        {localeState(locale) === 'draft' && !showIntro && <p className="ribbon ribbon--draft" role="note">{t('draftNotice')}</p>}
+        {usingDemoData && !showIntro && <p className="ribbon ribbon--demo" role="note">{t('demoNotice')}</p>}
 
-      {showIntro ? <IntroScreen onStart={finishIntro} onMoreLanguages={() => picker.current?.openSearch()} />
-        : route.name === 'browse' ? <HomeScreen filters={filters} onFiltersChange={setFilters} restoreScrollY={history.scrollY} />
-          : <DetailScreen key={route.id} id={route.id} filters={history.fromList || history.fromChat ? filters : null} />}
+        {showIntro ? <IntroScreen onStart={finishIntro} onMoreLanguages={() => picker.current?.openSearch()} />
+          : route.name === 'browse' ? <HomeScreen filters={filters} onFiltersChange={setFilters} restoreScrollY={history.scrollY} />
+            : <DetailScreen key={route.id} id={route.id} filters={history.fromList || history.fromChat || history.compare ? filters : null} conditions={filters} onConditionsChange={setFilters} />}
+      </div>
     </div>
   )
 }

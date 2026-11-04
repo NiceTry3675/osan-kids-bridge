@@ -48,7 +48,6 @@ export function PosterStrip({ programs }: { programs: Program[] }) {
       <h2 className="home-posters-title" id={titleId}>{translated ? t('homePostersMine') : t('homePostersOriginal')}</h2>
       {(translated || others.length > 0) && (
         <p className="home-posters-note">
-          <ValueIcon name="spark" />
           {translated ? t('homePostersChecked') : t('homePostersAlso', { languages: others.map((code) => languageName(locale, code)).join('·') })}
         </p>
       )}
@@ -80,7 +79,7 @@ function PosterCard({ program, variant, eager }: PosterPick & { eager: boolean }
             ? <img src={shown.src} alt="" loading={eager ? 'eager' : 'lazy'} decoding="async" onError={onError} />
             : <span className="home-poster-fallback"><ValueIcon name="poster" /></span>}
           {(shown?.variant ?? variant) !== 'original'
-            ? <span className="home-poster-badge"><ValueIcon name="spark" />{t('homePosterAi')}</span>
+            ? <span className="home-poster-badge">{t('homePosterAi')}</span>
             : locale !== 'ko-easy' && <span className="home-poster-badge home-poster-badge--original">{t('originalTag')}</span>}
         </span>
         <span className="home-poster-title" lang={text.lang}>{text.title}</span>

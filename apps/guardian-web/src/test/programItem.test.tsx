@@ -29,14 +29,14 @@ describe('목록 카드', () => {
     expect(container.querySelector('.item-match')).toBeNull()
   })
 
-  it('기관에 확인할 점은 개수 칩 하나로 보여 주고, 전체 항목은 읽기 프로그램에 남긴다', () => {
+  it('기관에 확인할 점은 상태 줄에 개수만 보여 주고, 전체 항목은 읽기 프로그램에 남긴다', () => {
     const { container } = renderItem(program())
-    const chip = container.querySelector('.item-check-chip')!
-    expect(chip.getAttribute('aria-hidden')).toBe('true')
-    expect(chip.textContent).toBe('기관에 확인할 점2')
+    const note = container.querySelector('.item-checks > [aria-hidden]')!
+    expect(note.getAttribute('aria-hidden')).toBe('true')
+    expect(note.textContent).toBe('확인할 점 2개')
     expect(container.querySelector('.item-checks .marked')).toBeNull()
     const full = container.querySelector('.item-checks .visually-hidden')!
-    expect(full.textContent).toBe('기관에 확인할 점: 가족 자격(다문화가족 여부 등), 형제자매도 함께 갈 수 있는지')
+    expect(full.textContent).toBe('기관에 확인할 점: 우리 가족도 참여할 수 있는지, 형제자매도 함께 갈 수 있는지')
     // 링크 이름은 짧게 두고, 카드 내용(전체 항목 포함)은 설명으로 읽는다
     const link = screen.getByRole('link', { name: '주말 한국어 놀이교실 자세히 보기' })
     expect(document.getElementById(link.getAttribute('aria-describedby')!)!.contains(full)).toBe(true)
@@ -53,7 +53,7 @@ describe('목록 카드', () => {
       { topic: 'other' as const, text: '참가비: 무료', added_at: '2026-10-15', covers: ['cost'], translations: { vi: 'Phí tham gia: Miễn phí' } },
     ]
     const { container } = renderItem(program({ cost_krw: null, cost_raw: null, addenda }), 'vi')
-    expect(container.querySelector('.item-check-count')!.textContent).toBe('1')
+    expect(container.querySelector('.item-checks > [aria-hidden]')!.textContent).toBe('1 điều cần hỏi')
     const cost = screen.getByText('Phí tham gia: Miễn phí')
     expect(cost.closest('mark')).toBeNull()
     expect(cost.closest('.item-fact')!.querySelector('b')!.textContent).toBe('Chi phí')
@@ -110,7 +110,7 @@ describe('목록 카드 포스터 썸네일', () => {
   it('번역본을 못 불러오면 한국어 원본으로, 원본도 못 불러오면 분야 그림을 보여 준다', () => {
     const { container } = renderItem(program())
     expect(container.querySelector('.item-poster')).toBeNull()
-    expect(container.querySelector('.item-art .interest-icon')).toBeTruthy()
+    expect(container.querySelector('.item-art')).toBeNull()
     cleanup()
     const broken = renderItem(program({ posters }), 'vi').container
     fireEvent.error(broken.querySelector('.item-poster img')!)
@@ -118,11 +118,12 @@ describe('목록 카드 포스터 썸네일', () => {
     expect(broken.querySelector('.item-poster-ai')).toBeNull()
     fireEvent.error(broken.querySelector('.item-poster img')!)
     expect(broken.querySelector('.item-poster')).toBeNull()
-    expect(broken.querySelector('.item-art')).toBeTruthy()
+    expect(broken.querySelector('.item-art')).toBeNull()
     cleanup()
     // 원본이 없으면 번역본 다음은 바로 분야 그림
     const noOriginal = renderItem(program({ posters: { original: false, languages: ['vi'] } }), 'vi').container
     fireEvent.error(noOriginal.querySelector('.item-poster img')!)
-    expect(noOriginal.querySelector('.item-art')).toBeTruthy()
+    expect(noOriginal.querySelector('.item-art')).toBeNull()
+    expect(noOriginal.querySelector('.item-poster')).toBeNull()
   })
 })

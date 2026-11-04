@@ -2,92 +2,90 @@
 .detail-head { display: grid; gap: 2px; padding: 8px 0 14px; }
 .detail-head-top { display: flex; align-items: flex-start; gap: 12px; }
 .detail-head-text { display: grid; gap: 2px; flex: 1; min-width: 0; }
-.detail-category { color: var(--ink-3); font-size: var(--text-xs); font-weight: 600; }
-.detail-title { font-size: var(--text-xl); line-height: 1.3; letter-spacing: -0.025em; font-weight: 900; }
-.detail-org { color: var(--ink-2); font-size: var(--text-sm); }
-.detail-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 12px; margin-top: 6px; font-size: var(--text-xs); color: var(--ink-3); }
+.detail-title { font-size: var(--text-xl); line-height: 1.3; font-weight: 700; }
 .reviewed-line { display: flex; align-items: center; gap: 6px; color: var(--status-open); font-size: var(--text-xs); font-weight: 700; }
 .reviewed-line .icon { width: 16px; height: 16px; }
 .link, .link-wrap .link { display: inline-flex; align-items: center; gap: 3px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--action); font-weight: 700; font-size: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .link .icon { width: 14px; height: 14px; }
 .link-wrap { display: inline-grid; }
 .action-wrap { display: grid; gap: 4px; }
-.demo-note { font-size: var(--text-xs); color: var(--ink-3); }
+.demo-note { font-size: var(--text-xs); }
 
 /* 제목 옆 포스터 썸네일(정사각형 포스터를 자르지 않고): 누르면 아래 포스터 구역(#poster)으로 */
-.poster-thumb { display: grid; justify-items: center; align-content: start; gap: 6px; flex: none; width: 80px; margin: 4px -4px 0 0; padding: 0 0 2px; border: 0; border-radius: 12px; background: none; color: var(--action); text-align: center; }
-.poster-thumb-frame { position: relative; display: block; width: 72px; height: 72px; border-radius: 10px; overflow: hidden; background: var(--sunken); box-shadow: 0 0 0 1px var(--line), var(--shadow-card); transition: box-shadow 0.15s; }
+.poster-thumb { display: grid; justify-items: center; align-content: start; gap: 6px; flex: none; width: 80px; margin: 4px -4px 0 0; padding: 0 0 2px; border: 0; border-radius: 8px; background: none; color: var(--action); text-align: center; }
+.poster-thumb-frame { position: relative; display: block; width: 72px; height: 72px; border-radius: 8px; overflow: hidden; background: var(--sunken); box-shadow: 0 0 0 1px var(--line); }
 .poster-thumb-frame img { display: block; width: 100%; height: 100%; object-fit: contain; }
-.poster-thumb-badge { position: absolute; left: 5px; top: 5px; padding: 1px 6px; border-radius: 6px; background: var(--action); color: var(--action-ink); font-size: 11px; font-weight: 900; line-height: 1.5; letter-spacing: 0.04em; }
-.poster-thumb-caption { font-size: var(--text-xs); font-weight: 750; line-height: 1.3; }
-@media (hover: hover) { .poster-thumb:hover .poster-thumb-frame { box-shadow: 0 0 0 2px var(--action), var(--shadow-card); } }
+.poster-thumb-badge { position: absolute; left: 5px; top: 5px; padding: 1px 6px; border-radius: 6px; background: var(--action); color: var(--action-ink); font-size: 12px; font-weight: 700; line-height: 1.5; }
+.poster-thumb-caption { font-size: var(--text-xs); font-weight: 700; line-height: 1.3; }
+@media (hover: hover) { .poster-thumb:hover .poster-thumb-frame { box-shadow: 0 0 0 2px var(--action); } }
 .poster { scroll-margin-top: 8px; }
 .poster:focus { outline: none; }
 
-/* 우리 아이 조건과 비교: 맞는 것은 초록 알약, 모르는 것은 ? 줄 */
+/* 우리 아이 조건과 비교: 맞는 것은 초록 표시, 모르는 것은 ? 줄 */
 .detail-head + .compare { padding: 2px 0 16px; border-bottom: 0; }
 .compare-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-.compare-pill { display: inline-flex; align-items: center; gap: 3px; min-height: 36px; padding: 5px 11px 5px 8px; border-radius: 999px; background: var(--status-open-soft); color: var(--status-open); font-size: var(--text-sm); font-weight: 800; line-height: 1.35; }
+.compare-pill { display: inline-flex; align-items: center; gap: 3px; min-height: 36px; padding: 5px 10px 5px 8px; border-radius: 4px; background: var(--status-open-soft); color: var(--status-open); font-size: var(--text-sm); font-weight: 700; line-height: 1.35; }
 .compare-pill .icon { width: 17px; height: 17px; stroke-width: 2.6; flex: none; }
-.compare-pill .compare-label { margin-right: 2px; color: var(--ink); font-weight: 650; }
+.compare-pill .compare-label { color: var(--ink); font-weight: 400; }
 .compare-rest { display: grid; gap: 4px; }
 .compare-pills + .compare-rest { margin-top: 10px; }
 .compare-line { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; font-size: var(--text-sm); line-height: 1.6; }
-.compare-line .compare-label { color: var(--ink-2); margin-right: 4px; }
+.compare-line .compare-label { margin-right: 4px; }
 .compare-line .marked { font-weight: 700; }
 .compare-line > .icon { width: 18px; height: 18px; margin-top: 0.2em; color: var(--status-closed); }
-.compare-line--not_matched .judge { font-weight: 750; }
+.compare-line--not_matched .judge { font-weight: 700; }
 
 .judge--matched { color: var(--status-open); }
 .judge--not_matched { color: var(--status-closed); }
 
 /* ? 표시: 확인할 점 카드에서는 노란 원, 아래쪽 구역에서는 테두리만 */
-.q-mark { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--mark); color: var(--mark-ink); font-size: var(--text-xs); font-weight: 900; line-height: 1; }
-.compare-line .q-mark, .unknown .q-mark { width: 18px; height: 18px; margin-top: 0.2em; background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink-3); color: var(--ink-2); font-size: 12px; }
-.unknown { display: inline-flex; align-items: flex-start; gap: 6px; color: var(--ink-2); font-weight: 500; }
+.q-mark { display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--mark); color: var(--mark-ink); font-size: var(--text-xs); font-weight: 700; line-height: 1; }
+.compare-line .q-mark, .unknown .q-mark { width: 18px; height: 18px; margin-top: 0.2em; background: transparent; box-shadow: inset 0 0 0 1px var(--ink); color: var(--ink); font-size: 12px; }
+.unknown { display: inline-flex; align-items: flex-start; gap: 6px; font-weight: 400; }
 
-/* 기관이 확인해 덧붙인 안내: 초록 카드. 공고 원문이 아니라는 표시를 함께 */
-.addenda { margin: 0 0 12px; padding: 14px 14px 14px 18px; border-radius: 14px; background: var(--status-open-soft); box-shadow: inset 4px 0 0 var(--status-open); }
-.addenda-title { display: flex; align-items: center; gap: 6px; font-size: var(--text-md); font-weight: 850; line-height: 1.4; color: var(--status-open); }
+/* 기관이 확인해 덧붙인 안내: 공고 원문이 아니라는 표시를 함께 */
+.addenda { margin: 0 0 12px; padding: 14px; border-radius: 8px; background: var(--status-open-soft); }
+.addenda-title { display: flex; align-items: center; gap: 6px; font-size: var(--text-md); font-weight: 700; line-height: 1.4; color: var(--status-open); }
 .addenda-title .icon { width: 20px; height: 20px; stroke-width: 2.6; flex: none; }
-.addenda-note { margin-top: 2px; font-size: var(--text-xs); line-height: 1.5; color: var(--ink-2); }
+.addenda-note { margin-top: 2px; font-size: var(--text-sm); line-height: 1.5; }
 .addenda-list { display: grid; gap: 10px; margin-top: 10px; }
 .addenda-list li { display: grid; gap: 1px; }
 .addenda-list li + li { padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--status-open) 18%, transparent); }
-.addendum-meta { font-size: var(--text-xs); font-weight: 650; color: var(--ink-2); }
+.addendum-meta { font-size: var(--text-xs); font-weight: 600; }
 .addendum-meta:empty { display: none; }
 .addendum-when { white-space: nowrap; }
-.addendum-text { font-size: var(--text-sm); font-weight: 700; line-height: 1.55; }
+.addendum-text { font-size: var(--text-sm); font-weight: 600; line-height: 1.55; }
 /* 화면 언어로 옮긴 문장 뒤의 작은 ‘AI 번역’ 표시와, 그 아래 기관이 쓴 한국어 원문 */
-.addendum-ai { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; background: var(--paper); color: var(--status-open); font-size: 11px; font-weight: 800; line-height: 1.6; vertical-align: 0.1em; white-space: nowrap; }
-.addendum-original { font-size: var(--text-xs); line-height: 1.5; color: var(--ink-2); }
+.addendum-ai { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 6px; background: var(--paper); color: var(--status-open); font-size: 12px; font-weight: 700; line-height: 1.6; vertical-align: 0.1em; white-space: nowrap; }
+.addendum-original { font-size: var(--text-xs); line-height: 1.5; }
 
-/* 기관에 확인할 점: 노란 카드 하나가 미확인 신호. 항목은 형광펜 없이 ? 글머리 + 원문 표현 */
-.to-check { margin: 0 0 14px; padding: 14px 14px 14px 18px; border-radius: 14px; background: var(--mark-soft); box-shadow: inset 4px 0 0 var(--mark); }
+/* 기관에 확인할 점: 노란 칸 하나가 미확인 신호. 항목은 형광펜 없이 ? 글머리 + 원문 표현 */
+.to-check { margin: 0 0 14px; padding: 14px; border-radius: 8px; background: var(--mark-soft); }
 .to-check .block-title { margin-bottom: 10px; }
 .checks { display: grid; gap: 10px; }
 .checks li { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
 .checks .q-mark { margin-top: 1px; }
 .check-text { display: grid; gap: 1px; min-width: 0; }
 .check-topic { font-size: var(--text-sm); font-weight: 700; line-height: 1.45; }
-.check-quote { font-size: var(--text-xs); line-height: 1.5; color: var(--ink-2); }
+.check-quote { font-size: var(--text-sm); line-height: 1.5; }
 
-.original summary, .trouble summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--action); font-weight: 750; font-size: var(--text-sm); }
-.original p { padding: 12px; border-radius: 12px; background: var(--sunken); }
+.original summary, .trouble summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; color: var(--action); font-weight: 700; font-size: var(--text-sm); }
+.original p { padding: 4px 0; }
 .trouble ol { display: grid; gap: 4px; padding-left: 20px; list-style: decimal; font-size: var(--text-sm); }
 
-.sessions { display: grid; gap: 6px; margin-top: 8px; }
-.session { display: grid; gap: 1px; padding: 10px 12px; border-radius: 12px; background: var(--sunken); font-size: var(--text-sm); }
-.session-when { font-weight: 750; }
-.session-where { color: var(--ink-2); font-size: var(--text-xs); }
-.session.is-matched { background: var(--status-open-soft); }
-.session-flag { display: inline-flex; align-items: center; gap: 4px; color: var(--status-open); font-weight: 750; font-size: var(--text-xs); }
+.sessions { display: grid; margin-top: 4px; }
+.session { display: grid; gap: 1px; padding: 10px 0; border-top: 1px solid var(--line); font-size: var(--text-sm); }
+.sessions > .session:first-child { border-top: 0; }
+.session-when { font-weight: 600; }
+.session-where { font-size: var(--text-sm); }
+.session.is-matched { padding-inline: 10px; border-radius: 8px; border-top-color: transparent; background: var(--status-open-soft); }
+.session-flag { display: inline-flex; align-items: center; gap: 4px; color: var(--status-open); font-weight: 700; font-size: var(--text-xs); }
 .session-flag .icon { width: 15px; height: 15px; }
 
 .action-bar {
   position: sticky; bottom: 0; z-index: 5; display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px;
   margin: 8px -18px 0; padding: 10px 18px calc(12px + env(safe-area-inset-bottom));
-  background: color-mix(in srgb, var(--paper) 94%, transparent); backdrop-filter: blur(8px); border-top: 1px solid var(--line);
+  background: var(--paper); border-top: 1px solid var(--line);
 }
 
 /* 조건을 넣지 않은 줄: 아이콘 자리만 비워 줄을 맞춘다 */
@@ -95,6 +93,16 @@
 
 /* 지난 회차 접기와 되풀이 회차의 날짜 */
 .sessions-past { margin-top: 10px; }
-.sessions-past > summary, .session-dates > summary { cursor: pointer; min-height: 32px; color: var(--ink-2); font-size: var(--text-xs); font-weight: 650; }
+.sessions-past > summary, .session-dates > summary { cursor: pointer; min-height: 32px; font-size: var(--text-xs); font-weight: 600; }
 .session-dates ul { display: grid; gap: 2px; margin-top: 4px; font-size: var(--text-xs); }
-.fact-link { display: block; margin-top: 2px; font-size: var(--text-xs); font-weight: 650; }
+.fact-link { display: block; font-size: var(--text-sm); font-weight: 400; }
+.fact-link .link { min-height: 32px; }
+
+/* 뒤로 가기 줄은 틀에 고정: 어디까지 내려도 목록으로 돌아갈 수 있습니다 */
+.page--detail > .bar-top { position: sticky; top: 0; z-index: 4; margin: 0 -18px; padding: 4px 18px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.detail-compare-link { justify-self: start; margin-top: 2px; font-size: var(--text-sm); }
+.to-check-ask { width: 100%; margin-top: 10px; }
+.participation-unknown { margin-top: 6px; font-size: var(--text-sm); }
+.prose--clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+.fact-line { display: block; }
+.fact-line + .fact-line { margin-top: 2px; }

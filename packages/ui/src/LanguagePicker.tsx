@@ -17,6 +17,8 @@ export interface LanguageOption<C extends string = string> {
   aliases: string[]
   /** available: 공개 / draft: 개발·시연에서만 여는 번역 초안 / in_review: 검수 중이라 열지 않음 */
   state: LanguageState
+  /** 초안 표시 문구. 그 언어로 적어 두면 지금 화면 언어를 못 읽어도 알 수 있습니다. 없으면 copy.draft */
+  note?: string
 }
 
 export interface LanguagePickerCopy {
@@ -31,6 +33,8 @@ export interface LanguagePickerCopy {
   inReview: string
   notOffered: string
   noMatch: string
+  /** 있으면 준비 중인 언어를 검색 없이도 목록으로 보이고, 줄마다 적는 대신 이 안내를 한 번 적습니다. */
+  notOfferedHint?: string
 }
 
 /** 서비스가 아직 제공하지 않지만 검색될 수 있는 언어들 */
@@ -62,10 +66,10 @@ export interface LanguageSearchResult<C extends string> {
   notOffered: string[]
 }
 
-export function searchLanguages<C extends string>(options: LanguageOption<C>[], query: string): LanguageSearchResult<C> {
+export function searchLanguages<C extends string>(options: LanguageOption<C>[], query: string, listAll = false): LanguageSearchResult<C> {
   return {
     offered: options.filter((option) => matches(query, option.native, option.aliases)),
-    notOffered: normalizeQuery(query) ? NOT_OFFERED.filter((item) => matches(query, item.native, item.aliases)).map((item) => item.native) : [],
+    notOffered: listAll || normalizeQuery(query) ? NOT_OFFERED.filter((item) => matches(query, item.native, item.aliases)).map((item) => item.native) : [],
   }
 }
 
@@ -89,7 +93,7 @@ export function LanguagePicker<C extends string>({ ref, value, options, onChange
   const moreRef = useRef<HTMLButtonElement>(null)
   const titleId = useId()
   const selectable = options.filter((option) => option.state !== 'in_review')
-  const result = searchLanguages(options, query)
+  const result = searchLanguages(options, query, !!copy.notOfferedHint)
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -102,7 +106,8 @@ export function LanguagePicker<C extends string>({ ref, value, options, onChange
   const open = () => {
     setQuery('')
     dialogRef.current?.showModal?.()
-    requestAnimationFrame(() => inputRef.current?.focus())
+    // 휴대폰에서는 바로 키보드를 올리지 않습니다. 목록을 가려서, 고를 수 있는 언어가 보이지 않게 되니까요.
+    if (window.matchMedia?.('(pointer: fine)').matches) requestAnimationFrame(() => inputRef.current?.focus())
   }
   const close = () => dialogRef.current?.close?.()
   useImperativeHandle(ref, () => ({ openSearch: open }))
@@ -160,16 +165,17 @@ export function LanguagePicker<C extends string>({ ref, value, options, onChange
                   >
                     <span lang={langAttr(option.code)} className="lp-row-name">{option.native}</span>
                     <span className="lp-row-note">
-                      {option.code === value ? copy.current : disabled ? copy.inReview : option.state === 'draft' ? copy.draft : ''}
+                      {option.code === value ? copy.current : disabled ? copy.inReview : option.state === 'draft' ? option.note ?? copy.draft : ''}
                     </span>
                   </button>
                 </li>
               )
             })}
+            {copy.notOfferedHint && result.notOffered.length > 0 && <li className="lp-off-hint">{copy.notOfferedHint}</li>}
             {result.notOffered.map((native) => (
               <li key={native} className="lp-row lp-row--off">
                 <span className="lp-row-name">{native}</span>
-                <span className="lp-row-note">{copy.notOffered}</span>
+                {!copy.notOfferedHint && <span className="lp-row-note">{copy.notOffered}</span>}
               </li>
             ))}
           </ul>

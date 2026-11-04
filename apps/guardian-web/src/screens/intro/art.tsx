@@ -15,7 +15,6 @@ const VALUE_PATHS = {
   // 말풍선: 기관에 물을 문장
   ask: <><path d="M5 4.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8l-4.5 3.5v-3.5H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z" /><path d="M7.5 9h9M7.5 12.2h5.5" /></>,
   // 반짝임: AI가 한 일
-  spark: <><path d="M10.5 3.5c.7 4.6 2.4 6.3 7 7-4.6.7-6.3 2.4-7 7-.7-4.6-2.4-6.3-7-7 4.6-.7 6.3-2.4 7-7Z" /><path d="M18.5 15.5c.3 1.9 1 2.6 2.9 2.9-1.9.3-2.6 1-2.9 2.9-.3-1.9-1-2.6-2.9-2.9 1.9-.3 2.6-1 2.9-2.9Z" /></>,
 } satisfies Record<string, ReactNode>
 
 export type ValueName = keyof typeof VALUE_PATHS
@@ -47,31 +46,23 @@ export function IntroArt() {
   return (
     <div className="intro-art" aria-hidden="true">
       <svg viewBox="0 0 340 132" preserveAspectRatio="xMidYMid meet">
-        <circle cx="30" cy="120" r="48" fill="#F9D6C6" />
-        <circle cx="318" cy="10" r="40" fill="#E3F0E8" />
-        <circle cx="290" cy="116" r="5" fill="#F3B9A4" />
-        <circle cx="54" cy="22" r="4" fill="#BFDCCB" />
-
         <g transform="translate(100 68) rotate(-7)">
           <PosterCard band="#1F7A5C">
             <text className="art-glyph" x="0" y="15" textAnchor="middle" fontSize="40" fill="#2B2420">가</text>
           </PosterCard>
         </g>
 
-        <g className="art-arrow">
+        <g>
           <path d="M150 80c8-20 24-26 38-18" fill="none" stroke="#E07A5F" strokeWidth="4.5" strokeLinecap="round" />
           <path d="m180 54 9 8-11 4" fill="none" stroke="#E07A5F" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M165 31c.6 4 2 5.4 6 6-4 .6-5.4 2-6 6-.6-4-2-5.4-6-6 4-.6 5.4-2 6-6Z" fill="#E07A5F" />
         </g>
 
         <g transform="translate(240 64) rotate(6)">
-          <g className="art-new">
-            <PosterCard band="#E07A5F">
-              <text className="art-glyph" x="0" y="13" textAnchor="middle" fontSize="30" fill="#1F7A5C">
-                A<tspan dx="3" fill="#E07A5F">·</tspan><tspan dx="3" lang="zh">中</tspan>
-              </text>
-            </PosterCard>
-          </g>
+          <PosterCard band="#E07A5F">
+            <text className="art-glyph" x="0" y="13" textAnchor="middle" fontSize="30" fill="#1F7A5C">
+              A<tspan dx="3" fill="#E07A5F">·</tspan><tspan dx="3" lang="zh">中</tspan>
+            </text>
+          </PosterCard>
         </g>
       </svg>
     </div>

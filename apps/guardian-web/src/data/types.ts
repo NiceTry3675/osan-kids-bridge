@@ -39,6 +39,8 @@ export interface ProgramSession {
 
 export interface ApplicationMethod {
   type: 'online' | 'phone' | 'visit'
+  /** 공고에 적힌 신청 방법 이름(원문). 예: '신청 QR코드' */
+  label?: string
   url?: string
   phone?: string
   address?: string
@@ -97,6 +99,11 @@ export interface Program {
   sessions: ProgramSession[]
   matched_sessions: string[]
   next_session: ProgramSession | null
+  /** 회차별 날짜 없이 공고가 밝힌 운영 기간과 총 횟수, 일정 안내(원문 그대로) */
+  period_start?: string | null
+  period_end?: string | null
+  session_count?: number | null
+  schedule_note?: string | null
   /** 판정 기준일(YYYY-MM-DD). 지난 회차를 가를 때 씁니다 */
   as_of?: string
   /** 시간이 unknown일 때 넣은 시간 안에 드는 앞으로의 회차. 일치했다는 뜻은 아닙니다 */

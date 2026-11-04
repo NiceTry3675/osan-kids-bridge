@@ -34,20 +34,19 @@ const renderHome = (locale: Locale, programs: Program[]) => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); window.history.replaceState(null, '', '/') })
 
 describe('첫 화면', () => {
-  it('언어를 고르기 전에 이 서비스가 해 주는 세 가지를 글자로 보여 주고, 그림은 읽기 프로그램에 숨긴다', () => {
+  it('이 서비스가 하는 일을 한 문장으로 알리고, 그림은 읽기 프로그램에 숨긴다', () => {
     const { container } = render(<I18nProvider initial="vi"><IntroScreen onStart={() => {}} onMoreLanguages={() => {}} /></I18nProvider>)
-    const values = screen.getAllByRole('listitem').map((item) => item.textContent)
-    expect(values).toEqual(['Thông báo bằng ngôn ngữ của bạn', 'Có hợp với con bạn không', 'Câu tiếng Hàn để hỏi cơ quan'])
+    expect(screen.getByText(/^Đọc thông báo bằng ngôn ngữ của bạn/)).toBeTruthy()
     expect(container.querySelector('.intro-art')!.getAttribute('aria-hidden')).toBe('true')
     expect(screen.getByRole('radiogroup')).toBeTruthy()
   })
 
-  it('언어 단추는 언어 이름에만 그 언어의 lang을 붙이고, ‘번역 초안’ 꼬리표는 지금 화면 언어로 둔다', () => {
-    render(<I18nProvider initial="vi"><IntroScreen onStart={() => {}} onMoreLanguages={() => {}} /></I18nProvider>)
-    const chinese = screen.getByRole('radio', { name: /中文/ })
-    expect(chinese.getAttribute('lang')).toBeNull()
-    expect(within(chinese).getByText('中文').getAttribute('lang')).toBe('zh')
-    expect(within(chinese).getByText('Bản dịch nháp').closest('[lang]')!.getAttribute('lang')).toBe('vi')
+  it('언어 단추의 이름과 ‘번역 초안’ 꼬리표를 그 언어로 적어, 지금 화면 언어를 못 읽어도 알 수 있게 한다', () => {
+    render(<I18nProvider initial="ko-easy"><IntroScreen onStart={() => {}} onMoreLanguages={() => {}} /></I18nProvider>)
+    expect(screen.getByText('Tiếng Việt').getAttribute('lang')).toBe('vi')
+    const tag = screen.getByText('Bản dịch nháp')
+    expect(tag.getAttribute('lang')).toBe('vi')
+    expect(tag.closest('button')!.textContent).toContain('Tiếng Việt')
   })
 
   it('번역 초안 안내는 세 언어 모두 한 문장이다', () => {

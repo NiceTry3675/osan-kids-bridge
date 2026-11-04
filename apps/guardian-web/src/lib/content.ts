@@ -79,6 +79,10 @@ function companionItem(item: UncertainItem, program: Program): UncertainItem[] {
   return [{ ...item, note_ko: item.note_ko && /동반|함께|같이/.test(item.note_ko) ? item.note_ko : null }]
 }
 
+/** 가족 배경을 말하는 원문만 근거로 붙입니다. ‘8~12세 어린이’는 우리 가족이 참여할 수 있는지에 답하지 않습니다. */
+const familyItem = (item: UncertainItem): UncertainItem =>
+  (item.note_ko && !/다문화|중도\s*입국|결혼\s*이민|이주\s*배경|외국인|거주|시민/.test(item.note_ko) ? { ...item, note_ko: null } : item)
+
 /**
  * 기관에 확인할 항목: 공고의 미확인 항목 + 판정이 unknown인 나이·학년·시간.
  * 기관이 덧붙인 안내가 이미 답한 주제(covers)는 빼서, 같은 화면의 초록 안내 카드와 어긋나지 않게 합니다.
@@ -87,7 +91,7 @@ export function itemsToCheck(program: Program): UncertainItem[] {
   const covered = coveredTopics(program)
   const items = program.uncertain_items
     .filter((item) => !covered.has(item.topic))
-    .flatMap((item) => (item.topic === 'companion' ? companionItem(item, program) : [item]))
+    .flatMap((item) => (item.topic === 'companion' ? companionItem(item, program) : item.topic === 'family_eligibility' ? [familyItem(item)] : [item]))
   const has = (topic: UncertainItem['topic']) => items.some((item) => item.topic === topic)
   if (program.time_match_status === 'unknown' && !has('schedule')) items.unshift({ topic: 'schedule', note_ko: null })
   if (program.age_grade_match_status === 'unknown' && !has('age_grade')) items.unshift({ topic: 'age_grade', note_ko: null })
@@ -163,26 +167,44 @@ export interface SessionGroup {
   sessions: ProgramSession[]
   /** 공고에 적힌 반 이름 */
   className: string | null
+  /** 날짜 간격이 모두 7일인지. 쉬는 주가 있는데 ‘매주’라고 하면 헛걸음하게 됩니다. */
+  weekly: boolean
 }
 
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
+const dayMs = (date: string) => { const [year, month, day] = date.split('-').map(Number); return Date.UTC(year, month - 1, day) }
+const isWeekly = (sessions: ProgramSession[]) =>
+  sessions.length > 1 && sessions.every((session, index) => index === 0 || dayMs(session.date!) - dayMs(sessions[index - 1].date!) === WEEK_MS)
+
 /**
- * 같은 요일·시간·장소에 되풀이되는 회차를 묶습니다. 되풀이되는 공고가 아니면 null을 돌려줘 회차를 그대로 보이게 합니다.
+ * 같은 요일·시간·장소에 되풀이되는 회차를 묶습니다. 묶을 만하지 않으면 null을 돌려줘 날짜를 그대로 보이게 합니다.
  * 장소가 다른 회차를 한 묶음에 넣으면 다른 장소가 화면에서 사라지므로 따로 묶습니다.
- * 월·금 두 반이 번갈아 나와도 ‘반마다 언제’로 읽히게 하려는 것입니다.
+ * 공고에 반이 적혀 있으면 ‘반마다 언제’로 묶고, 반이 없으면 회차가 5개 이상이고 묶음마다 평균 3회 이상일 때만 묶습니다.
+ * 회차가 적으면 고를 날짜를 바로 보여 주는 편이 낫습니다.
  */
 export function groupSessions(program: Program, sessions: ProgramSession[]): SessionGroup[] | null {
-  if (sessions.length < 3 || sessions.some((session) => !session.date || !session.start_time || !session.end_time)) return null
+  if (sessions.length < 2 || sessions.some((session) => !session.date || !session.start_time || !session.end_time)) return null
   const classes = classNames(program)
   const groups = new Map<string, SessionGroup>()
-  for (const session of sessions) {
+  for (const session of [...sessions].sort((a, b) => a.date!.localeCompare(b.date!))) {
     const day = weekdayOfDate(session.date!)
     const time = `${session.start_time}~${session.end_time}`
     const key = `${day}-${time}-${session.online ? 'online' : session.place_name ?? ''}`
-    const group = groups.get(key) ?? { key, day, time, sessions: [], className: classes.find((item) => item.day === day)?.name ?? null }
+    const group = groups.get(key) ?? { key, day, time, sessions: [], className: classes.find((item) => item.day === day)?.name ?? null, weekly: false }
     group.sessions.push(session)
     groups.set(key, group)
   }
-  return sessions.length / groups.size >= 2 ? [...groups.values()] : null
+  const list = [...groups.values()].map((group) => ({ ...group, weekly: isWeekly(group.sessions) }))
+  if (classes.length > 1 && list.every((group) => group.className)) return list
+  return sessions.length >= 5 && sessions.length / list.length >= 3 ? list : null
+}
+
+/** 반이 나뉜 공고의 반별 다음 회차. 다음 일정에 한 반의 날짜만 보이지 않게 합니다. */
+export function nextByClass(program: Program): { name: string; session: ProgramSession }[] | null {
+  const { upcoming } = splitSessions(program)
+  const groups = groupSessions(program, upcoming)
+  const named = groups?.filter((group) => group.className) ?? []
+  return named.length > 1 ? named.map((group) => ({ name: group.className!, session: group.sessions[0] })) : null
 }
 
 /**
@@ -216,9 +238,43 @@ const INQUIRY_KO: Partial<Record<UncertainItem['topic'], string>> = {
  * AI 없이 ‘기관에 확인할 점’에서 만들기 때문에 서버가 없어도 쓸 수 있습니다. 물을 것이 없으면 null.
  */
 export function inquiryMessage(program: Program): string | null {
-  const questions = [...new Set(itemsToCheck(program).flatMap((item) => INQUIRY_KO[item.topic] ?? []))]
-  if (program.cost_krw === null && !costAddendum(program)) questions.push('참가비가 있나요? 있다면 얼마인가요?')
-  if (program.application_issue) questions.unshift('신청 마감일이 정확히 언제인가요?')
+  const questions = [...new Set(inquiryTopics(program).flatMap((topic) => (topic === 'application' ? '신청 마감일이 정확히 언제인가요?' : topic === 'cost' ? '참가비가 있나요? 있다면 얼마인가요?' : INQUIRY_KO[topic] ?? [])))]
   if (!questions.length) return null
   return [`안녕하세요. ‘${program.title}’ 프로그램에 대해 여쭤보고 싶어요.`, ...questions, '감사합니다.'].join('\n')
 }
+
+/** 문장에 담긴 주제. 한국어를 못 읽어도 무엇을 묻는지 화면 언어로 알 수 있게 합니다. */
+export function inquiryTopics(program: Program): (UncertainItem['topic'] | 'application' | 'cost')[] {
+  const topics = [...new Set(itemsToCheck(program).filter((item) => INQUIRY_KO[item.topic]).map((item) => item.topic))]
+  return [
+    ...(program.application_issue ? ['application' as const] : []),
+    ...topics,
+    ...(program.cost_krw === null && !costAddendum(program) ? ['cost' as const] : []),
+  ]
+}
+
+/** 이만큼 넘게 벗어나면 ‘맞지 않을 수 있는 공고’로 접습니다. 중도입국 등으로 나이와 학년이 다른 아이를 위해 여유를 둡니다. */
+const BASIS_MARGIN_YEARS = 2
+
+/**
+ * 공고의 대상 기준이 넣은 조건과 달라(학년으로 찾았는데 공고는 나이) 판단할 수 없을 때, 차이가 큰지 어림합니다.
+ * 판정이 아닙니다: 공고를 빼지 않고(명세 3장) 접어 두기만 합니다. 초등 n학년은 대략 만 n+5~n+6세로 봅니다.
+ */
+export function isUnlikelyBasis(program: Program, filters: SearchFilters): boolean {
+  if (program.age_grade_match_status !== 'unknown') return false
+  const gap = (from: number, to: number, otherFrom: number, otherTo: number) => Math.max(otherFrom - to, from - otherTo, 0)
+  if (filters.child_grade !== undefined && program.age_range) {
+    return gap(filters.child_grade + 5, filters.child_grade + 6, program.age_range[0], program.age_range[1]) > BASIS_MARGIN_YEARS
+  }
+  if (filters.child_age !== undefined && program.grade_range) {
+    return gap(filters.child_age, filters.child_age, program.grade_range[0] + 5, program.grade_range[1] + 6) > BASIS_MARGIN_YEARS
+  }
+  return false
+}
+
+/** 찾은 공고 수: 접어 둔 ‘맞지 않을 수 있는 공고’는 뺍니다. 조건 시트의 버튼과 결과 제목이 같은 숫자를 보여 줍니다. */
+export const likelyCount = (data: { results: Program[]; needs_confirmation: Program[] }, filters: SearchFilters): number =>
+  [...data.results, ...data.needs_confirmation].filter((program) => !isUnlikelyBasis(program, filters)).length
+
+/** 공고 자체가 아니라 기관의 목록 페이지로 가는 주소인지. 그러면 나가서 공고를 직접 찾아야 합니다. */
+export const isListPage = (url: string): boolean => /\/list(?:\.do)?(?:[?#]|$)/.test(url)

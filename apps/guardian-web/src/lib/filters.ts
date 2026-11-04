@@ -38,6 +38,59 @@ export const dongOption = (dong: string, locale: Locale) => {
   return label === dong ? dong : `${label} (${dong})`
 }
 
+/**
+ * 시간대. 보호자는 ‘토요일 오전’으로 생각하므로 눌러서 고릅니다.
+ * 회차 전체가 구간 안에 들어가야 맞기 때문에(명세 4장) 시간대를 겹치게 잡고, 이어진 시간대는 하나로 합칩니다.
+ * 나누어 두면 오전과 오후를 모두 골라도 12:00~14:00 수업이 맞지 않습니다.
+ */
+export type TimePart = 'morning' | 'afternoon' | 'evening'
+export const TIME_PARTS: TimePart[] = ['morning', 'afternoon', 'evening']
+const PART_RANGE: Record<TimePart, [string, string]> = { morning: ['09:00', '13:00'], afternoon: ['12:00', '18:00'], evening: ['17:00', '22:00'] }
+/** 요일만 고르면 그 요일 종일로 찾습니다 */
+const ALL_DAY: [string, string] = ['06:00', '22:00']
+
+function partRanges(parts: TimePart[]): [string, string][] {
+  if (!parts.length) return [ALL_DAY]
+  const ranges: [string, string][] = []
+  for (const part of TIME_PARTS.filter((item) => parts.includes(item))) {
+    const [start, end] = PART_RANGE[part]
+    const last = ranges.at(-1)
+    if (last && start <= last[1]) last[1] = end
+    else ranges.push([start, end])
+  }
+  return ranges
+}
+
+/** 고른 요일·시간대를 가능 시간 구간으로. 요일을 고르지 않고 시간대만 고르면 모든 요일입니다. 둘 다 없으면 시간 조건이 없습니다. */
+export function windowsFrom(days: Weekday[], parts: TimePart[]): AvailableWindow[] {
+  if (!days.length && !parts.length) return []
+  const ranges = partRanges(parts)
+  return WEEKDAYS.filter((day) => !days.length || days.includes(day))
+    .flatMap((day) => ranges.map(([start_time, end_time]) => ({ day_of_week: day, start_time, end_time })))
+}
+
+const windowKey = (window: AvailableWindow) => ('date' in window ? window.date : window.day_of_week) + window.start_time + window.end_time
+
+/** 합치면 겹치는 구간을 지웁니다 */
+export const uniqueWindows = (windows: AvailableWindow[]) => [...new Map(windows.map((window) => [windowKey(window), window])).values()]
+
+const PART_SETS: TimePart[][] = [[], ['morning'], ['afternoon'], ['evening'], ['morning', 'afternoon'], ['afternoon', 'evening'], ['morning', 'evening'], ['morning', 'afternoon', 'evening']]
+
+/** 저장된 가능 시간을 다시 요일·시간대 선택으로 풉니다. 그렇게 풀리지 않는 구간은 직접 넣은 시간(custom)으로 둡니다. */
+export function selectionFrom(windows: AvailableWindow[]): { days: Weekday[]; parts: TimePart[]; custom: AvailableWindow[] } {
+  const ranges = new Set(PART_SETS.flatMap((parts) => partRanges(parts).map(([start, end]) => start + end)))
+  const known = windows.filter((window) => 'day_of_week' in window && ranges.has(window.start_time + window.end_time))
+  const custom = windows.filter((window) => !known.includes(window))
+  const keys = known.map(windowKey).sort().join()
+  const days = WEEKDAYS.filter((day) => known.some((window) => 'day_of_week' in window && window.day_of_week === day))
+  for (const parts of PART_SETS) {
+    if (known.length && windowsFrom(days, parts).map(windowKey).sort().join() === keys) {
+      return { days: days.length === WEEKDAYS.length && parts.length ? [] : days, parts, custom }
+    }
+  }
+  return { days: [], parts: [], custom: windows }
+}
+
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
 
 /** 잘못된 가능 시간이면 화면 언어로 된 이유를, 괜찮으면 null을 돌려줍니다(명세 4장). */

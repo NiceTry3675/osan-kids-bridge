@@ -75,12 +75,12 @@ describe('AI 상담이 권한 공고 열기', () => {
     window.history.replaceState({ fromList: true }, '', '/programs/demo-korean')
     const calls = serve()
     render(<I18nProvider initial="ko-easy"><App /></I18nProvider>)
-    fireEvent.click(await screen.findByRole('button', { name: /이 공고, AI에게 물어보기/ }))
+    fireEvent.click(await screen.findByRole('button', { name: '물어보기' }))
+    fireEvent.click(await screen.findByRole('button', { name: /이 공고, AI에게 물어보기/, hidden: true }))
     await askAndOpenSuggestion()
 
     await waitFor(() => expect(window.location.pathname).toBe('/programs/demo-craft'))
     expect(await screen.findByRole('heading', { name: '우리 아이 조건과 비교' })).toBeTruthy()
-    expect(screen.queryByText(/공유 링크로 열어서/)).toBeNull()
     const evaluate = calls.find((call) => call.url === 'http://api.test/programs/demo-craft/evaluate')
     expect(evaluate?.method).toBe('POST')
     expect(evaluate?.body).toMatchObject({ child_grade: 2 })
@@ -89,14 +89,25 @@ describe('AI 상담이 권한 공고 열기', () => {
     expect(window.history.state.fromList).toBeUndefined()
   })
 
-  it('홈에서 조건 없이 물었으면, 조건을 넣지 않아 비교하지 않았다고 말한다(공유 링크라고 하지 않음)', async () => {
+  it('홈에서 조건 없이 물었으면, 비교 구역 대신 조건을 넣어 비교하는 길을 보여 준다', async () => {
     serve()
     render(<I18nProvider initial="ko-easy"><App /></I18nProvider>)
-    fireEvent.click(await screen.findByRole('button', { name: /궁금한 걸 AI에게 물어보세요/ }))
+    fireEvent.click(await screen.findByRole('button', { name: /AI에게 묻기/ }))
     await askAndOpenSuggestion()
 
-    expect(await screen.findByText(/아이 학년·시간을 넣지 않아 비교하지 않았어요/)).toBeTruthy()
-    expect(screen.queryByText(/공유 링크로 열어서/)).toBeNull()
+    expect(await screen.findByRole('button', { name: '아이 조건 넣고 비교하기' })).toBeTruthy()
+    expect(screen.queryByRole('heading', { name: '우리 아이 조건과 비교' })).toBeNull()
+  })
+
+  it('상세에서 조건을 넣으면 그 공고에 머물며 바로 비교한다', async () => {
+    window.history.replaceState({}, '', '/programs/demo-korean')
+    serve()
+    render(<I18nProvider initial="ko-easy"><App /></I18nProvider>)
+    fireEvent.click(await screen.findByRole('button', { name: '아이 조건 넣고 비교하기' }))
+    fireEvent.click(await screen.findByRole('radio', { name: '초등 2학년', hidden: true }))
+    fireEvent.click(screen.getByRole('button', { name: '이 공고와 비교하기', hidden: true }))
+    expect(await screen.findByRole('heading', { name: '우리 아이 조건과 비교' })).toBeTruthy()
+    expect(window.location.pathname).toBe('/programs/demo-korean')
   })
 
   it('본문으로 건너뛰기 링크는 화면마다 같은 이름을 쓴다', async () => {
