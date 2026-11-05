@@ -11,6 +11,16 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); window.history.replaceState(n
 
 const view = (open: boolean, onClose = () => {}) => <I18nProvider initial="ko-easy"><Sheet open={open} onClose={onClose} title="시트">내용</Sheet></I18nProvider>
 
+describe('시트를 열 때의 포커스', () => {
+  it('첫 단추가 아니라 시트 자체로 옮겨 테두리가 뜨지 않게 한다', () => {
+    vi.spyOn(window.history, 'back').mockImplementation(() => {})
+    const { rerender } = render(view(true))
+    expect(document.activeElement).toBe(document.querySelector('dialog'))
+    rerender(view(false))
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  })
+})
+
 describe('늦게 온 닫힘 신호', () => {
   it('다시 연 시트는 지난번에 닫을 때의 close 신호로 닫히지 않는다', () => {
     const onClose = vi.fn()
