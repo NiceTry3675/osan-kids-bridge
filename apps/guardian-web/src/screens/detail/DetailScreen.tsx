@@ -86,7 +86,6 @@ function ProgramDetail({ id, program, compared, conditions, onConditionsChange }
             <h1 className="detail-title">
               <span lang={text.lang}>{text.title}</span>
               {text.missingTranslation && <span className="tag-original">{t('originalTag')}</span>}
-              {program.is_demo && <span className="tag-original tag-demo">{t('demoTag')}</span>}
             </h1>
           </div>
           <PosterThumb programId={program.program_id} posters={posters} />

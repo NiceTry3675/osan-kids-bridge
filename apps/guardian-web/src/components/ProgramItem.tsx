@@ -64,10 +64,9 @@ export function ProgramItem({ program }: { program: Program }) {
             )}
           </span>
           <span className="item-title" lang={text.lang}>{text.title}</span>
-          {(text.missingTranslation || program.is_demo) && (
+          {text.missingTranslation && (
             <span className="item-tags">
-              {text.missingTranslation && <span className="tag-original">{t('originalTag')}</span>}
-              {program.is_demo && <span className="tag-original tag-demo">{t('demoTag')}</span>}
+              <span className="tag-original">{t('originalTag')}</span>
             </span>
           )}
           <span className="item-facts">

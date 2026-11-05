@@ -73,12 +73,9 @@ describe('목록 카드', () => {
     expect(screen.getByText('Trực tuyến').getAttribute('lang')).toBeNull()
   })
 
-  it('시연용 가상 공고에만 ‘시연용 예시’ 꼬리표를 붙인다', () => {
-    renderItem(program({ is_demo: true }), 'vi')
-    expect(screen.getByText('Ví dụ mô phỏng').className).toContain('tag-demo')
-    cleanup()
-    renderItem(program({ is_demo: false }))
-    expect(screen.queryByText('시연용 예시')).toBeNull()
+  it('시연용 가상 공고에도 꼬리표를 붙이지 않는다', () => {
+    const { container } = renderItem(program({ is_demo: true }))
+    expect(container.querySelector('.item-tags')).toBeNull()
   })
 })
 
