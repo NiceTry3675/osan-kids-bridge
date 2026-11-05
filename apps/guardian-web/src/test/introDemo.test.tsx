@@ -18,6 +18,7 @@ function memoryStorage(): Storage {
   }
 }
 
+const NOTICE = '시연용 화면이에요. 프로그램과 일정은 예시이고, 기관이 실제로 여는 것이 아니에요.'
 const open = () => render(<I18nProvider initial="ko-easy"><App /></I18nProvider>)
 
 beforeEach(() => {
@@ -53,5 +54,16 @@ describe('데모 모드의 첫 화면', () => {
     window.history.replaceState(null, '', '/programs/demo-korean')
     open()
     expect(screen.queryByRole('button', { name: '둘러보기 시작' })).toBeNull()
+  })
+
+  it('첫 화면에 시연용이라고 알린다', () => {
+    open()
+    expect(screen.getByText(NOTICE)).toBeTruthy()
+  })
+
+  it('첫 화면을 건너뛴 상세에도 시연용이라고 알린다', async () => {
+    window.history.replaceState(null, '', '/programs/demo-korean')
+    open()
+    expect(await screen.findByText(NOTICE)).toBeTruthy()
   })
 })

@@ -20,6 +20,9 @@
 .intro-lang .icon { position: absolute; top: 3px; right: 3px; width: 13px; height: 13px; stroke-width: 3; color: var(--action); }
 .intro-lang[aria-checked='true'] { box-shadow: inset 0 0 0 1px var(--ink); border-color: var(--ink); background: var(--paper); }
 .intro-draft { font-size: var(--text-xs); }
+.intro-demo { font-size: var(--text-xs); line-height: 1.5; }
+/* 시연 안내가 두 줄 늘어난 만큼 그림을 줄여 한 화면에 들어오게 합니다. */
+.intro:has(.intro-demo) .intro-art { height: clamp(88px, calc(100cqh - 548px), 240px); }
 /* 시작 버튼은 엄지가 닿는 아래쪽에 둡니다 */
 .intro-foot { margin-top: auto; padding: 12px 0 calc(16px + env(safe-area-inset-bottom)); }
 .shell--intro .lp-strip { display: none; }
