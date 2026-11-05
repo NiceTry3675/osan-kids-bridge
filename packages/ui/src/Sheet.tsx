@@ -54,7 +54,8 @@ export function Sheet({ open, onClose, title, titleHidden, closeLabel, headerExt
       ref={ref}
       className={tall ? 'sheet sheet--tall' : 'sheet'}
       aria-labelledby={titleId}
-      onClose={onClose}
+      // 닫을 때의 close 신호는 늦게 옵니다. 그사이 다시 열었으면 지난 신호이므로 새 시트를 닫지 않습니다.
+      onClose={(event) => { if (!event.currentTarget.open) onClose() }}
       onCancel={onClose}
       onClick={(event) => { if (event.target === event.currentTarget) onClose() }}
     >

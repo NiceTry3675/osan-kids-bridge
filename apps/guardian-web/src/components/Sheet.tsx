@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Sheet as SharedSheet } from '@osan-kids-bridge/ui'
 import type { SheetProps } from '@osan-kids-bridge/ui'
 import { useI18n } from '../i18n'
@@ -41,9 +42,13 @@ function useCloseOnBack(open: boolean, onClose: () => void) {
   }, [open])
 }
 
-/** 공통 시트(packages/ui)에 화면 언어의 ‘닫기’와 뒤로 가기를 붙입니다. 조건 넣기(03)와 신청·물어보기(06)가 씁니다. */
+/**
+ * 공통 시트(packages/ui)에 화면 언어의 ‘닫기’와 뒤로 가기를 붙입니다. 조건 넣기(03)와 신청·물어보기(06)가 씁니다.
+ * 시트는 body 바로 아래에 둡니다. 내용 스크롤 영역(.shell-scroll)은 격리되어 있어, 그 안에 두면
+ * 브라우저에 따라 아래로 스크롤한 뒤 연 시트가 화면 밖에 놓일 수 있습니다.
+ */
 export function Sheet(props: Omit<SheetProps, 'closeLabel'>) {
   const { t } = useI18n()
   useCloseOnBack(props.open, props.onClose)
-  return <SharedSheet {...props} closeLabel={t('close')} />
+  return createPortal(<SharedSheet {...props} closeLabel={t('close')} />, document.body)
 }
