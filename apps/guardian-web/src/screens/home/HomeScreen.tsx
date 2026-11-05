@@ -54,7 +54,7 @@ export function HomeScreen({ filters, onFiltersChange, restoreScrollY }: Props) 
       {hasConditions ? (
         <div className="results-head">
           <h1 className="home-title">{search.status === 'ready' ? t('foundCount', { count: likelyCount(search.data, filters) }) : t('browseTitle')}</h1>
-          <button type="button" className="btn btn--quiet" onClick={() => { setCleared(filters); change(emptyFilters()) }}><Icon name="x" />{t('clearConditions')}</button>
+          <button type="button" className="btn btn--quiet" onClick={() => { setCleared(filters); change(emptyFilters()) }}>{t('clearConditions')}</button>
         </div>
       ) : (
         <header className="home-head">
