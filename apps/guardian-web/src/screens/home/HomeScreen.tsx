@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useI18n } from '../../i18n'
 import type { Interest, Program, SearchFilters, SearchResponse } from '../../data/types'
 import { emptyFilters } from '../../data/types'
@@ -31,11 +31,8 @@ export function HomeScreen({ filters, onFiltersChange, restoreScrollY }: Props) 
   const [search, retry] = useSearch(filters, locale)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
-  // 조건 지우기는 되돌릴 수 있게 지운 조건을 잠시 기억합니다.
-  const [cleared, setCleared] = useState<SearchFilters | null>(null)
   const chips = filterChips(filters, locale)
   const hasConditions = chips.length > 0
-  useEffect(() => { if (hasConditions) setCleared(null) }, [hasConditions])
   // 조건이 바뀌면 결과가 달라지므로 맨 위부터 보여 줍니다.
   const change = (next: SearchFilters) => { onFiltersChange(next); scrollToTop() }
   const openSheet = () => setSheetOpen(true)
@@ -45,16 +42,10 @@ export function HomeScreen({ filters, onFiltersChange, restoreScrollY }: Props) 
   return (
     <main className="page" id="main" tabIndex={-1}>
       <HomeBar filters={filters} onChange={change} onConditions={openSheet} onChat={() => setChatOpen(true)} />
-      {cleared && (
-        <p className="undo-bar" role="status">
-          <span>{t('conditionsCleared')}</span>
-          <button type="button" className="btn btn--quiet" onClick={() => change(cleared)}>{t('undo')}</button>
-        </p>
-      )}
       {hasConditions ? (
         <div className="results-head">
           <h1 className="home-title">{search.status === 'ready' ? t('foundCount', { count: likelyCount(search.data, filters) }) : t('browseTitle')}</h1>
-          <button type="button" className="btn btn--quiet" onClick={() => { setCleared(filters); change(emptyFilters()) }}>{t('clearConditions')}</button>
+          <button type="button" className="btn btn--quiet" onClick={() => change(emptyFilters())}>{t('clearConditions')}</button>
         </div>
       ) : (
         <header className="home-head">

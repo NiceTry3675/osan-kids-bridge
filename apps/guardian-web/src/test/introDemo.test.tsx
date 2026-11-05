@@ -32,6 +32,20 @@ afterEach(() => {
   window.history.replaceState(null, '', '/')
 })
 
+describe('조건 지우기', () => {
+  it('되돌리기 안내 없이 처음 목록으로 돌아간다', async () => {
+    open()
+    fireEvent.click(screen.getByRole('button', { name: '둘러보기 시작' }))
+    const interest = await screen.findByRole('button', { name: /^한국어/ })
+    fireEvent.click(interest)
+    fireEvent.click(await screen.findByRole('button', { name: '조건 지우기' }))
+    expect(await screen.findByRole('heading', { name: /지금 볼 수 있는 프로그램/ })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: '조건 지우기' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '되돌리기' })).toBeNull()
+    expect(screen.queryByText('조건을 지웠어요')).toBeNull()
+  })
+})
+
 describe('데모 모드의 첫 화면', () => {
   it('둘러보기를 시작한 뒤 다시 열어도 첫 화면부터 보인다', async () => {
     open()
