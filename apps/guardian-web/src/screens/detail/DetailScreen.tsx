@@ -106,6 +106,8 @@ function ProgramDetail({ id, program, compared, conditions, onConditionsChange }
       <SessionsSection program={program} />
       <DescriptionSection program={program} text={text} />
       <ParticipationSection program={program} />
+      {/* 공유 링크로 오면 첫 화면을 건너뛰므로 상세에도 적습니다. 실제 기관 이름을 쓴 시연 공고를 진짜로 여기지 않게 합니다. */}
+      {program.is_demo && <p className="detail-demo">{t('demoNotice')}</p>}
 
       <div className="action-bar">
         <button type="button" className="btn btn--outline btn--lg" onClick={() => setSheet('ask')}>{t('askButton')}</button>

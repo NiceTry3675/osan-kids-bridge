@@ -1,5 +1,6 @@
 import { langAttr } from '@osan-kids-bridge/ui'
 import { useI18n } from '../../i18n'
+import { usingDemoData } from '../../data/api'
 import { languageOptions, localeState } from '../../i18n/policy'
 import { Icon } from '../../components/Icon'
 import { IntroArt } from './art'
@@ -48,6 +49,7 @@ export function IntroScreen({ onStart, onMoreLanguages }: Props) {
       <h1 className="intro-title">{t('introTitle')}</h1>
       <p className="intro-lead">{t('introLead')}</p>
       <p className="intro-privacy">{t('homeFooter')}</p>
+      {usingDemoData && <p className="intro-demo">{t('demoNotice')}</p>}
 
       <div className="intro-foot">
         <button type="button" className="btn btn--primary btn--lg btn--block" onClick={onStart}>{t('introStart')}</button>

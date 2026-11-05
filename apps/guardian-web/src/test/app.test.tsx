@@ -69,6 +69,15 @@ afterEach(() => {
   window.history.replaceState(null, '', '/')
 })
 
+describe('서버에 연결된 화면', () => {
+  it('첫 화면에 시연 안내를 적지 않는다', () => {
+    localStorage.removeItem('osan-guardian-intro-seen')
+    render(<I18nProvider initial="ko-easy"><App /></I18nProvider>)
+    expect(screen.getByRole('button', { name: '둘러보기 시작' })).toBeTruthy()
+    expect(screen.queryByText(/시연용 화면이에요/)).toBeNull()
+  })
+})
+
 describe('AI 상담이 권한 공고 열기', () => {
   it('상세에서 조건을 넣고 물었으면, 권한 공고도 같은 조건으로 판정하고 공유 링크로 열었다고 하지 않는다', async () => {
     sessionStorage.setItem('guardian-search-v2', JSON.stringify({ ...emptyFilters(), child_grade: 2 }))
