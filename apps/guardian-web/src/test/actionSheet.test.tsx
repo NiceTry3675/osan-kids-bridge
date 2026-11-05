@@ -63,9 +63,9 @@ describe('신청하기', () => {
 
 describe('물어보기', () => {
   it('문장을 문의처보다 먼저 보여 준다', () => {
-    const { container } = open({ ...base(), uncertain_items: [{ topic: 'materials', note_ko: null }] }, 'ask')
-    const sentence = container.querySelector('.inquiry-box')!
-    const contact = container.querySelector('.contacts')!
+    open({ ...base(), uncertain_items: [{ topic: 'materials', note_ko: null }] }, 'ask')
+    const sentence = document.querySelector('.inquiry-box')!
+    const contact = document.querySelector('.contacts')!
     expect(sentence.compareDocumentPosition(contact) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, render } from '@testing-library/react'
+import { act, cleanup, fireEvent, render } from '@testing-library/react'
 import { I18nProvider } from '../i18n'
 import { Sheet } from '../components/Sheet'
 
@@ -10,6 +10,28 @@ HTMLDialogElement.prototype.close = function close() { this.open = false }
 afterEach(() => { cleanup(); vi.restoreAllMocks(); window.history.replaceState(null, '') })
 
 const view = (open: boolean, onClose = () => {}) => <I18nProvider initial="ko-easy"><Sheet open={open} onClose={onClose} title="시트">내용</Sheet></I18nProvider>
+
+describe('시트의 위치', () => {
+  it('내용 스크롤 영역 안에서 열어도 시트는 body 바로 아래에 놓인다', () => {
+    render(<div className="shell-scroll">{view(false)}</div>)
+    expect(document.querySelector('dialog')!.parentElement).toBe(document.body)
+    expect(document.querySelector('.shell-scroll dialog')).toBeNull()
+  })
+})
+
+describe('늦게 온 닫힘 신호', () => {
+  it('다시 연 시트는 지난번에 닫을 때의 close 신호로 닫히지 않는다', () => {
+    const onClose = vi.fn()
+    render(view(false, onClose))
+    const dialog = document.querySelector('dialog')!
+    dialog.open = true
+    fireEvent(dialog, new Event('close'))
+    expect(onClose).not.toHaveBeenCalled()
+    dialog.open = false
+    fireEvent(dialog, new Event('close'))
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+})
 
 describe('시트와 뒤로 가기', () => {
   it('뒤로 가기는 페이지를 떠나지 않고 시트를 닫는다', () => {
