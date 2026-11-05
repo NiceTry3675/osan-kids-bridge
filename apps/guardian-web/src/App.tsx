@@ -13,7 +13,11 @@ import { HomeScreen } from './screens/home/HomeScreen'
 import { IntroScreen } from './screens/intro/IntroScreen'
 
 const INTRO_KEY = 'osan-guardian-intro-seen'
-const introSeen = () => { try { return localStorage.getItem(INTRO_KEY) === '1' } catch { return true } }
+/** 시연은 여러 사람에게 차례로 보여 주므로, 데모 모드에서는 기억하지 않고 열 때마다 첫 화면부터 보입니다. */
+const introSeen = () => {
+  if (usingDemoData) return false
+  try { return localStorage.getItem(INTRO_KEY) === '1' } catch { return true }
+}
 
 /**
  * 보호자 웹(유저플로우 v5). 페이지는 홈(/)과 상세(/programs/{id}) 두 개이고,
@@ -54,7 +58,6 @@ export default function App() {
       <div className="shell-scroll" id={SCROLL_ROOT_ID}>
         {/* 첫 화면은 언어 고르기 아래에 따로 적습니다. 위에 띠가 생기면 방금 누른 버튼이 밀려나니까요. */}
         {localeState(locale) === 'draft' && !showIntro && <p className="ribbon ribbon--draft" role="note">{t('draftNotice')}</p>}
-        {usingDemoData && !showIntro && <p className="ribbon ribbon--demo" role="note">{t('demoNotice')}</p>}
 
         {showIntro ? <IntroScreen onStart={finishIntro} onMoreLanguages={() => picker.current?.openSearch()} />
           : route.name === 'browse' ? <HomeScreen filters={filters} onFiltersChange={setFilters} restoreScrollY={history.scrollY} />

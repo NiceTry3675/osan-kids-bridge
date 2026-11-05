@@ -9,7 +9,6 @@
 
 .ribbon { margin: 0; padding: 8px 18px; font-size: var(--text-xs); line-height: 1.5; }
 .ribbon--draft { background: var(--status-unknown-soft); color: var(--status-unknown); }
-.ribbon--demo { background: var(--sunken); color: var(--ink-2); }
 
 .page { padding: 4px 18px 40px; }
 

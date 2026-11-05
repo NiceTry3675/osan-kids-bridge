@@ -16,7 +16,6 @@ const ko = {
   pickerNotOfferedHint: '아직 준비 중인 언어예요. 지금은 쉬운 한국어로 볼 수 있어요. (Not available yet)',
   close: '닫기',
   draftNotice: '화면 문구 번역은 검수 전 초안이에요',
-  demoNotice: '시연용 가상 공고예요. 실제로 신청하거나 전화할 수 없어요.',
   skip: '본문으로 건너뛰기',
 
   browseTitle: '오산의 자녀 프로그램',
@@ -354,7 +353,6 @@ const vi: Catalog = {
   pickerNotOfferedHint: 'Các ngôn ngữ này đang được chuẩn bị. Hiện bạn có thể xem bằng tiếng Hàn dễ hiểu. (Not available yet)',
   close: 'Đóng',
   draftNotice: 'Bản dịch giao diện chưa được kiểm tra',
-  demoNotice: 'Đây là thông báo mô phỏng. Bạn không thể đăng ký hay gọi điện thật.',
   skip: 'Chuyển đến nội dung chính',
 
   browseTitle: 'Chương trình cho trẻ ở Osan',
@@ -687,7 +685,6 @@ const zh: Catalog = {
   pickerNotOfferedHint: '这些语言正在准备中。目前可以用简单韩语查看。(Not available yet)',
   close: '关闭',
   draftNotice: '界面译文尚未审核',
-  demoNotice: '这是演示用的虚拟公告，无法真正报名或拨打电话。',
   skip: '跳到正文',
 
   browseTitle: '乌山的儿童活动',
