@@ -29,7 +29,11 @@ export function Sheet({ open, onClose, title, titleHidden, closeLabel, headerExt
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
-    if (open && !dialog.open) dialog.showModal?.()
+    if (open && !dialog.open) {
+      dialog.showModal?.()
+      // 첫 단추에 포커스 테두리가 뜨지 않도록 시트 자체로 옮깁니다. 키보드로는 Tab을 누르면 첫 단추로 갑니다.
+      dialog.focus({ preventScroll: true })
+    }
     if (!open && dialog.open) dialog.close()
   }, [open])
 
@@ -54,6 +58,7 @@ export function Sheet({ open, onClose, title, titleHidden, closeLabel, headerExt
       ref={ref}
       className={tall ? 'sheet sheet--tall' : 'sheet'}
       aria-labelledby={titleId}
+      tabIndex={-1}
       // 닫을 때의 close 신호는 늦게 옵니다. 그사이 다시 열었으면 지난 신호이므로 새 시트를 닫지 않습니다.
       onClose={(event) => { if (!event.currentTarget.open) onClose() }}
       onCancel={onClose}

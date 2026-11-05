@@ -1,4 +1,6 @@
 /* 05 상세 */
+/* 맨 위 안내가 고정 줄에 붙지 않도록, 아래쪽과 같은 간격을 둡니다. */
+.detail > .notice:first-child { margin-top: 14px; }
 .detail-head { display: grid; gap: 2px; padding: 8px 0 14px; }
 .detail-head-top { display: flex; align-items: flex-start; gap: 12px; }
 .detail-head-text { display: grid; gap: 2px; flex: 1; min-width: 0; }

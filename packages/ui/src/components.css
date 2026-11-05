@@ -86,6 +86,7 @@
 .sheet--tall { height: min(92dvh, 860px); }
 @media (min-width: 520px) { .sheet { margin: auto; border-radius: 24px; } }
 .sheet[open] { animation: rise 220ms cubic-bezier(.2, .8, .2, 1); }
+.sheet:focus { outline: none; }
 @keyframes rise { from { transform: translateY(40px); opacity: 0; } }
 .sheet::backdrop { background: rgb(17 23 19 / 48%); }
 .sheet-inner { display: grid; grid-template-rows: auto auto 1fr auto; }

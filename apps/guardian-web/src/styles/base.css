@@ -35,14 +35,16 @@
 */
 html, html body { height: 100%; overflow: hidden; overscroll-behavior: none; }
 html body { position: fixed; inset: 0; padding: 0; }
-#root { height: 100%; }
+/* 틀의 위 여백이 밖으로 빠져나가면 문서가 그만큼 넘쳐 스크롤되고, 틀만 시트와 어긋납니다. */
+#root { display: flow-root; height: 100%; }
 html .shell { display: flex; flex-direction: column; height: 100svh; min-height: 0; overflow: clip; }
 .shell-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; container-type: size; }
+html .lp-dialog { border-radius: 12px 12px 0 0; }
 @media (min-width: 520px) {
   :root { --frame-w: 390px; --frame-h: min(calc(100svh - 48px), 844px); }
   html .shell { width: var(--frame-w); max-width: none; height: var(--frame-h); margin: calc((100svh - var(--frame-h)) / 2) auto 0; border-radius: 28px; box-shadow: 0 0 0 1px var(--line), var(--shadow-card); }
   /* 시트도 틀 안에서 올라옵니다 */
-  html .sheet { width: var(--frame-w); max-width: var(--frame-w); margin: auto auto calc((100svh - var(--frame-h)) / 2); border-radius: 8px 24px 28px 28px; }
+  html .sheet, html .lp-dialog { width: var(--frame-w); max-width: var(--frame-w); margin: auto auto calc((100svh - var(--frame-h)) / 2); border-radius: 12px 12px 28px 28px; }
   html .sheet--tall { height: calc(var(--frame-h) * 0.92); }
 }
 
@@ -83,6 +85,8 @@ main[tabindex="-1"]:focus { outline: none; }
 .sheet { border-radius: 12px 12px 0 0; }
 .seg { padding: 0; border-radius: 0; background: none; border-bottom: 1px solid var(--line); }
 .seg-btn { border-radius: 0; font-weight: 500; }
+/* 키보드로 옮겨 왔을 때만 보이는 테두리. 옆 탭과 밑줄을 넘지 않게 안쪽에 그립니다. */
+.seg-btn:focus-visible { outline-offset: -3px; }
 .seg-btn[aria-selected='true'] { background: none; box-shadow: inset 0 -2px 0 var(--ink); font-weight: 700; }
 .pick, .pick--round { border-width: 1px; border-radius: 8px; font-weight: 600; }
 .input { border-width: 1px; border-radius: 8px; }
