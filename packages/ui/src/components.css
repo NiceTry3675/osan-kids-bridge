@@ -88,7 +88,9 @@
 .sheet[open] { animation: rise 220ms cubic-bezier(.2, .8, .2, 1); }
 @keyframes rise { from { transform: translateY(40px); opacity: 0; } }
 .sheet::backdrop { background: rgb(17 23 19 / 48%); }
-.sheet-inner { display: grid; grid-template-rows: auto auto 1fr auto; height: 100%; }
+.sheet-inner { display: grid; grid-template-rows: auto auto 1fr auto; }
+/* 높이를 정한 시트에서만 채웁니다. 내용만큼 커지는 시트에 height: 100%를 주면 Safari에서 높이가 0이 되어 시트가 보이지 않습니다. */
+.sheet--tall .sheet-inner { height: 100%; }
 .grab { width: 40px; height: 5px; margin: 10px auto 0; border-radius: 9px; background: var(--line-strong); }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px 4px 18px; }
 .sheet-head h2 { font-size: var(--text-lg); font-weight: 850; }

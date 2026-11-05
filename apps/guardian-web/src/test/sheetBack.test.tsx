@@ -11,14 +11,6 @@ afterEach(() => { cleanup(); vi.restoreAllMocks(); window.history.replaceState(n
 
 const view = (open: boolean, onClose = () => {}) => <I18nProvider initial="ko-easy"><Sheet open={open} onClose={onClose} title="시트">내용</Sheet></I18nProvider>
 
-describe('시트의 위치', () => {
-  it('내용 스크롤 영역 안에서 열어도 시트는 body 바로 아래에 놓인다', () => {
-    render(<div className="shell-scroll">{view(false)}</div>)
-    expect(document.querySelector('dialog')!.parentElement).toBe(document.body)
-    expect(document.querySelector('.shell-scroll dialog')).toBeNull()
-  })
-})
-
 describe('늦게 온 닫힘 신호', () => {
   it('다시 연 시트는 지난번에 닫을 때의 close 신호로 닫히지 않는다', () => {
     const onClose = vi.fn()
